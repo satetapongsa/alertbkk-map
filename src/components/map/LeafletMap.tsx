@@ -79,6 +79,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const [showCCTV, setShowCCTV] = useState(true);
   const [showRecon, setShowRecon] = useState(true);
   const [showWifi, setShowWifi] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [showFlights, setShowFlights] = useState(true);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
@@ -694,8 +695,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       {/* Map DOM target */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[500px]" />
 
-      {/* Floating Map Controls on Right Side (Top-Right under summary) */}
-      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 lg:top-auto lg:bottom-28 z-[600] pointer-events-auto flex flex-col gap-2 items-center">
+      {/* Floating Map Controls on Right Side (Adjusted with mobile padding so bottom nav doesn't clip) */}
+      <div className="absolute bottom-20 sm:bottom-24 lg:bottom-28 right-3 sm:right-4 z-[600] pointer-events-auto flex flex-col gap-2 items-center">
         {/* Compact Map Layer Mode Switcher Pill (Street vs Satellite Icons) */}
         <div className="flex flex-col bg-slate-900/95 border border-slate-700/80 rounded-xl p-1 shadow-2xl backdrop-blur-md gap-1">
           <button
@@ -752,9 +753,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             <Layers className="w-5 h-5" />
           </button>
 
-          {/* Layer Selector Glassmorphism Panel */}
+          {/* Layer Selector Glassmorphism Panel (Optimized for small screens) */}
           {showLayerMenu && (
-            <div className="absolute right-12 top-0 w-64 bg-slate-950/95 backdrop-blur-xl border border-slate-700/90 rounded-2xl p-3 shadow-2xl z-[700] text-slate-200 animate-in fade-in slide-in-from-right-2 duration-150">
+            <div className="absolute right-12 bottom-0 w-64 max-w-[calc(100vw-80px)] bg-slate-950/95 backdrop-blur-xl border border-slate-700/90 rounded-2xl p-3 shadow-2xl z-[700] text-slate-200 animate-in fade-in slide-in-from-right-2 duration-150 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
                 <div className="flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-cyan-400" />
