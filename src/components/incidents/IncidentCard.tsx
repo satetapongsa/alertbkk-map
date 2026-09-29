@@ -26,6 +26,7 @@ import {
   Gauge,
   Train,
   Check,
+  X,
 } from 'lucide-react';
 
 interface IncidentCardProps {
@@ -102,9 +103,10 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Close"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>

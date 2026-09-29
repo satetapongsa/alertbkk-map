@@ -92,7 +92,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   ];
 
   return (
-    <div className="flex flex-col gap-2 z-30">
+    <div className="flex flex-col gap-2 z-30 select-none">
       {/* Category Pills Bar (Horizontal scrollable on small screens) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
         {categories.map((cat) => {
@@ -101,18 +101,18 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             <button
               key={cat.id}
               onClick={() => onSelectType(cat.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 backdrop-blur-xl shadow-lg ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 backdrop-blur-xl border cursor-pointer ${
                 isActive
-                  ? 'bg-cyan-500 text-slate-950 shadow-cyan-500/25 scale-[1.02]'
-                  : 'bg-slate-900/85 hover:bg-slate-800 text-slate-200 border border-slate-750/70 hover:border-slate-600'
+                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/20'
+                  : 'bg-slate-900/90 hover:bg-slate-850 text-slate-300 hover:text-white border-slate-800/90 hover:border-slate-700'
               }`}
             >
               <span>{cat.icon}</span>
               <span>{cat.label}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                className={`text-[10px] px-1.5 py-0.2 rounded-md font-mono font-bold ${
                   isActive
-                    ? 'bg-slate-950/20 text-slate-950'
+                    ? 'bg-cyan-500/30 text-cyan-200'
                     : 'bg-slate-800 text-slate-400'
                 }`}
               >
@@ -123,18 +123,18 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         })}
       </div>
 
-      {/* Time Filter & Historical Toggle */}
-      <div className="flex items-center justify-between gap-2 bg-slate-900/90 backdrop-blur-xl border border-slate-800 px-2.5 py-1.5 rounded-xl shadow-xl w-fit max-w-full overflow-x-auto">
+      {/* Time Filter & Archive Toggle */}
+      <div className="flex items-center justify-between gap-2 bg-slate-900/90 backdrop-blur-xl border border-slate-800/90 px-3 py-1 rounded-xl shadow-xl w-fit max-w-full overflow-x-auto">
         <div className="flex items-center gap-1">
           <Clock className="w-3.5 h-3.5 text-slate-400 mr-1 flex-shrink-0" />
           {timeOptions.map((opt) => (
             <button
               key={opt.id}
               onClick={() => onSelectTime(opt.id)}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
+              className={`px-2.5 py-0.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                 selectedTime === opt.id
-                  ? 'bg-slate-700/90 text-cyan-300 font-bold shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
               {opt.label}
@@ -146,10 +146,10 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
         <button
           onClick={() => onToggleHistorical(!showHistorical)}
-          className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md transition-colors flex-shrink-0 cursor-pointer ${
+          className={`flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-lg transition-colors flex-shrink-0 cursor-pointer ${
             showHistorical
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
           }`}
           title="Toggle resolved & past incidents"
         >
