@@ -8,7 +8,6 @@ import { UnifiedOverviewFeedWidget } from '@/components/incidents/UnifiedOvervie
 import { IncidentCard } from '@/components/incidents/IncidentCard';
 import { CreateReportModal } from '@/components/incidents/CreateReportModal';
 import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
-import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { SatelliteWeatherBar } from '@/components/weather/SatelliteWeatherBar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -261,12 +260,8 @@ export default function HomePage() {
           }}
         />
 
-        {/* Top-Left Navigation Tabs & Filter Bar (pointer-events-none on outer container so it never blocks map clicks) */}
+        {/* Top-Left Filter Bar (pointer-events-none on outer container so it never blocks map clicks) */}
         <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-100px)] sm:max-w-xl z-[500] pointer-events-none flex flex-col gap-2">
-          {/* Desktop/Tablet Header Navigation Tabs */}
-          <div className="pointer-events-auto hidden md:block">
-            <PageNavigationTabs />
-          </div>
           <div className="pointer-events-auto">
             <FilterPanel
               selectedType={selectedType}

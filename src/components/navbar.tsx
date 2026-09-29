@@ -417,51 +417,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
       </header>
-
-      {/* Mobile Bottom Navigation Bar (Fixed bottom for thumb-friendly navigation) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl px-4 py-1.5 flex items-center justify-around text-[10px] font-medium shadow-2xl">
-        <a
-          href="/"
-          onClick={(e) => navigateTo(e, '/')}
-          className={`flex flex-col items-center gap-0.5 p-1 rounded-lg cursor-pointer select-none ${
-            pathname === '/' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <MapPin className="w-4 h-4" />
-          <span>Live Map</span>
-        </a>
-
-        {/* Center thumb-friendly Action Button: Always Active */}
-        <button
-          onClick={handleReportClick}
-          className="flex flex-col items-center gap-0.5 px-3.5 py-1 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold -mt-3 shadow-lg shadow-emerald-500/40 active:scale-95 transition-transform cursor-pointer"
-        >
-          <PlusCircle className="w-5 h-5 text-slate-950" />
-          <span className="text-[10px] font-bold">Report</span>
-        </button>
-
-        <a
-          href="/dashboard"
-          onClick={(e) => navigateTo(e, '/dashboard')}
-          className={`flex flex-col items-center gap-0.5 p-1 rounded-lg cursor-pointer select-none ${
-            pathname === '/dashboard' ? 'text-emerald-400 font-semibold' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" />
-          <span>Dashboard</span>
-        </a>
-
-        <a
-          href="/admin"
-          onClick={(e) => navigateTo(e, '/admin')}
-          className={`flex flex-col items-center gap-0.5 p-1 rounded-lg cursor-pointer select-none ${
-            pathname === '/admin' ? 'text-rose-400 font-semibold' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Shield className="w-4 h-4" />
-          <span>Admin</span>
-        </a>
-      </div>
     </>
   );
 };

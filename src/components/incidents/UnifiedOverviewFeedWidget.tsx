@@ -199,26 +199,16 @@ export const UnifiedOverviewFeedWidget: React.FC<UnifiedOverviewFeedWidgetProps>
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <a
-                  href="/transport"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.location.href = '/transport';
-                  }}
-                  className="py-2 px-2.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-semibold text-center block transition-all text-xs cursor-pointer select-none"
-                >
-                  Transit Lines &gt;
-                </a>
+              <div className="pt-1">
                 <a
                   href="/dashboard"
                   onClick={(e) => {
                     e.preventDefault();
                     window.location.href = '/dashboard';
                   }}
-                  className="py-2 px-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-center block transition-all text-xs cursor-pointer select-none"
+                  className="py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-center block transition-all text-xs cursor-pointer select-none shadow-sm"
                 >
-                  Analytics &gt;
+                  Open Operations & Transit Center &rarr;
                 </a>
               </div>
             </div>

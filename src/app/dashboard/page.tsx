@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
-import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { IntegratedTransitSection } from '@/components/transit/IntegratedTransitSection';
 import { AirportFlightRadarSection } from '@/components/transit/AirportFlightRadarSection';
@@ -74,11 +73,6 @@ export default function DashboardPage() {
       <Navbar />
 
       <main className="max-w-6xl w-full mx-auto p-4 sm:p-6 pb-24 md:pb-6 space-y-5 flex-1">
-        {/* Universal Page Switcher Navigation Tabs (Desktop / Tablet) */}
-        <div className="hidden md:block">
-          <PageNavigationTabs />
-        </div>
-
         {/* Header Hero */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
