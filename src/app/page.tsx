@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '@/components/navbar';
 import { MapWrapper } from '@/components/map/MapWrapper';
 import { FilterPanel } from '@/components/incidents/FilterPanel';
-import { UnifiedOverviewFeedWidget } from '@/components/incidents/UnifiedOverviewFeedWidget';
 import { IncidentCard } from '@/components/incidents/IncidentCard';
 import { CreateReportModal } from '@/components/incidents/CreateReportModal';
 import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
@@ -14,6 +13,8 @@ import { CompactFlightRadarDrawer } from '@/components/transit/CompactFlightRada
 import { BangkokEmergencySosModal } from '@/components/modals/BangkokEmergencySosModal';
 import { BangkokDistrictsModal } from '@/components/modals/BangkokDistrictsModal';
 import { SafeRouteHazardModal } from '@/components/modals/SafeRouteHazardModal';
+import { VehicleFloodRiskModal } from '@/components/modals/VehicleFloodRiskModal';
+import { BangkokWaterTideModal } from '@/components/modals/BangkokWaterTideModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -28,6 +29,8 @@ import {
   AlertOctagon,
   Compass,
   ShieldCheck,
+  Gauge,
+  Waves,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -57,6 +60,8 @@ export default function HomePage() {
   const [isSosModalOpen, setIsSosModalOpen] = useState(false);
   const [isDistrictsModalOpen, setIsDistrictsModalOpen] = useState(false);
   const [isHazardModalOpen, setIsHazardModalOpen] = useState(false);
+  const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
+  const [isWaterTideModalOpen, setIsWaterTideModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -409,6 +414,28 @@ export default function HomePage() {
               <span>สแกนเส้นทาง</span>
             </button>
 
+            {/* Vehicle Flood Clearance Calculator Pill */}
+            <button
+              onClick={() => setIsVehicleModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white border border-cyan-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="ตรวจความเสี่ยงน้ำท่วมตามประเภทรถ (Sedan, SUV, EV, มอเตอร์ไซค์)"
+            >
+              <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">ตรวจน้ำท่วมตามรุ่นรถ</span>
+              <span className="sm:hidden">รุ่นรถ</span>
+            </button>
+
+            {/* Chao Phraya Water Tides & Sluice Gates Pill */}
+            <button
+              onClick={() => setIsWaterTideModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-sky-300 hover:text-white border border-sky-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="ระดับน้ำแม่น้ำเจ้าพระยาและสถานีสูบน้ำหลัก กทม."
+            >
+              <Waves className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden sm:inline">ระดับน้ำเจ้าพระยา</span>
+              <span className="sm:hidden">ระดับน้ำ</span>
+            </button>
+
             {/* SOS Hotline Button */}
             <button
               onClick={() => setIsSosModalOpen(true)}
@@ -418,17 +445,6 @@ export default function HomePage() {
               <span>SOS</span>
             </button>
           </div>
-        </div>
-
-        {/* Unified Bangkok Overview & Live Incident Feed Widget (Top-Right, Collapsible to Icon) */}
-        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-[500] pointer-events-auto">
-          <UnifiedOverviewFeedWidget
-            incidents={filteredIncidents}
-            selectedIncident={selectedIncident}
-            onSelectIncident={handleSelectIncident}
-            onSelectCategory={(type: any) => setSelectedType(type)}
-            userCoords={userCoords}
-          />
         </div>
 
         {/* Live Flight Radar Compact Drawer */}
@@ -557,6 +573,18 @@ export default function HomePage() {
         onFlyToIncident={(lat, lng) => {
           setFlyToCoords({ lat, lng, zoom: 15 });
         }}
+      />
+
+      {/* Vehicle Clearance Flood Risk Calculator Modal */}
+      <VehicleFloodRiskModal
+        isOpen={isVehicleModalOpen}
+        onClose={() => setIsVehicleModalOpen(false)}
+      />
+
+      {/* Bangkok Chao Phraya River Water Level & Sluice Gates Modal */}
+      <BangkokWaterTideModal
+        isOpen={isWaterTideModalOpen}
+        onClose={() => setIsWaterTideModalOpen(false)}
       />
 
       {/* Mobile App Bottom Navigation Bar */}
