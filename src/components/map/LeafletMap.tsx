@@ -2,17 +2,22 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Incident, TransportLine } from '@/types';
+import { Incident } from '@/types';
 import { INCIDENT_CONFIG, SEVERITY_CONFIG } from '@/lib/utils';
-import { BANGKOK_TRANSIT_LINES } from '@/lib/transit-data';
+import { FlightItem } from '@/app/api/flights/route';
 import {
   BANGKOK_CCTV_CAMERAS,
-  BANGKOK_BOAT_ROUTES,
   BANGKOK_RECON_UNITS,
   BANGKOK_WIFI_HOTSPOTS,
   BangkokCCTVCamera,
   BangkokWifiHotspot,
 } from '@/lib/recon-data';
+import {
+  BANGKOK_CANAL_STATIONS,
+  BANGKOK_PM25_STATIONS,
+  BANGKOK_SHELTERS,
+} from '@/lib/bkk-environmental-data';
+import { tacticalAudio } from '@/lib/tactical-audio';
 import {
   Navigation,
   Plus,
@@ -25,11 +30,12 @@ import {
   Eye,
   EyeOff,
   Camera,
-  Ship,
   Shield,
-  Bus,
-  Train,
   Wifi,
+  Droplets,
+  Wind,
+  CloudRain,
+  Building2,
   AlertTriangle,
   Check,
   X,
@@ -44,6 +50,9 @@ interface LeafletMapProps {
   onMapClick?: (lat: number, lng: number) => void;
   watchArea?: { lat: number; lng: number; radiusKm: number } | null;
   onLocateUser?: (coords: { lat: number; lng: number }) => void;
+  flights?: FlightItem[];
+  showFlights?: boolean;
+  onToggleFlights?: () => void;
 }
 
 export type MapTileMode = 'STREET' | 'SATELLITE';
@@ -57,38 +66,43 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   onMapClick,
   watchArea,
   onLocateUser,
+  flights = [],
+  showFlights = false,
+  onToggleFlights,
 }) => {
   const [isLocatingUser, setIsLocatingUser] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const activeTileLayerRef = useRef<L.TileLayer | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const transitLayerRef = useRef<L.LayerGroup | null>(null);
   const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
   const watchCircleRef = useRef<L.Circle | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const clickMarkerRef = useRef<L.Marker | null>(null);
 
   // Map Tile Mode: Default to REAL HIGH-RESOLUTION SATELLITE (Like looking down from orbit)
   const [mapMode, setMapMode] = useState<MapTileMode>('SATELLITE');
   
   // Master Visibility & Individual Recon Layer Toggles
   const [showIncidents, setShowIncidents] = useState(true);
-  const [showTransit, setShowTransit] = useState(true);
-  const [showBus, setShowBus] = useState(true);
-  const [showBoats, setShowBoats] = useState(true);
   const [showCCTV, setShowCCTV] = useState(true);
   const [showRecon, setShowRecon] = useState(true);
   const [showWifi, setShowWifi] = useState(true);
+  const [showCanals, setShowCanals] = useState(true);
+  const [showAirQuality, setShowAirQuality] = useState(true);
+  const [showShelters, setShowShelters] = useState(true);
+  const [showTmdRadar, setShowTmdRadar] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [showFlights, setShowFlights] = useState(true);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   // Extra Layer Groups
-  const busLayerRef = useRef<L.LayerGroup | null>(null);
-  const boatsLayerRef = useRef<L.LayerGroup | null>(null);
   const cctvLayerRef = useRef<L.LayerGroup | null>(null);
   const reconLayerRef = useRef<L.LayerGroup | null>(null);
   const wifiLayerRef = useRef<L.LayerGroup | null>(null);
+  const canalsLayerRef = useRef<L.LayerGroup | null>(null);
+  const airQualityLayerRef = useRef<L.LayerGroup | null>(null);
+  const sheltersLayerRef = useRef<L.LayerGroup | null>(null);
+  const tmdRadarLayerRef = useRef<L.LayerGroup | null>(null);
   const flightsLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Default Center: Bangkok Grand Palace / Siam / City Center
@@ -138,19 +152,44 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       .addTo(map);
 
     markersLayerRef.current = L.layerGroup().addTo(map);
-    transitLayerRef.current = L.layerGroup().addTo(map);
-    busLayerRef.current = L.layerGroup().addTo(map);
-    boatsLayerRef.current = L.layerGroup().addTo(map);
     cctvLayerRef.current = L.layerGroup().addTo(map);
     reconLayerRef.current = L.layerGroup().addTo(map);
     wifiLayerRef.current = L.layerGroup().addTo(map);
+    canalsLayerRef.current = L.layerGroup().addTo(map);
+    airQualityLayerRef.current = L.layerGroup().addTo(map);
+    sheltersLayerRef.current = L.layerGroup().addTo(map);
+    tmdRadarLayerRef.current = L.layerGroup().addTo(map);
     flightsLayerRef.current = L.layerGroup().addTo(map);
     heatmapLayerRef.current = L.layerGroup().addTo(map);
 
-    // Map click handler
+    // Map click handler (supports clicking anywhere in Bangkok or other provinces)
     map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      if (!clickMarkerRef.current) {
+        const pinIcon = L.divIcon({
+          html: `
+            <div style="position: relative; width: 28px; height: 28px;">
+              <div style="position: absolute; inset: 0; border-radius: 50%; background: #f59e0b; opacity: 0.45; animation: pulse 2s infinite;"></div>
+              <div style="position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #0f172a; border: 2px solid #f59e0b; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
+            </div>
+          `,
+          className: 'custom-click-pin',
+          iconSize: [28, 28],
+          iconAnchor: [14, 28],
+        });
+
+        clickMarkerRef.current = L.marker([lat, lng], { icon: pinIcon }).addTo(map);
+      } else {
+        clickMarkerRef.current.setLatLng([lat, lng]);
+      }
+
       if (onMapClick) {
-        onMapClick(e.latlng.lat, e.latlng.lng);
+        onMapClick(lat, lng);
       }
     });
 
@@ -169,8 +208,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       window.removeEventListener('resize', handleResize);
       try {
         if (markersLayerRef.current) markersLayerRef.current.clearLayers();
-        if (transitLayerRef.current) transitLayerRef.current.clearLayers();
         if (heatmapLayerRef.current) heatmapLayerRef.current.clearLayers();
+        if (flightsLayerRef.current) flightsLayerRef.current.clearLayers();
+        if (canalsLayerRef.current) canalsLayerRef.current.clearLayers();
+        if (airQualityLayerRef.current) airQualityLayerRef.current.clearLayers();
+        if (sheltersLayerRef.current) sheltersLayerRef.current.clearLayers();
+        if (tmdRadarLayerRef.current) tmdRadarLayerRef.current.clearLayers();
+        if (clickMarkerRef.current) {
+          clickMarkerRef.current.remove();
+          clickMarkerRef.current = null;
+        }
         map.remove();
       } catch (err) {
         // Ignore Leaflet unmount cleanup error during route transition
@@ -250,143 +297,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       marker.addTo(markersLayerRef.current!);
     });
   }, [incidents, selectedIncident, onSelectIncident, showIncidents]);
-
-  // Update Train Rapid Transit (BTS / MRT / ARL / SRT)
-  useEffect(() => {
-    if (!mapInstanceRef.current || !transitLayerRef.current) return;
-    transitLayerRef.current.clearLayers();
-    if (!showTransit) return;
-
-    BANGKOK_TRANSIT_LINES.filter((l) => l.type !== 'BUS').forEach((line) => {
-      const polyline = L.polyline(line.coordinates, {
-        color: line.colorCode,
-        weight: line.status === 'DELAYED' ? 5 : 4,
-        opacity: 0.9,
-        dashArray: line.status === 'DELAYED' ? '6, 8' : undefined,
-      });
-
-      polyline.bindPopup(`
-        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 190px;">
-          <div style="font-weight: 800; font-size: 13px; color: ${line.colorCode}; margin-bottom: 2px;">
-            ${line.name}
-          </div>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${line.nameEn}</div>
-          <div style="display: flex; align-items: center; gap: 4px; font-weight: 600; margin-bottom: 4px;">
-            <span style="color: ${line.status === 'NORMAL' ? '#22c55e' : '#f59e0b'};">
-              ● ${line.status === 'NORMAL' ? 'Normal Operations' : 'Delayed Service'}
-            </span>
-          </div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">
-            ${line.statusDetail || 'Regular scheduled frequency'}
-          </div>
-        </div>
-      `);
-      polyline.addTo(transitLayerRef.current!);
-
-      line.stations.forEach((st) => {
-        const stationIcon = L.divIcon({
-          html: `<div style="width: 9px; height: 9px; border-radius: 50%; background-color: #ffffff; border: 2.5px solid ${line.colorCode}; box-shadow: 0 0 6px ${line.colorCode};"></div>`,
-          className: 'station-pin',
-          iconSize: [9, 9],
-          iconAnchor: [4.5, 4.5],
-        });
-        const stMarker = L.marker([st.latitude, st.longitude], { icon: stationIcon });
-        stMarker.bindTooltip(`${st.name} (${st.nameEn})`, {
-          direction: 'top',
-          offset: [0, -5],
-          className: 'glass-panel text-xs text-white px-2 py-1 rounded-md border-0',
-        });
-        stMarker.addTo(transitLayerRef.current!);
-      });
-    });
-  }, [showTransit]);
-
-  // Update City Bus Routes Layer
-  useEffect(() => {
-    if (!mapInstanceRef.current || !busLayerRef.current) return;
-    busLayerRef.current.clearLayers();
-    if (!showBus) return;
-
-    BANGKOK_TRANSIT_LINES.filter((l) => l.type === 'BUS').forEach((bus) => {
-      const polyline = L.polyline(bus.coordinates, {
-        color: bus.colorCode,
-        weight: 3.5,
-        opacity: 0.85,
-        dashArray: '8, 6',
-      });
-
-      polyline.bindPopup(`
-        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 190px;">
-          <div style="font-weight: 800; font-size: 13px; color: ${bus.colorCode}; margin-bottom: 2px;">
-            ${bus.name}
-          </div>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${bus.nameEn}</div>
-          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">
-            ${bus.statusDetail || 'Regular city bus loop'}
-          </div>
-        </div>
-      `);
-      polyline.addTo(busLayerRef.current!);
-
-      bus.stations.forEach((st) => {
-        const busStopIcon = L.divIcon({
-          html: `<div style="width: 8px; height: 8px; border-radius: 2px; background-color: ${bus.colorCode}; border: 1.5px solid #ffffff; box-shadow: 0 0 5px ${bus.colorCode};"></div>`,
-          className: 'bus-pin',
-          iconSize: [8, 8],
-          iconAnchor: [4, 4],
-        });
-        const stMarker = L.marker([st.latitude, st.longitude], { icon: busStopIcon });
-        stMarker.bindTooltip(`Bus Stop: ${st.name}`, {
-          direction: 'top',
-          offset: [0, -5],
-          className: 'glass-panel text-xs text-white px-2 py-1 rounded-md border-0',
-        });
-        stMarker.addTo(busLayerRef.current!);
-      });
-    });
-  }, [showBus]);
-
-  // Update Chao Phraya & Canal Boat Routes
-  useEffect(() => {
-    if (!mapInstanceRef.current || !boatsLayerRef.current) return;
-    boatsLayerRef.current.clearLayers();
-    if (!showBoats) return;
-
-    BANGKOK_BOAT_ROUTES.forEach((route) => {
-      const polyline = L.polyline(route.coordinates, {
-        color: route.colorCode,
-        weight: 4,
-        opacity: 0.9,
-      });
-
-      polyline.bindPopup(`
-        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 200px;">
-          <div style="font-weight: bold; font-size: 13px; color: ${route.colorCode}; margin-bottom: 2px;">
-            ${route.name}
-          </div>
-          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${route.nameEn}</div>
-          <div style="font-size: 11px; color: #38bdf8;">Schedule: ${route.schedule}</div>
-        </div>
-      `);
-      polyline.addTo(boatsLayerRef.current!);
-
-      route.piers.forEach((pier) => {
-        const pierIcon = L.divIcon({
-          html: `<div style="width: 10px; height: 10px; border-radius: 50%; background-color: #0284c7; border: 2px solid #ffffff; box-shadow: 0 0 6px #0284c7;"></div>`,
-          className: 'pier-pin',
-          iconSize: [10, 10],
-          iconAnchor: [5, 5],
-        });
-        const pMarker = L.marker([pier.lat, pier.lng], { icon: pierIcon });
-        pMarker.bindTooltip(`Pier: ${pier.name} (${pier.nameEn})`, {
-          direction: 'top',
-          offset: [0, -5],
-          className: 'glass-panel text-xs text-white px-2 py-1 rounded-md border-0',
-        });
-        pMarker.addTo(boatsLayerRef.current!);
-      });
-    });
-  }, [showBoats]);
 
   // Update Street-Level CCTV Cameras
   useEffect(() => {
@@ -564,6 +474,372 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       marker.addTo(wifiLayerRef.current!);
     });
   }, [showWifi]);
+
+  // Update Airspace Live Flights & Airport Sectors (BKK / DMK)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !flightsLayerRef.current) return;
+    flightsLayerRef.current.clearLayers();
+
+    if (!showFlights) return;
+
+    // 1. Suvarnabhumi & Don Mueang Airport Hub Markers
+    const airports = [
+      { name: 'Suvarnabhumi Airport (BKK / VTBS)', code: 'BKK', lat: 13.6900, lng: 100.7501, color: '#3b82f6' },
+      { name: 'Don Mueang Airport (DMK / VTBD)', code: 'DMK', lat: 13.9126, lng: 100.6067, color: '#f59e0b' },
+    ];
+
+    airports.forEach((apt) => {
+      // Outer radar sector circle
+      L.circle([apt.lat, apt.lng], {
+        radius: 12000,
+        color: apt.color,
+        fillColor: apt.color,
+        fillOpacity: 0.05,
+        weight: 1.5,
+        dashArray: '4, 6',
+      }).addTo(flightsLayerRef.current!);
+
+      const aptIcon = L.divIcon({
+        html: `
+          <div style="display: flex; align-items: center; gap: 4px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid ${apt.color}; border-radius: 8px; padding: 2px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-family: monospace; font-size: 10px; font-weight: bold; color: #ffffff;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${apt.color}" stroke-width="2.5"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+            <span>${apt.code}</span>
+          </div>
+        `,
+        className: 'airport-hub-marker',
+        iconSize: [60, 24],
+        iconAnchor: [30, 12],
+      });
+
+      const aptMarker = L.marker([apt.lat, apt.lng], { icon: aptIcon });
+      aptMarker.bindPopup(`
+        <div style="padding: 8px; font-size: 12px; color: #f8fafc; min-width: 180px;">
+          <strong style="color: ${apt.color}; font-size: 13px;">${apt.name}</strong>
+          <div style="color: #94a3b8; font-size: 11px; margin-top: 4px;">Primary Bangkok Terminal Control Area</div>
+          <div style="font-family: monospace; font-size: 10px; color: #64748b; margin-top: 4px;">Lat: ${apt.lat} | Lng: ${apt.lng}</div>
+        </div>
+      `);
+      aptMarker.addTo(flightsLayerRef.current!);
+    });
+
+    // 2. Active Flights Markers
+    flights.forEach((flight) => {
+      const isArrival = flight.direction === 'ARRIVAL';
+      const isBkk = flight.airport === 'BKK';
+      const flightColor = isBkk ? '#60a5fa' : '#fbbf24';
+
+      const planeIcon = L.divIcon({
+        html: `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+            <div style="
+              width: 28px;
+              height: 28px;
+              border-radius: 50%;
+              background: rgba(15, 23, 42, 0.95);
+              border: 1.5px solid ${flightColor};
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+              transform: rotate(${flight.heading || 0}deg);
+              transition: transform 0.5s ease;
+            ">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="${flightColor}" stroke="${flightColor}" stroke-width="1.5">
+                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+              </svg>
+            </div>
+            <div style="
+              margin-top: 2px;
+              padding: 1px 4px;
+              border-radius: 4px;
+              background: rgba(15, 23, 42, 0.88);
+              border: 1px solid rgba(255,255,255,0.15);
+              color: #f1f5f9;
+              font-family: monospace;
+              font-size: 9px;
+              font-weight: 700;
+              white-space: nowrap;
+              pointer-events: none;
+            ">
+              ${flight.callsign}
+            </div>
+          </div>
+        `,
+        className: 'flight-air-pin',
+        iconSize: [36, 44],
+        iconAnchor: [18, 14],
+      });
+
+      const marker = L.marker([flight.latitude, flight.longitude], { icon: planeIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 220px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: ${flightColor}; font-size: 14px; font-family: monospace;">${flight.callsign}</strong>
+            <span style="font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);">
+              ${flight.airport} ${flight.direction}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 2px;">Airline: <strong style="color: #ffffff;">${flight.airline}</strong></div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+            ${flight.routeOrigin || flight.airport} ➔ ${flight.routeDestination || 'Destination'}
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.8); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace;">
+            <div><span style="color: #94a3b8;">ALT:</span> <strong style="color: #f8fafc;">${flight.altitudeFeet.toLocaleString()} ft</strong></div>
+            <div><span style="color: #94a3b8;">SPD:</span> <strong style="color: #f8fafc;">${flight.speedKmh} km/h</strong></div>
+            <div><span style="color: #94a3b8;">HDG:</span> <strong style="color: #f8fafc;">${flight.heading}°</strong></div>
+            <div><span style="color: #94a3b8;">DIST:</span> <strong style="color: #f8fafc;">${flight.distanceToAirportKm} km</strong></div>
+          </div>
+          <div style="font-size: 9px; color: #64748b; font-family: monospace; margin-top: 6px;">
+            ICAO24: ${flight.icao24} | STATUS: ${flight.status}
+          </div>
+        </div>
+      `);
+      marker.addTo(flightsLayerRef.current!);
+    });
+  }, [showFlights, flights]);
+
+  // Update Bangkok Major Canal Water Level Stations (BMA Drainage Dept)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !canalsLayerRef.current) return;
+    canalsLayerRef.current.clearLayers();
+    if (!showCanals) return;
+
+    BANGKOK_CANAL_STATIONS.forEach((station) => {
+      const isCritical = station.status === 'CRITICAL';
+      const isWarning = station.status === 'WARNING';
+      const statusColor = isCritical ? '#ef4444' : isWarning ? '#f59e0b' : '#06b6d4';
+      const statusBg = isCritical ? 'rgba(127, 29, 29, 0.95)' : isWarning ? 'rgba(113, 63, 18, 0.95)' : 'rgba(8, 51, 68, 0.95)';
+
+      const canalIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: ${statusBg};
+            border: 1.5px solid ${statusColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px ${statusColor}66;
+            cursor: pointer;
+          ">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+        `,
+        className: 'canal-water-pin',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([station.lat, station.lng], { icon: canalIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 230px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: ${statusColor}; font-size: 13px;">${station.name}</strong>
+            <span style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}66;">
+              ${station.statusTh}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+            สายคลอง: <strong style="color: #e2e8f0;">${station.canalName}</strong> (${station.district})
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.85); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace;">
+            <div><span style="color: #94a3b8;">ระดับน้ำ:</span> <strong style="color: ${statusColor};">+${station.waterLevelMsl.toFixed(2)} ม.รทก.</strong></div>
+            <div><span style="color: #94a3b8;">ระดับคันกั้น:</span> <strong style="color: #f8fafc;">+${station.bankLevelMsl.toFixed(2)} ม.รทก.</strong></div>
+            <div><span style="color: #94a3b8;">แนวโน้ม:</span> <strong style="color: #f8fafc;">${station.trendTh}</strong></div>
+            <div><span style="color: #94a3b8;">อัตราไหล:</span> <strong style="color: #f8fafc;">${station.flowRateCubicM} m3/s</strong></div>
+          </div>
+          <div style="font-size: 9px; color: #64748b; font-family: monospace; margin-top: 6px;">
+            แหล่งข้อมูล: สำนักการระบายน้ำ กทม. (${station.lastUpdated})
+          </div>
+        </div>
+      `);
+      marker.addTo(canalsLayerRef.current!);
+    });
+  }, [showCanals]);
+
+  // Update Bangkok PM2.5 Air Quality Sensors (PCD / BMA Network)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !airQualityLayerRef.current) return;
+    airQualityLayerRef.current.clearLayers();
+    if (!showAirQuality) return;
+
+    BANGKOK_PM25_STATIONS.forEach((station) => {
+      const pmPinIcon = L.divIcon({
+        html: `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1.5px solid ${station.colorHex};
+            border-radius: 8px;
+            padding: 2px 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            cursor: pointer;
+            font-family: monospace;
+          ">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${station.colorHex};"></span>
+            <span style="font-size: 10px; font-weight: 800; color: #ffffff;">${station.pm25.toFixed(0)}</span>
+          </div>
+        `,
+        className: 'pm25-sensor-pin',
+        iconSize: [40, 22],
+        iconAnchor: [20, 11],
+      });
+
+      const marker = L.marker([station.lat, station.lng], { icon: pmPinIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 220px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: ${station.colorHex}; font-size: 13px;">${station.stationName}</strong>
+            <span style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${station.colorHex}22; color: ${station.colorHex}; border: 1px solid ${station.colorHex}66;">
+              ${station.statusTh}
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px;">
+            <span>PM2.5: <strong style="color:${station.colorHex}; font-size:13px;">${station.pm25} µg/m³</strong></span>
+            <span style="color:#64748b;">|</span>
+            <span>AQI: <strong style="color:#ffffff;">${station.aqi}</strong></span>
+          </div>
+          <div style="padding: 6px 8px; background: rgba(15, 23, 42, 0.85); border-radius: 8px; border: 1px solid #334155; font-size: 10px; color: #cbd5e1; margin-bottom: 6px; line-height: 1.4;">
+            คำแนะนำ: ${station.healthAdviceTh}
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; font-family: monospace;">
+            อุณหภูมิ: ${station.temperatureC}°C | ความชื้น: ${station.humidityPct}% (${station.lastUpdated})
+          </div>
+        </div>
+      `);
+      marker.addTo(airQualityLayerRef.current!);
+    });
+  }, [showAirQuality]);
+
+  // Update Bangkok Flood Shelters & High-Ground Parking Points
+  useEffect(() => {
+    if (!mapInstanceRef.current || !sheltersLayerRef.current) return;
+    sheltersLayerRef.current.clearLayers();
+    if (!showShelters) return;
+
+    BANGKOK_SHELTERS.forEach((shelter) => {
+      const isParking = shelter.type === 'PARKING_HIGH_GROUND';
+      const color = isParking ? '#818cf8' : '#34d399';
+      const bg = isParking ? 'rgba(30, 27, 75, 0.95)' : 'rgba(6, 78, 59, 0.95)';
+
+      const shelterIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: ${bg};
+            border: 1.5px solid ${color};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px ${color}66;
+            cursor: pointer;
+          ">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.2">
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+            </svg>
+          </div>
+        `,
+        className: 'shelter-pin',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([shelter.lat, shelter.lng], { icon: shelterIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 230px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: ${color}; font-size: 13px;">${shelter.name}</strong>
+            <span style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${color}22; color: ${color}; border: 1px solid ${color}66;">
+              ${isParking ? 'ที่จอดรถที่สูง' : 'ศูนย์พักพิงน้ำท่วม'}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">เขต: ${shelter.district}</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.85); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace;">
+            <div><span style="color: #94a3b8;">ความจุคน:</span> <strong style="color: #f8fafc;">${shelter.capacityPeople.toLocaleString()} คน</strong></div>
+            <div><span style="color: #94a3b8;">ที่จอดรถ:</span> <strong style="color: #f8fafc;">${shelter.parkingSpots} คัน</strong></div>
+            <div><span style="color: #94a3b8;">ระดับพื้น:</span> <strong style="color: #f8fafc;">+${shelter.elevationMsl} ม.รทก.</strong></div>
+            <div><span style="color: #94a3b8;">ติดต่อ:</span> <strong style="color: #38bdf8;">${shelter.contactTel}</strong></div>
+          </div>
+          <div style="margin-top: 6px; font-size: 10px; color: #cbd5e1;">
+            สิ่งอำนวยความสะดวก: ${shelter.amenities.join(', ')}
+          </div>
+        </div>
+      `);
+      marker.addTo(sheltersLayerRef.current!);
+    });
+  }, [showShelters]);
+
+  // Update TMD Weather Doppler Radar Rain Echo Sweep Layer
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tmdRadarLayerRef.current) return;
+    tmdRadarLayerRef.current.clearLayers();
+    if (!showTmdRadar) return;
+
+    // 1. Doppler Radar Station Centers (Nong Chok & Phasi Charoen)
+    const radarStations = [
+      { name: 'TMD Nong Chok Doppler Radar', lat: 13.8552, lng: 100.8654, radiusM: 45000 },
+      { name: 'TMD Phasi Charoen Doppler Radar', lat: 13.7142, lng: 100.4351, radiusM: 38000 },
+    ];
+
+    radarStations.forEach((st) => {
+      // Outer radar sweep ring
+      L.circle([st.lat, st.lng], {
+        radius: st.radiusM,
+        color: '#06b6d4',
+        fillColor: '#06b6d4',
+        fillOpacity: 0.04,
+        weight: 1.5,
+        dashArray: '5, 8',
+      }).addTo(tmdRadarLayerRef.current!);
+
+      // Mid ring
+      L.circle([st.lat, st.lng], {
+        radius: st.radiusM * 0.5,
+        color: '#38bdf8',
+        fillColor: '#38bdf8',
+        fillOpacity: 0.03,
+        weight: 1,
+        dashArray: '3, 6',
+      }).addTo(tmdRadarLayerRef.current!);
+    });
+
+    // 2. Simulated Active Precipitation Rain Echo Clusters over Bangkok Basin
+    const rainClusters = [
+      { lat: 13.7850, lng: 100.5820, radius: 6500, color: '#22c55e', intensity: 'Moderate Rain (10-25 mm/h)' },
+      { lat: 13.8200, lng: 100.6200, radius: 4800, color: '#eab308', intensity: 'Heavy Rain Echo (25-45 mm/h)' },
+      { lat: 13.6800, lng: 100.5200, radius: 5200, color: '#38bdf8', intensity: 'Light Rain (5-10 mm/h)' },
+      { lat: 13.7400, lng: 100.7200, radius: 4000, color: '#ef4444', intensity: 'Very Heavy Cloudburst (> 45 mm/h)' },
+    ];
+
+    rainClusters.forEach((cl) => {
+      const echo = L.circle([cl.lat, cl.lng], {
+        radius: cl.radius,
+        color: cl.color,
+        fillColor: cl.color,
+        fillOpacity: 0.28,
+        weight: 1,
+      });
+      echo.bindPopup(`
+        <div style="padding: 8px; font-size: 11px; color: #f8fafc;">
+          <strong style="color: ${cl.color}; font-size: 12px;">กลุ่มฝนเรดาร์ตรวจวัด (Doppler Rain Echo)</strong>
+          <div style="color: #cbd5e1; margin-top: 4px;">ความเข้ม: ${cl.intensity}</div>
+          <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">อ้างอิง: เรดาร์ตรวจอากาศ กทม. หนองจอก/ภาษีเจริญ</div>
+        </div>
+      `);
+      echo.addTo(tmdRadarLayerRef.current!);
+    });
+  }, [showTmdRadar]);
+
   useEffect(() => {
     if (!mapInstanceRef.current || !heatmapLayerRef.current) return;
 
@@ -654,6 +930,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
   const handleCenterBangkok = () =>
     mapInstanceRef.current?.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 1 });
+  const handleCenterThailand = () =>
+    mapInstanceRef.current?.flyTo([13.7367, 100.5231], 6, { duration: 1.2 });
 
   const handleFlyToUser = () => {
     if (userCoords && mapInstanceRef.current) {
@@ -808,57 +1086,21 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                   </span>
                 </button>
 
-                {/* Rapid Rail Transit (BTS/MRT) */}
+                {/* Live Airspace Flight Radar Toggle */}
                 <button
-                  onClick={() => setShowTransit((prev) => !prev)}
+                  onClick={() => onToggleFlights && onToggleFlights()}
                   className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
-                    showTransit
-                      ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-500/40'
+                    showFlights
+                      ? 'bg-cyan-950/40 text-cyan-200 border border-cyan-500/40'
                       : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <Train className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Train Lines (BTS/MRT)</span>
+                    <Plane className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Live Airspace Flights</span>
                   </span>
-                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showTransit ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
-                    {showTransit && <Check className="w-3 h-3 stroke-[3]" />}
-                  </span>
-                </button>
-
-                {/* City Bus Routes (BMTA) */}
-                <button
-                  onClick={() => setShowBus((prev) => !prev)}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
-                    showBus
-                      ? 'bg-blue-950/40 text-blue-200 border border-blue-500/40'
-                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Bus className="w-3.5 h-3.5 text-blue-400" />
-                    <span>City Bus Routes (BMTA)</span>
-                  </span>
-                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showBus ? 'bg-blue-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
-                    {showBus && <Check className="w-3 h-3 stroke-[3]" />}
-                  </span>
-                </button>
-
-                {/* Chao Phraya & Canal Boats */}
-                <button
-                  onClick={() => setShowBoats((prev) => !prev)}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
-                    showBoats
-                      ? 'bg-sky-950/40 text-sky-200 border border-sky-500/40'
-                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Ship className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Boat & Ferry Piers</span>
-                  </span>
-                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showBoats ? 'bg-sky-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
-                    {showBoats && <Check className="w-3 h-3 stroke-[3]" />}
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showFlights ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showFlights && <Check className="w-3 h-3 stroke-[3]" />}
                   </span>
                 </button>
 
@@ -904,6 +1146,81 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     {showWifi && <Check className="w-3 h-3 stroke-[3]" />}
                   </span>
                 </button>
+
+                {/* Canal Water Level Gauges */}
+                <button
+                  onClick={() => setShowCanals((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showCanals
+                      ? 'bg-cyan-950/40 text-cyan-200 border border-cyan-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Droplets className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Canal Water Level (คลอง กทม.)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showCanals ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showCanals && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
+
+                {/* PM2.5 Air Quality Sensors */}
+                <button
+                  onClick={() => setShowAirQuality((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showAirQuality
+                      ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Wind className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Air Quality (PM2.5 ประจำเขต)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showAirQuality ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showAirQuality && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
+
+                {/* Flood Evacuation Shelters & High-Ground Parking */}
+                <button
+                  onClick={() => setShowShelters((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showShelters
+                      ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Flood Shelters & Parking (จุดพักพิง/ที่จอดรถ)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showShelters ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showShelters && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
+
+                {/* TMD Doppler Weather Rain Radar Echo */}
+                <button
+                  onClick={() => {
+                    setShowTmdRadar((prev) => !prev);
+                    tacticalAudio.playRadarSonarPing();
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showTmdRadar
+                      ? 'bg-cyan-950/40 text-cyan-200 border border-cyan-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <CloudRain className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>TMD Rain Radar (เรดาร์ฝน กทม.)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showTmdRadar ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showTmdRadar && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
               </div>
 
               {/* Master Bulk Action */}
@@ -911,28 +1228,30 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                 <button
                   onClick={() => {
                     setShowIncidents(true);
-                    setShowTransit(true);
-                    setShowBus(true);
-                    setShowBoats(true);
                     setShowCCTV(true);
                     setShowRecon(true);
                     setShowWifi(true);
+                    setShowCanals(true);
+                    setShowAirQuality(true);
+                    setShowShelters(true);
+                    setShowTmdRadar(true);
                   }}
-                  className="text-cyan-400 hover:text-cyan-300 font-medium px-2 py-1 rounded hover:bg-slate-900"
+                  className="text-cyan-400 hover:text-cyan-300 font-medium px-2 py-1 rounded hover:bg-slate-900 cursor-pointer"
                 >
                   Enable All
                 </button>
                 <button
                   onClick={() => {
                     setShowIncidents(false);
-                    setShowTransit(false);
-                    setShowBus(false);
-                    setShowBoats(false);
                     setShowCCTV(false);
                     setShowRecon(false);
                     setShowWifi(false);
+                    setShowCanals(false);
+                    setShowAirQuality(false);
+                    setShowShelters(false);
+                    setShowTmdRadar(false);
                   }}
-                  className="text-slate-400 hover:text-rose-400 font-medium px-2 py-1 rounded hover:bg-slate-900"
+                  className="text-slate-400 hover:text-rose-400 font-medium px-2 py-1 rounded hover:bg-slate-900 cursor-pointer"
                 >
                   Clear All
                 </button>
@@ -959,10 +1278,18 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
         <button
           onClick={handleCenterBangkok}
-          title="Reset to Bangkok Center"
+          title="Reset to Bangkok Center (เน้นกรุงเทพฯ)"
           className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer"
         >
-          <Crosshair className="w-5 h-5" />
+          <Crosshair className="w-5 h-5 text-cyan-400" />
+        </button>
+
+        <button
+          onClick={handleCenterThailand}
+          title="ภาพรวมทุกจังหวัดทั่วไทย (View All Thailand)"
+          className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+        >
+          <Globe className="w-5 h-5 text-indigo-400" />
         </button>
 
         <div className="flex flex-col bg-slate-900/90 border border-slate-700/80 rounded-xl shadow-xl overflow-hidden">
@@ -982,14 +1309,25 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           </button>
         </div>
 
-        {/* Flight Radar & Airport Operations Shortcut */}
-        <a
-          href="/dashboard#flights"
-          title="Live Flight Radar & Airport Flight Telemetry"
-          className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 border border-cyan-500/40 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer select-none group"
+        {/* Flight Radar & Airport Operations Shortcut Button */}
+        <button
+          onClick={onToggleFlights}
+          title={showFlights ? "ซ่อนเรดาร์การบิน (Hide Flight Radar)" : "เปิดเรดาร์การบินสด (Show Airspace Flight Radar)"}
+          className={`w-10 h-10 rounded-xl shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer select-none group relative ${
+            showFlights
+              ? 'bg-cyan-500 text-slate-950 font-bold shadow-cyan-500/50 ring-2 ring-cyan-400'
+              : 'bg-slate-900/90 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 border border-cyan-500/40'
+          }`}
         >
-          <Plane className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        </a>
+          <Plane className={`w-5 h-5 transition-transform ${showFlights ? 'rotate-45' : 'group-hover:scale-110'}`} />
+          {flights && flights.length > 0 && (
+            <span className={`absolute -top-1 -right-1 text-[9px] font-mono px-1 rounded-full ${
+              showFlights ? 'bg-slate-950 text-cyan-400 font-bold' : 'bg-cyan-500 text-slate-950 font-extrabold'
+            }`}>
+              {flights.length}
+            </span>
+          )}
+        </button>
       </div>
     </div>
   );

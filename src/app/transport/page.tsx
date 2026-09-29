@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
@@ -23,6 +23,11 @@ export default function TransportPage() {
   const [lines, setLines] = useState<TransportLine[]>(BANGKOK_TRANSIT_LINES);
   const [filterType, setFilterType] = useState<'ALL' | 'BTS' | 'MRT' | 'ARL' | 'SRT' | 'BUS'>('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -201,9 +206,11 @@ export default function TransportPage() {
                 </div>
 
                 <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                  <div className="flex items-center gap-1" suppressHydrationWarning>
+                  <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3 text-slate-500" />
-                    <span>Last Updated: {new Date(line.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span suppressHydrationWarning>
+                      Last Updated: {mounted ? new Date(line.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                    </span>
                   </div>
 
                   <Link

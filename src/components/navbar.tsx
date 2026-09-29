@@ -14,13 +14,20 @@ import {
   Compass,
   RefreshCw,
   Menu,
+  AlertOctagon,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { Incident } from '@/types';
 import { INCIDENT_CONFIG } from '@/lib/utils';
+import { tacticalAudio } from '@/lib/tactical-audio';
 
 interface NavbarProps {
   onOpenReportModal?: () => void;
   onOpenAreaWatchModal?: () => void;
+  onOpenSosModal?: () => void;
+  onOpenDistrictsModal?: () => void;
+  onOpenHazardModal?: () => void;
   onSelectIncident?: (incident: Incident) => void;
   onSearchLocation?: (lat: number, lng: number, label: string) => void;
   onSyncCompleted?: () => void;
@@ -31,6 +38,9 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenReportModal,
   onOpenAreaWatchModal,
+  onOpenSosModal,
+  onOpenDistrictsModal,
+  onOpenHazardModal,
   onSelectIncident,
   onSearchLocation,
   onSyncCompleted,
@@ -75,18 +85,35 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState('');
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Quick preset locations in Bangkok for instant search suggestions
+  useEffect(() => {
+    setIsAudioMuted(tacticalAudio.getMuted());
+  }, []);
+
+  const toggleSound = () => {
+    const isNowMuted = tacticalAudio.toggleMute();
+    setIsAudioMuted(isNowMuted);
+  };
+
+  // Quick preset locations in Bangkok and major provinces for instant search suggestions
   const presetLocations = [
+    { label: 'Bangkok Center (เสาชิงช้า / สยาม)', type: 'LOCATION', lat: 13.7563, lng: 100.5018, icon: '[BKK]' },
     { label: 'Asok Intersection (Sukhumvit 21)', type: 'LOCATION', lat: 13.7371, lng: 100.5604, icon: '[LOC]' },
-    { label: 'Siam Square / Paragon', type: 'LOCATION', lat: 13.7460, lng: 100.5347, icon: '[HUB]' },
-    { label: 'Ha Yaek Lat Phrao', type: 'LOCATION', lat: 13.8123, lng: 100.5604, icon: '[ROAD]' },
-    { label: 'Rama IX Road', type: 'LOCATION', lat: 13.7578, lng: 100.5649, icon: '[TRAFFIC]' },
+    { label: 'Ha Yaek Lat Phrao (ห้าแยกลาดพร้าว)', type: 'LOCATION', lat: 13.8123, lng: 100.5604, icon: '[ROAD]' },
+    { label: 'Nonthaburi (นนทบุรี / บางใหญ่)', type: 'PROVINCE', lat: 13.8621, lng: 100.5144, icon: '[PROV]' },
+    { label: 'Pathum Thani (ปทุมธานี / รังสิต)', type: 'PROVINCE', lat: 13.9892, lng: 100.6178, icon: '[PROV]' },
+    { label: 'Samut Prakan (สมุทรปราการ / ปากน้ำ)', type: 'PROVINCE', lat: 13.5991, lng: 100.5998, icon: '[PROV]' },
+    { label: 'Chiang Mai (เชียงใหม่ / ตัวเมือง)', type: 'PROVINCE', lat: 18.7883, lng: 98.9853, icon: '[PROV]' },
+    { label: 'Chon Buri / Pattaya (ชลบุรี / พัทยา)', type: 'PROVINCE', lat: 12.9276, lng: 100.8771, icon: '[PROV]' },
+    { label: 'Phuket (ภูเก็ต / ตัวเมือง)', type: 'PROVINCE', lat: 7.8804, lng: 98.3923, icon: '[PROV]' },
+    { label: 'Nakhon Ratchasima (นครราชสีมา / โคราช)', type: 'PROVINCE', lat: 14.9799, lng: 102.0978, icon: '[PROV]' },
+    { label: 'Khon Kaen (ขอนแก่น)', type: 'PROVINCE', lat: 16.4322, lng: 102.8236, icon: '[PROV]' },
     { label: 'BTS Asok Station', type: 'TRANSIT', lat: 13.7371, lng: 100.5604, icon: '[BTS]' },
     { label: 'MRT Sukhumvit Station', type: 'TRANSIT', lat: 13.7371, lng: 100.5604, icon: '[MRT]' },
     { label: 'Nong Chok TMD Weather Radar', type: 'TMD', lat: 13.8552, lng: 100.8654, icon: '[RADAR]' },
-    { label: 'Chalong Rat Expressway KM.14', type: 'ACCIDENT', lat: 13.8050, lng: 100.6280, icon: '[EXPWY]' },
+    { label: 'Phasi Charoen Weather Radar', type: 'TMD', lat: 13.7142, lng: 100.4351, icon: '[RADAR]' },
   ];
 
   useEffect(() => {
@@ -97,29 +124,30 @@ export const Navbar: React.FC<NavbarProps> = ({
 
     const q = searchQuery.toLowerCase().trim();
 
-    // Search in active incidents
+    // Search in active incidents (by title, location, district, or province)
     const matchedIncidents = incidents
       .filter(
         (i) =>
           i.title.toLowerCase().includes(q) ||
           i.locationName.toLowerCase().includes(q) ||
-          (i.district && i.district.toLowerCase().includes(q))
+          (i.district && i.district.toLowerCase().includes(q)) ||
+          (i.province && i.province.toLowerCase().includes(q))
       )
       .map((i) => ({
         type: 'INCIDENT',
         label: i.title,
-        sub: i.locationName,
+        sub: `${i.locationName} (${i.province || 'กรุงเทพมหานคร'})`,
         incident: i,
-        icon: INCIDENT_CONFIG[i.type]?.icon || '📍',
+        icon: INCIDENT_CONFIG[i.type]?.icon || '[PIN]',
       }));
 
-    // Search in preset Bangkok areas / stations
+    // Search in preset areas, stations, and provinces
     const matchedLocations = presetLocations
       .filter((loc) => loc.label.toLowerCase().includes(q))
       .map((l) => ({
         type: l.type,
         label: l.label,
-        sub: l.type === 'TRANSIT' ? 'Transit Hub' : l.type === 'TMD' ? 'Weather Radar' : 'Bangkok Landmark',
+        sub: l.type === 'TRANSIT' ? 'Transit Hub' : l.type === 'TMD' ? 'Weather Radar' : l.type === 'PROVINCE' ? 'Province / Region' : 'Bangkok Landmark',
         lat: l.lat,
         lng: l.lng,
         icon: l.icon,
@@ -277,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Desktop Navigation Links (Visible on tablets and desktop: 768px+) */}
+          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1.5 z-[600]">
             <a
               href="/"
@@ -289,25 +317,32 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Live Map</span>
-            </a>
-
-            <a
-              href="/dashboard"
-              onClick={(e) => navigateTo(e, '/dashboard')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
-                pathname === '/dashboard'
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Operations & Analytics</span>
+              <span>Bangkok Live Map</span>
             </a>
           </nav>
 
-          {/* Action Buttons: TMD Live Sync & Quick Report */}
+          {/* Action Buttons: TMD Live Sync, SOS, 50 Districts & Quick Report */}
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* SOS Emergency Hotline Quick Dial Button */}
+            <button
+              onClick={onOpenSosModal}
+              title="สายด่วนฉุกเฉินและกู้ภัย กทม. 24 ชั่วโมง (SOS 24 HR)"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 hover:text-white border border-rose-500/40 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-sm shadow-rose-500/20 active:scale-95"
+            >
+              <AlertOctagon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400 animate-pulse" />
+              <span>SOS</span>
+            </button>
+
+            {/* 50 Districts Quick Picker */}
+            <button
+              onClick={onOpenDistrictsModal}
+              title="เลือกดู 50 เขต กทม. (Bangkok Districts Selector)"
+              className="hidden lg:flex px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all items-center gap-1.5 text-xs font-medium cursor-pointer"
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400" />
+              <span>50 เขต</span>
+            </button>
+
             {/* Live TMD & Traffic Sync Button */}
             <button
               onClick={handleLiveSync}
@@ -319,6 +354,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden xl:inline">
                 {isSyncing ? 'Syncing...' : 'Live TMD Sync'}
               </span>
+            </button>
+
+            {/* Tactical Audio Feedback Toggle */}
+            <button
+              onClick={toggleSound}
+              title={isAudioMuted ? 'เปิดเสียงเอฟเฟกต์ (Tactical Audio Muted)' : 'ปิดเสียงเอฟเฟกต์ (Tactical Audio Active)'}
+              className="p-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+            >
+              {isAudioMuted ? (
+                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              )}
+              <span className="hidden 2xl:inline">{isAudioMuted ? 'Muted' : 'Audio On'}</span>
             </button>
 
             <button
@@ -359,7 +408,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Dropdown Navigation Drawer */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-slate-800 bg-slate-900/98 backdrop-blur-2xl p-3.5 space-y-2 animate-in slide-in-from-top-2 duration-150 shadow-2xl">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-2">
               <a
                 href="/"
                 onClick={(e) => {
@@ -375,26 +424,41 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="w-7 h-7 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400">
                   <MapPin className="w-4 h-4" />
                 </div>
-                <span>Live Map</span>
+                <div>
+                  <span className="font-bold">Bangkok Live Map</span>
+                  <p className="text-[10px] text-slate-400 font-normal">Real-Time Incidents & Recon</p>
+                </div>
               </a>
 
-              <a
-                href="/dashboard"
-                onClick={(e) => {
-                  setIsMobileMenuOpen(false);
-                  navigateTo(e, '/dashboard');
-                }}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none ${
-                  pathname === '/dashboard'
-                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
-                    : 'bg-slate-800/80 text-slate-200 border-slate-700/80 hover:bg-slate-800'
-                }`}
-              >
-                <div className="w-7 h-7 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
-                <span>Operations Center</span>
-              </a>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (onOpenSosModal) onOpenSosModal();
+                  }}
+                  className="p-2.5 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-left flex items-center gap-2 cursor-pointer"
+                >
+                  <AlertOctagon className="w-4 h-4 text-rose-400 flex-shrink-0 animate-pulse" />
+                  <div>
+                    <span className="font-extrabold text-xs text-rose-300">SOS สายด่วน</span>
+                    <p className="text-[9px] text-slate-400 font-normal">199 / 1669 / 1555</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (onOpenDistrictsModal) onOpenDistrictsModal();
+                  }}
+                  className="p-2.5 rounded-2xl bg-slate-850 border border-slate-750 text-left flex items-center gap-2 cursor-pointer"
+                >
+                  <Compass className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                  <div>
+                    <span className="font-extrabold text-xs text-slate-200">50 เขต กทม.</span>
+                    <p className="text-[9px] text-slate-400 font-normal">สำรวจพิกัดตามเขต</p>
+                  </div>
+                </button>
+              </div>
             </div>
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center gap-2">
@@ -411,7 +475,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="py-2.5 px-3 bg-slate-800 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Bell className="w-4 h-4 text-amber-400" />
-                <span>Area Watch</span>
+                <span>Watch</span>
+              </button>
+
+              <button
+                onClick={toggleSound}
+                className="py-2.5 px-3 bg-slate-800 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {isAudioMuted ? <VolumeX className="w-4 h-4 text-slate-500" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+                <span>{isAudioMuted ? 'Muted' : 'Audio'}</span>
               </button>
             </div>
           </div>

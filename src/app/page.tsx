@@ -10,15 +10,38 @@ import { CreateReportModal } from '@/components/incidents/CreateReportModal';
 import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
 import { SatelliteWeatherBar } from '@/components/weather/SatelliteWeatherBar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { CompactFlightRadarDrawer } from '@/components/transit/CompactFlightRadarDrawer';
+import { BangkokEmergencySosModal } from '@/components/modals/BangkokEmergencySosModal';
+import { BangkokDistrictsModal } from '@/components/modals/BangkokDistrictsModal';
+import { SafeRouteHazardModal } from '@/components/modals/SafeRouteHazardModal';
+import { BangkokDistrict } from '@/lib/bkk-environmental-data';
+import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
-import { Bell, Radio, CheckCircle2 } from 'lucide-react';
+import {
+  Bell,
+  Radio,
+  CheckCircle2,
+  MapPin,
+  Plus,
+  X,
+  Plane,
+  AlertOctagon,
+  Compass,
+  ShieldCheck,
+} from 'lucide-react';
 
 export default function HomePage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [filteredIncidents, setFilteredIncidents] = useState<Incident[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
-  // Filters
+  // Live Airspace Radar Telemetry (Suvarnabhumi & Don Mueang ADS-B)
+  const [flightData, setFlightData] = useState<AirportFlightResponse | null>(null);
+  const [isFlightLoading, setIsFlightLoading] = useState(false);
+  const [showFlightRadar, setShowFlightRadar] = useState(false);
+
+  // Filters & Selected Coordinates
+  const [clickedMapCoords, setClickedMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedType, setSelectedType] = useState<IncidentType | 'ALL'>('ALL');
   const [selectedTime, setSelectedTime] = useState<TimeFilter>('LIVE');
   const [showHistorical, setShowHistorical] = useState(false);
@@ -31,6 +54,9 @@ export default function HomePage() {
   // Modals
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isAreaWatchModalOpen, setIsAreaWatchModalOpen] = useState(false);
+  const [isSosModalOpen, setIsSosModalOpen] = useState(false);
+  const [isDistrictsModalOpen, setIsDistrictsModalOpen] = useState(false);
+  const [isHazardModalOpen, setIsHazardModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -48,9 +74,31 @@ export default function HomePage() {
     }
   }, []);
 
+  // Fetch Live Flights Telemetry
+  const fetchFlights = useCallback(async () => {
+    setIsFlightLoading(true);
+    try {
+      const res = await fetch('/api/flights');
+      const data = await res.json();
+      if (data.success) {
+        setFlightData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching live flights:', err);
+    } finally {
+      setIsFlightLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchIncidents();
   }, [fetchIncidents]);
+
+  useEffect(() => {
+    fetchFlights();
+    const interval = setInterval(fetchFlights, 30000);
+    return () => clearInterval(interval);
+  }, [fetchFlights]);
 
   // Check URL query parameters for modal opening and category filters
   useEffect(() => {
@@ -144,6 +192,15 @@ export default function HomePage() {
     };
   }, [selectedIncident]);
 
+  /**
+   * ARCHITECTURE SPECIFICATION (AlertBKK Core):
+   * 1. Priority Focus: Bangkok Metropolitan Region (BKK).
+   *    AlertBKK is primarily designed to serve Bangkok first; default camera views,
+   *    recon layers, and telemetry anchor around Bangkok (13.7563, 100.5018).
+   * 2. Provincial Extensibility: Incidents reported across other provinces in Thailand
+   *    remain fully loaded and queryable on the map without cluttering the UI with dedicated
+   *    scope filter toggle buttons.
+   */
   // Apply Client Filtering
   useEffect(() => {
     let list = [...incidents];
@@ -224,6 +281,12 @@ export default function HomePage() {
     }
   };
 
+  // Consolidate BKK & DMK active flights from telemetry response
+  const activeFlights = flightData
+    ? [...flightData.airports.suvarnabhumi.flights, ...flightData.airports.donmueang.flights]
+    : [];
+  const totalFlightCount = flightData?.totalAirborneInBKKBasin || activeFlights.length;
+
   return (
     <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-slate-950">
       {/* 1. Top Navbar */}
@@ -232,6 +295,9 @@ export default function HomePage() {
         activeCount={incidents.filter((i) => i.status === 'ACTIVE').length}
         onOpenReportModal={() => setIsReportModalOpen(true)}
         onOpenAreaWatchModal={() => setIsAreaWatchModalOpen(true)}
+        onOpenSosModal={() => setIsSosModalOpen(true)}
+        onOpenDistrictsModal={() => setIsDistrictsModalOpen(true)}
+        onOpenHazardModal={() => setIsHazardModalOpen(true)}
         onSelectIncident={handleSelectIncident}
         onSearchLocation={handleSearchLocation}
         onSyncCompleted={fetchIncidents}
@@ -250,6 +316,17 @@ export default function HomePage() {
           flyToCoords={flyToCoords}
           userCoords={userCoords}
           watchArea={watchArea}
+          flights={activeFlights}
+          showFlights={showFlightRadar}
+          onToggleFlights={() => setShowFlightRadar((prev) => !prev)}
+          onMapClick={(lat, lng) => {
+            setClickedMapCoords({ lat, lng });
+            setLiveToast({
+              title: 'ปักหมุดตำแหน่งบนแผนที่',
+              message: `พิกัด ${lat.toFixed(4)}, ${lng.toFixed(4)} (คลิกปุ่มด้านล่างเพื่อปักหมุดบ้านหรือแจ้งเหตุ)`,
+            });
+            setTimeout(() => setLiveToast(null), 3500);
+          }}
           onLocateUser={(coords) => {
             setUserCoords(coords);
             setLiveToast({
@@ -271,7 +348,7 @@ export default function HomePage() {
           <span className="text-cyan-300">BASIN SCAN: ACTIVE</span>
         </div>
 
-        {/* Top-Left Filter Bar (pointer-events-none on outer container so it never blocks map clicks) */}
+        {/* Top-Left Filter Bar & Quick Flight Radar Launcher */}
         <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-100px)] sm:max-w-xl z-[500] pointer-events-none flex flex-col gap-2">
           <div className="pointer-events-auto">
             <FilterPanel
@@ -283,6 +360,63 @@ export default function HomePage() {
               onToggleHistorical={setShowHistorical}
               incidents={incidents}
             />
+          </div>
+
+          {/* Quick Tactical Action Pills */}
+          <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* Airspace Flight Radar Launcher Pill */}
+            <button
+              onClick={() => setShowFlightRadar((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none ${
+                showFlightRadar
+                  ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-300 shadow-cyan-500/30'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white border-cyan-500/40'
+              }`}
+              title="ดูสายการบินและเรดาร์น่านฟ้าสด (BKK & DMK)"
+            >
+              <Plane className={`w-3.5 h-3.5 ${showFlightRadar ? 'rotate-45' : ''}`} />
+              <span>สายการบิน</span>
+              {totalFlightCount > 0 && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                    showFlightRadar
+                      ? 'bg-slate-950 text-cyan-300'
+                      : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
+                  }`}
+                >
+                  {totalFlightCount} ลำ
+                </span>
+              )}
+            </button>
+
+            {/* 50 Districts Quick Selector Pill */}
+            <button
+              onClick={() => setIsDistrictsModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-750 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="เลือกดูพิกัด 50 เขต กทม."
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400" />
+              <span>50 เขต</span>
+            </button>
+
+            {/* Safe Commute / Hazard Scanner Button */}
+            <button
+              onClick={() => setIsHazardModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-emerald-300 hover:text-white border border-emerald-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="สแกนเส้นทางกลับบ้าน/ที่หมาย ปลอดภัยจากน้ำท่วมและอุบัติเหตุ"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>สแกนเส้นทาง</span>
+            </button>
+
+            {/* SOS Hotline Button */}
+            <button
+              onClick={() => setIsSosModalOpen(true)}
+              className="sm:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 backdrop-blur-xl text-xs font-bold shadow-lg transition-all cursor-pointer"
+            >
+              <AlertOctagon className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+              <span>SOS</span>
+            </button>
           </div>
         </div>
 
@@ -297,6 +431,18 @@ export default function HomePage() {
           />
         </div>
 
+        {/* Live Flight Radar Compact Drawer */}
+        <CompactFlightRadarDrawer
+          isOpen={showFlightRadar}
+          onClose={() => setShowFlightRadar(false)}
+          flightData={flightData}
+          loading={isFlightLoading}
+          onRefresh={fetchFlights}
+          onSelectFlight={(flight) => {
+            setFlyToCoords({ lat: flight.latitude, lng: flight.longitude, zoom: 15 });
+          }}
+        />
+
         {/* Selected Incident Floating Popup Card */}
         {selectedIncident && (
           <div className="absolute top-20 left-3 sm:left-4 max-w-sm sm:max-w-md w-[calc(100%-24px)] z-[600] pointer-events-auto animate-in slide-in-from-top-4 duration-200">
@@ -307,6 +453,38 @@ export default function HomePage() {
               onDispute={handleDisputeIncident}
               onClose={() => setSelectedIncident(null)}
             />
+          </div>
+        )}
+
+        {/* Floating Quick Action when User clicks anywhere on the Map (Home Pin / Report Here / Scan Path) */}
+        {clickedMapCoords && !selectedIncident && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] bg-slate-900/95 border border-amber-500/60 text-slate-100 px-3.5 py-2 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-wrap items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-[92vw]">
+            <div className="flex items-center gap-1.5 text-amber-400 text-xs font-mono">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>{clickedMapCoords.lat.toFixed(4)}, {clickedMapCoords.lng.toFixed(4)}</span>
+            </div>
+            <div className="h-4 w-[1px] bg-slate-700 hidden sm:block" />
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-cyan-500/20"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>ปักหมุดบ้าน / แจ้งเหตุ</span>
+            </button>
+            <button
+              onClick={() => setIsHazardModalOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-emerald-600/20"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>สแกนเส้นทางมาจุดนี้</span>
+            </button>
+            <button
+              onClick={() => setClickedMapCoords(null)}
+              className="text-slate-400 hover:text-white p-1 rounded-lg"
+              title="Close pin"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
@@ -330,7 +508,7 @@ export default function HomePage() {
           setIncidents((prev) => [newInc, ...prev]);
           handleSelectIncident(newInc);
         }}
-        currentMapCoords={userCoords || { lat: 13.7563, lng: 100.5018 }}
+        currentMapCoords={clickedMapCoords || userCoords || { lat: 13.7563, lng: 100.5018 }}
       />
 
       <AreaWatchModal
@@ -348,8 +526,46 @@ export default function HomePage() {
         }}
       />
 
+      {/* Bangkok Emergency SOS Hotlines Modal */}
+      <BangkokEmergencySosModal
+        isOpen={isSosModalOpen}
+        onClose={() => setIsSosModalOpen(false)}
+        userCoords={userCoords}
+      />
+
+      {/* Bangkok 50 Districts Explorer Modal */}
+      <BangkokDistrictsModal
+        isOpen={isDistrictsModalOpen}
+        onClose={() => setIsDistrictsModalOpen(false)}
+        onSelectDistrict={(district) => {
+          setFlyToCoords({ lat: district.lat, lng: district.lng, zoom: 14 });
+          setLiveToast({
+            title: `สำรวจพื้นที่เขต${district.nameTh} (${district.nameEn})`,
+            message: `พิกัด ${district.lat.toFixed(4)}, ${district.lng.toFixed(4)} • รหัสไปรษณีย์ ${district.postalCode}`,
+          });
+          setTimeout(() => setLiveToast(null), 4000);
+        }}
+      />
+
+      {/* Safe Commute / Hazard Scanner Modal */}
+      <SafeRouteHazardModal
+        isOpen={isHazardModalOpen}
+        onClose={() => setIsHazardModalOpen(false)}
+        userCoords={userCoords}
+        targetCoords={clickedMapCoords}
+        incidents={incidents}
+        onFlyToIncident={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 15 });
+        }}
+      />
+
       {/* Mobile App Bottom Navigation Bar */}
-      <MobileBottomNav onOpenReport={() => setIsReportModalOpen(true)} />
+      <MobileBottomNav
+        onOpenReport={() => setIsReportModalOpen(true)}
+        onToggleFlights={() => setShowFlightRadar((prev) => !prev)}
+        showFlights={showFlightRadar}
+        flightCount={totalFlightCount}
+      />
     </div>
   );
 }

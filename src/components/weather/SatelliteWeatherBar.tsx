@@ -40,10 +40,34 @@ export function SatelliteWeatherBar() {
   };
 
   useEffect(() => {
-    fetchWeather();
-    // Auto refresh every 3 minutes
-    const interval = setInterval(fetchWeather, 3 * 60 * 1000);
-    return () => clearInterval(interval);
+    let ignore = false;
+    fetch('/api/weather')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!ignore && data.success && data.telemetry) {
+          setTelemetry(data.telemetry);
+        }
+      })
+      .catch((err) => console.error('Failed to load weather telemetry:', err))
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    const interval = setInterval(() => {
+      fetch('/api/weather')
+        .then((res) => res.json())
+        .then((data) => {
+          if (!ignore && data.success && data.telemetry) {
+            setTelemetry(data.telemetry);
+          }
+        })
+        .catch((err) => console.error(err));
+    }, 3 * 60 * 1000);
+
+    return () => {
+      ignore = true;
+      clearInterval(interval);
+    };
   }, []);
 
   if (!telemetry && loading) {

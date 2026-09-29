@@ -46,11 +46,19 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
   const [longitude, setLongitude] = useState<number>(currentMapCoords?.lng || 100.5018);
   const [locationName, setLocationName] = useState('Ratchadaphisek Road');
   const [district, setDistrict] = useState('Chatuchak');
+  const [province, setProvince] = useState('กรุงเทพมหานคร');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<Severity>('MEDIUM');
   const [reporterName, setReporterName] = useState('Citizen Reporter');
   const [images, setImages] = useState<{ url: string; caption?: string }[]>([]);
+
+  React.useEffect(() => {
+    if (currentMapCoords) {
+      setLatitude(Number(currentMapCoords.lat.toFixed(5)));
+      setLongitude(Number(currentMapCoords.lng.toFixed(5)));
+    }
+  }, [currentMapCoords]);
 
   // Category specifics
   const [floodDetails, setFloodDetails] = useState<FloodDetails>({
@@ -141,8 +149,8 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
         latitude,
         longitude,
         locationName,
-        district: district || 'Bangkok',
-        province: 'Bangkok',
+        district: district || (province === 'กรุงเทพมหานคร' ? 'กรุงเทพมหานคร' : 'อำเภอเมือง'),
+        province: province || 'กรุงเทพมหานคร',
         severity,
         createdByName: reporterName || 'Citizen Reporter',
         images,
@@ -284,6 +292,18 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                   <Navigation className="w-4 h-4" />
                   <span>Use My Current Device GPS</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocationName('บ้านของฉัน (My Home)');
+                    if (!title) setTitle('จุดหมุดบ้าน / เฝ้าระวังพื้นที่ที่พักอาศัย');
+                    if (district === 'Chatuchak') setDistrict('ที่พักอาศัย');
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>ปักหมุดบ้านของฉัน</span>
+                </button>
               </div>
 
               <div>
@@ -294,7 +314,7 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                   type="text"
                   value={locationName}
                   onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="e.g. Ratchadaphisek Rd near Criminal Court, Asok Intersection"
+                  placeholder="e.g. Ratchadaphisek Rd, Asok Intersection, หรือ บ้านของฉัน"
                   className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
@@ -302,26 +322,51 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    District
+                    District / อำเภอ-เขต
                   </label>
                   <input
                     type="text"
                     value={district}
                     onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="e.g. Chatuchak, Watthana, Bang Rak"
+                    placeholder="e.g. Chatuchak, Watthana, เมือง"
                     className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Province
+                    Province / จังหวัด
                   </label>
                   <input
                     type="text"
-                    defaultValue="Bangkok"
-                    disabled
-                    className="w-full px-3.5 py-2 bg-slate-800/50 border border-slate-700/60 rounded-xl text-sm text-slate-400"
+                    list="thailand-provinces-list"
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    placeholder="กรุงเทพมหานคร หรือจังหวัดอื่น..."
+                    className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
+                  <datalist id="thailand-provinces-list">
+                    <option value="กรุงเทพมหานคร" />
+                    <option value="นนทบุรี" />
+                    <option value="ปทุมธานี" />
+                    <option value="สมุทรปราการ" />
+                    <option value="สมุทรสาคร" />
+                    <option value="นครปฐม" />
+                    <option value="ชลบุรี" />
+                    <option value="ระยอง" />
+                    <option value="พระนครศรีอยุธยา" />
+                    <option value="ฉะเชิงเทรา" />
+                    <option value="เชียงใหม่" />
+                    <option value="เชียงราย" />
+                    <option value="พิษณุโลก" />
+                    <option value="ขอนแก่น" />
+                    <option value="นครราชสีมา" />
+                    <option value="อุดรธานี" />
+                    <option value="อุบลราชธานี" />
+                    <option value="ภูเก็ต" />
+                    <option value="สุราษฎร์ธานี" />
+                    <option value="สงขลา" />
+                    <option value="กระบี่" />
+                  </datalist>
                 </div>
               </div>
 
@@ -333,7 +378,7 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                   </span>
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  (Bangkok Metro Grid)
+                  {province === 'กรุงเทพมหานคร' ? '(Bangkok Focus)' : `(${province})`}
                 </span>
               </div>
             </div>

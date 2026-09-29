@@ -20,6 +20,11 @@ export function IntegratedTransitSection() {
   const [lines, setLines] = useState<TransportLine[]>(BANGKOK_TRANSIT_LINES);
   const [filterType, setFilterType] = useState<'ALL' | 'BTS' | 'MRT' | 'ARL' | 'SRT' | 'BUS'>('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -182,9 +187,11 @@ export function IntegratedTransitSection() {
               </div>
 
               <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-                <div className="flex items-center gap-1" suppressHydrationWarning>
+                <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3 text-slate-500" />
-                  <span>Updated: {new Date(line.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span suppressHydrationWarning>
+                    Updated: {mounted ? new Date(line.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                  </span>
                 </div>
 
                 <Link

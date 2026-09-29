@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Plane,
   Compass,
@@ -28,7 +28,7 @@ export function AirportFlightRadarSection() {
   const [selectedFlight, setSelectedFlight] = useState<FlightItem | null>(null);
   const [viewMode, setViewMode] = useState<'SCHEDULE_TABLE' | 'CARDS'>('SCHEDULE_TABLE');
 
-  const fetchFlights = async () => {
+  const fetchFlights = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/flights');
@@ -41,12 +41,35 @@ export function AirportFlightRadarSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchFlights();
-    const interval = setInterval(fetchFlights, 20000); // 20s poll
-    return () => clearInterval(interval);
+    let ignore = false;
+    fetch('/api/flights')
+      .then((res) => res.json())
+      .then((json) => {
+        if (!ignore && json.success) {
+          setData(json);
+        }
+      })
+      .catch((err) => console.error('Failed to load flights:', err))
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    const interval = setInterval(() => {
+      fetch('/api/flights')
+        .then((res) => res.json())
+        .then((json) => {
+          if (!ignore && json.success) setData(json);
+        })
+        .catch((err) => console.error(err));
+    }, 20000); // 20s poll
+
+    return () => {
+      ignore = true;
+      clearInterval(interval);
+    };
   }, []);
 
   const bkkFlights = data?.airports.suvarnabhumi.flights || [];

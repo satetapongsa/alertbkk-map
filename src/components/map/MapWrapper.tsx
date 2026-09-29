@@ -3,6 +3,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { Incident } from '@/types';
+import { FlightItem } from '@/app/api/flights/route';
 import { Compass } from 'lucide-react';
 
 interface MapWrapperProps {
@@ -14,6 +15,9 @@ interface MapWrapperProps {
   onMapClick?: (lat: number, lng: number) => void;
   watchArea?: { lat: number; lng: number; radiusKm: number } | null;
   onLocateUser?: (coords: { lat: number; lng: number }) => void;
+  flights?: FlightItem[];
+  showFlights?: boolean;
+  onToggleFlights?: () => void;
 }
 
 const DynamicLeafletMap = dynamic(

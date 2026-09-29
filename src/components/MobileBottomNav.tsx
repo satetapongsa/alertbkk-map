@@ -2,13 +2,21 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { MapPin, Train, BarChart3, PlusCircle } from 'lucide-react';
+import { MapPin, Plane, PlusCircle } from 'lucide-react';
 
 interface MobileBottomNavProps {
   onOpenReport?: () => void;
+  onToggleFlights?: () => void;
+  showFlights?: boolean;
+  flightCount?: number;
 }
 
-export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenReport }) => {
+export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
+  onOpenReport,
+  onToggleFlights,
+  showFlights = false,
+  flightCount = 0,
+}) => {
   const pathname = usePathname();
 
   const handleNavigate = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -26,12 +34,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenReport }
         href="/"
         onClick={(e) => handleNavigate(e, '/')}
         className={`flex flex-col items-center justify-center py-1 px-4 rounded-xl transition-all cursor-pointer select-none ${
-          pathname === '/'
+          pathname === '/' && !showFlights
             ? 'text-cyan-400 font-bold'
             : 'text-slate-400 hover:text-slate-200'
         }`}
       >
-        <div className={`p-1.5 rounded-lg ${pathname === '/' ? 'bg-cyan-500/20' : ''}`}>
+        <div className={`p-1.5 rounded-lg ${pathname === '/' && !showFlights ? 'bg-cyan-500/20' : ''}`}>
           <MapPin className="w-5 h-5" />
         </div>
         <span className="text-[11px] mt-0.5">Map</span>
@@ -60,21 +68,26 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenReport }
         </a>
       )}
 
-      {/* 3. All-in-One Dashboard Tab */}
-      <a
-        href="/dashboard"
-        onClick={(e) => handleNavigate(e, '/dashboard')}
-        className={`flex flex-col items-center justify-center py-1 px-4 rounded-xl transition-all cursor-pointer select-none ${
-          pathname === '/dashboard'
-            ? 'text-emerald-400 font-bold'
+      {/* 3. Airspace Flight Radar Toggle Button */}
+      <button
+        onClick={onToggleFlights}
+        type="button"
+        className={`flex flex-col items-center justify-center py-1 px-4 rounded-xl transition-all cursor-pointer select-none relative ${
+          showFlights
+            ? 'text-cyan-300 font-bold'
             : 'text-slate-400 hover:text-slate-200'
         }`}
       >
-        <div className={`p-1.5 rounded-lg ${pathname === '/dashboard' ? 'bg-emerald-500/20' : ''}`}>
-          <BarChart3 className="w-5 h-5" />
+        <div className={`p-1.5 rounded-lg relative ${showFlights ? 'bg-cyan-500/25 ring-1 ring-cyan-400' : ''}`}>
+          <Plane className={`w-5 h-5 ${showFlights ? 'rotate-45 text-cyan-300' : ''}`} />
+          {flightCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-cyan-500 text-slate-950 text-[9px] font-bold px-1 rounded-full">
+              {flightCount}
+            </span>
+          )}
         </div>
-        <span className="text-[11px] mt-0.5">Dashboard</span>
-      </a>
+        <span className="text-[11px] mt-0.5">Airspace</span>
+      </button>
     </nav>
   );
 };

@@ -333,7 +333,7 @@ export default function IncidentDetailPage() {
                   <div className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-cyan-500 border-2 border-slate-900"></div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-cyan-400 font-bold">
+                      <span className="font-mono text-xs text-cyan-400 font-bold" suppressHydrationWarning>
                         {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       {item.user && (

@@ -23,11 +23,14 @@ import {
   Car,
   Truck,
   Droplets,
-  Gauge,
   Train,
   Check,
   X,
+  Share2,
+  Copy,
+  Gauge,
 } from 'lucide-react';
+import { tacticalAudio } from '@/lib/tactical-audio';
 
 interface IncidentCardProps {
   incident: Incident;
@@ -48,6 +51,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
   const [isConfirming, setIsConfirming] = useState(false);
   const [isDisputing, setIsDisputing] = useState(false);
   const [hasVoted, setHasVoted] = useState<'CONFIRMED' | 'DISPUTED' | null>(null);
+  const [copiedSitRep, setCopiedSitRep] = useState(false);
 
   const cfg = INCIDENT_CONFIG[incident.type] || INCIDENT_CONFIG.GENERAL;
   const sev = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.MEDIUM;
@@ -78,6 +82,17 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
     } finally {
       setIsDisputing(false);
     }
+  };
+
+  const handleShareSitRep = () => {
+    tacticalAudio.playTacticalBeep(960, 0.05);
+    const waterInfo = incident.floodDetails?.waterLevelCm
+      ? `ระดับน้ำท่วม: ${incident.floodDetails.waterLevelCm} ซม. (${incident.floodDetails.smallCarPassable ? 'รถเล็กผ่านได้' : 'รถเก๋งไม่ควรผ่าน'})\n`
+      : '';
+    const text = `[ALERTBKK SITUATION REPORT]\nประเภทเหตุ: ${cfg.label}\nสถานที่: ${incident.locationName} (${incident.province || 'กทม.'})\n${waterInfo}รายละเอียด: ${incident.description}\nพิกัด GPS: ${incident.latitude.toFixed(4)}, ${incident.longitude.toFixed(4)}\nเวลา: ${new Date(incident.createdAt).toLocaleTimeString('th-TH')}\nตรวจสอบแผนที่สด: https://alertbkk-map.vercel.app/incident/${incident.id}`;
+    navigator.clipboard.writeText(text);
+    setCopiedSitRep(true);
+    setTimeout(() => setCopiedSitRep(false), 2500);
   };
 
   return (
@@ -143,21 +158,35 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
       {/* Category-Specific Custom Badges */}
       {/* 1. FLOOD Details */}
       {incident.type === 'FLOOD' && incident.floodDetails && (
-        <div className="bg-cyan-950/40 border border-cyan-800/50 rounded-xl p-2.5 text-xs grid grid-cols-2 gap-2 text-cyan-200">
-          <div className="flex items-center gap-1.5">
-            <Droplets className="w-4 h-4 text-cyan-400" />
-            <span>Water Level: <strong className="text-white">{incident.floodDetails.waterLevelCm ? `${incident.floodDetails.waterLevelCm} cm` : incident.floodDetails.waterLevelCategory}</strong></span>
+        <div className="bg-cyan-950/40 border border-cyan-800/50 rounded-xl p-2.5 text-xs flex flex-col gap-2 text-cyan-200">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-1.5">
+              <Droplets className="w-4 h-4 text-cyan-400" />
+              <span>ระดับน้ำ: <strong className="text-white">{incident.floodDetails.waterLevelCm ? `${incident.floodDetails.waterLevelCm} ซม.` : incident.floodDetails.waterLevelCategory}</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Car className="w-4 h-4 text-cyan-400" />
+              <span>รถเก๋ง: <strong className={incident.floodDetails.smallCarPassable ? 'text-emerald-400' : 'text-red-400'}>{incident.floodDetails.smallCarPassable ? 'ผ่านได้ชะลอตัว' : 'เสี่ยงน้ำเข้าท่อ'}</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Truck className="w-4 h-4 text-cyan-400" />
+              <span>รถยกสูง/กระบะ: <strong className={incident.floodDetails.largeTruckPassable ? 'text-emerald-400' : 'text-amber-400'}>{incident.floodDetails.largeTruckPassable ? 'ผ่านได้' : 'ควรระวัง'}</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>สภาพผิวทาง: <strong className={incident.floodDetails.roadBlocked ? 'text-red-400' : 'text-emerald-400'}>{incident.floodDetails.roadBlocked ? 'ปิดการจราจร' : 'เปิดสัญจร'}</strong></span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Car className="w-4 h-4 text-cyan-400" />
-            <span>Sedans: <strong className={incident.floodDetails.smallCarPassable ? 'text-emerald-400' : 'text-red-400'}>{incident.floodDetails.smallCarPassable ? 'Passable' : 'Risk'}</strong></span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Truck className="w-4 h-4 text-cyan-400" />
-            <span>Trucks: <strong className={incident.floodDetails.largeTruckPassable ? 'text-emerald-400' : 'text-amber-400'}>{incident.floodDetails.largeTruckPassable ? 'Passable' : 'Slow'}</strong></span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span>Roadway: <strong className={incident.floodDetails.roadBlocked ? 'text-red-400' : 'text-emerald-400'}>{incident.floodDetails.roadBlocked ? 'Blocked' : 'Open'}</strong></span>
+
+          {/* Vehicle Clearance Risk Indicator Bar */}
+          <div className="pt-1.5 border-t border-cyan-800/40 flex items-center justify-between text-[11px]">
+            <span className="text-slate-400">คำแนะนำยานพาหนะ:</span>
+            <span className={`font-bold px-2 py-0.5 rounded-md ${
+              !incident.floodDetails.smallCarPassable
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+            }`}>
+              {!incident.floodDetails.smallCarPassable ? 'เฉพาะรถยกสูง / SUV / 4WD' : 'รถทุกประเภทสัญจรได้'}
+            </span>
           </div>
         </div>
       )}
@@ -309,6 +338,20 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
           <span>Timeline</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
+
+        {/* Tactical SitRep Copy / Share Button */}
+        <button
+          onClick={handleShareSitRep}
+          className={`py-2 px-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+            copiedSitRep
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+              : 'bg-slate-800 hover:bg-slate-700 border-slate-700/80 text-slate-300 hover:text-white'
+          }`}
+          title="คัดลอกรายงานสรุปสถานการณ์ (Copy Situation Report for LINE / Twitter)"
+        >
+          {copiedSitRep ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+          <span>{copiedSitRep ? 'คัดลอกแล้ว' : 'แชร์'}</span>
+        </button>
       </div>
     </div>
   );
