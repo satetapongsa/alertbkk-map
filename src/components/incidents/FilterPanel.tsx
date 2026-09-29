@@ -2,7 +2,19 @@
 
 import React from 'react';
 import { IncidentType, TimeFilter, Incident } from '@/types';
-import { Clock, History, Train, BarChart3 } from 'lucide-react';
+import {
+  Clock,
+  History,
+  Train,
+  BarChart3,
+  Zap,
+  Droplets,
+  Car,
+  AlertTriangle,
+  ShieldAlert,
+  MapPin,
+  Construction
+} from 'lucide-react';
 
 interface FilterPanelProps {
   selectedType: IncidentType | 'ALL';
@@ -23,48 +35,48 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   onToggleHistorical,
   incidents,
 }) => {
-  const categories: { id: IncidentType | 'ALL'; label: string; icon: string; count: number }[] = [
-    { id: 'ALL', label: 'All Incidents', icon: '⚡', count: incidents.length },
+  const categories: { id: IncidentType | 'ALL'; label: string; icon: React.ReactNode; count: number }[] = [
+    { id: 'ALL', label: 'All Incidents', icon: <Zap className="w-3.5 h-3.5" />, count: incidents.length },
     {
       id: 'FLOOD',
       label: 'Flood',
-      icon: '💧',
+      icon: <Droplets className="w-3.5 h-3.5 text-cyan-400" />,
       count: incidents.filter((i) => i.type === 'FLOOD').length,
     },
     {
       id: 'TRAFFIC',
       label: 'Traffic Jam',
-      icon: '🚗',
+      icon: <Car className="w-3.5 h-3.5 text-amber-400" />,
       count: incidents.filter((i) => i.type === 'TRAFFIC').length,
     },
     {
       id: 'ACCIDENT',
       label: 'Accident',
-      icon: '🚨',
+      icon: <AlertTriangle className="w-3.5 h-3.5 text-red-400" />,
       count: incidents.filter((i) => i.type === 'ACCIDENT').length,
     },
     {
       id: 'ROAD_CLOSED',
       label: 'Road Closed',
-      icon: '🚧',
+      icon: <Construction className="w-3.5 h-3.5 text-orange-400" />,
       count: incidents.filter((i) => i.type === 'ROAD_CLOSED').length,
     },
     {
       id: 'TRANSIT',
       label: 'Transit Alert',
-      icon: '🚇',
+      icon: <Train className="w-3.5 h-3.5 text-purple-400" />,
       count: incidents.filter((i) => i.type === 'TRANSIT').length,
     },
     {
       id: 'EMERGENCY',
       label: 'Emergency',
-      icon: '⚠️',
+      icon: <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />,
       count: incidents.filter((i) => i.type === 'EMERGENCY').length,
     },
     {
       id: 'GENERAL',
       label: 'General',
-      icon: '📍',
+      icon: <MapPin className="w-3.5 h-3.5 text-blue-400" />,
       count: incidents.filter((i) => i.type === 'GENERAL').length,
     },
   ];

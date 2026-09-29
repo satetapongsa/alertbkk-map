@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '@/components/navbar';
-import { SafetyBanner } from '@/components/SafetyBanner';
 import { MapWrapper } from '@/components/map/MapWrapper';
 import { FilterPanel } from '@/components/incidents/FilterPanel';
 import { UnifiedOverviewFeedWidget } from '@/components/incidents/UnifiedOverviewFeedWidget';
@@ -241,9 +240,6 @@ export default function HomePage() {
 
       {/* 2. Real-time Satellite & Meteorology Telemetry Bar */}
       <SatelliteWeatherBar />
-
-      {/* 3. Mandatory Safety Banner */}
-      <SafetyBanner />
 
       {/* 3. Main Map & Overlays Container */}
       <main className="relative flex-1 w-full h-full min-h-0 overflow-hidden">

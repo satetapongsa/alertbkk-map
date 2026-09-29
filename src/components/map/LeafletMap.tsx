@@ -234,7 +234,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       polyline.bindPopup(`
         <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 180px;">
           <div style="font-weight: bold; font-size: 13px; color: ${line.colorCode}; margin-bottom: 4px;">
-            🚇 ${line.name}
+            ${line.name}
           </div>
           <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
             ${line.nameEn}

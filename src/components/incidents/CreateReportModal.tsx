@@ -250,7 +250,10 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                         : 'bg-slate-800/60 hover:bg-slate-800 border-slate-700/60 text-slate-300'
                     }`}
                   >
-                    <span className="text-3xl">{cfg.icon}</span>
+                    <div
+                      className="w-8 h-8 rounded-xl bg-slate-900/90 border border-slate-700/60 flex items-center justify-center p-1.5"
+                      dangerouslySetInnerHTML={{ __html: cfg.icon.replace(/width="16" height="16"/g, 'width="22" height="22"') }}
+                    />
                     <div>
                       <h4 className="font-bold text-sm text-slate-100">{cfg.label}</h4>
                       <p className="text-[11px] text-slate-400">

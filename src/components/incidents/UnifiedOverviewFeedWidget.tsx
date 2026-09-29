@@ -13,7 +13,12 @@ import {
   ExternalLink,
   ChevronRight,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Droplets,
+  Car,
+  AlertTriangle,
+  Train,
+  Construction,
 } from 'lucide-react';
 import {
   formatThaiRelativeTime,
@@ -146,35 +151,50 @@ export const UnifiedOverviewFeedWidget: React.FC<UnifiedOverviewFeedWidgetProps>
                   onClick={() => onSelectCategory && onSelectCategory('FLOOD')}
                   className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-left transition-colors cursor-pointer border border-slate-800/80"
                 >
-                  <span>💧 Floods</span>
+                  <span className="flex items-center gap-1.5">
+                    <Droplets className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Floods</span>
+                  </span>
                   <span className="font-bold text-cyan-400">{floodCount}</span>
                 </button>
                 <button
                   onClick={() => onSelectCategory && onSelectCategory('TRAFFIC')}
                   className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-left transition-colors cursor-pointer border border-slate-800/80"
                 >
-                  <span>🚗 Congestion</span>
+                  <span className="flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Congestion</span>
+                  </span>
                   <span className="font-bold text-amber-400">{trafficCount}</span>
                 </button>
                 <button
                   onClick={() => onSelectCategory && onSelectCategory('ACCIDENT')}
                   className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-left transition-colors cursor-pointer border border-slate-800/80"
                 >
-                  <span>🚨 Accidents</span>
+                  <span className="flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                    <span>Accidents</span>
+                  </span>
                   <span className="font-bold text-red-400">{accidentCount}</span>
                 </button>
                 <button
                   onClick={() => onSelectCategory && onSelectCategory('TRANSIT')}
                   className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-left transition-colors cursor-pointer border border-slate-800/80"
                 >
-                  <span>🚇 Transit</span>
+                  <span className="flex items-center gap-1.5">
+                    <Train className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Transit</span>
+                  </span>
                   <span className="font-bold text-purple-400">{transitCount}</span>
                 </button>
                 <button
                   onClick={() => onSelectCategory && onSelectCategory('ROAD_CLOSED')}
                   className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-left transition-colors col-span-2 cursor-pointer border border-slate-800/80"
                 >
-                  <span>🚧 Closed Roads</span>
+                  <span className="flex items-center gap-1.5">
+                    <Construction className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Closed Roads</span>
+                  </span>
                   <span className="font-bold text-orange-400">{roadClosedCount}</span>
                 </button>
               </div>
@@ -188,7 +208,7 @@ export const UnifiedOverviewFeedWidget: React.FC<UnifiedOverviewFeedWidgetProps>
                   }}
                   className="py-2 px-2.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 font-semibold text-center block transition-all text-xs cursor-pointer select-none"
                 >
-                  🚇 Transit Lines ➔
+                  Transit Lines &gt;
                 </a>
                 <a
                   href="/dashboard"
@@ -198,7 +218,7 @@ export const UnifiedOverviewFeedWidget: React.FC<UnifiedOverviewFeedWidgetProps>
                   }}
                   className="py-2 px-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-center block transition-all text-xs cursor-pointer select-none"
                 >
-                  📊 Analytics ➔
+                  Analytics &gt;
                 </a>
               </div>
             </div>
@@ -230,7 +250,10 @@ export const UnifiedOverviewFeedWidget: React.FC<UnifiedOverviewFeedWidgetProps>
                           : 'hover:bg-slate-800/60 border border-transparent'
                       }`}
                     >
-                      <div className="text-xl flex-shrink-0 mt-0.5">{cfg.icon}</div>
+                      <div
+                        className="w-5 h-5 flex-shrink-0 mt-0.5 flex items-center justify-center"
+                        dangerouslySetInnerHTML={{ __html: cfg.icon }}
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1 mb-0.5">
                           <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${cfg.bgBadge}`}>

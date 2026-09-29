@@ -172,5 +172,85 @@ export const BANGKOK_TRANSIT_LINES: TransportLine[] = [
       { id: 'srt-donmueang', code: 'RN08', name: 'ดอนเมือง', nameEn: 'Don Mueang', latitude: 13.9130, longitude: 100.5980, status: 'NORMAL' },
       { id: 'srt-rangsit', code: 'RN10', name: 'รังสิต', nameEn: 'Rangsit', latitude: 13.9890, longitude: 100.6120, status: 'NORMAL' }
     ]
+  },
+  // Bangkok BMTA & Smart Bus Trunk Routes
+  {
+    id: 'bus-route-8',
+    name: 'สาย 8 (2-38) แฮปปี้แลนด์ - สะพานพุทธ',
+    nameEn: 'Bus Line 8 (Happyland - Memorial Bridge)',
+    type: 'BUS',
+    colorCode: '#0284c7', // Cyan Blue
+    status: 'NORMAL',
+    statusDetail: 'เดินรถปกติผ่านถนนลาดพร้าว, อนุสาวรีย์ชัยฯ, ราชดำเนินกลาง, สะพานพุทธ',
+    updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    coordinates: [
+      [13.7820, 100.6430], // Happyland
+      [13.7915, 100.6130], // The Mall Bangkapi
+      [13.7960, 100.5840], // Chok Chai 4
+      [13.8123, 100.5604], // Ha Yaek Lat Phrao
+      [13.8024, 100.5539], // Mo Chit BTS
+      [13.7749, 100.5422], // Ari
+      [13.7650, 100.5380], // Victory Monument
+      [13.7580, 100.5180], // Yommarat
+      [13.7550, 100.5010], // Ratchadamnoen
+      [13.7400, 100.4980]  // Memorial Bridge
+    ],
+    stations: [
+      { id: 'bus-8-1', code: 'B8-1', name: 'แฮปปี้แลนด์', nameEn: 'Happyland', latitude: 13.7820, longitude: 100.6430, status: 'NORMAL' },
+      { id: 'bus-8-2', code: 'B8-2', name: 'อนุสาวรีย์ชัยฯ', nameEn: 'Victory Monument', latitude: 13.7650, longitude: 100.5380, status: 'NORMAL' },
+      { id: 'bus-8-3', code: 'B8-3', name: 'สะพานพุทธ', nameEn: 'Memorial Bridge', latitude: 13.7400, longitude: 100.4980, status: 'NORMAL' }
+    ]
+  },
+  {
+    id: 'bus-route-511',
+    name: 'สาย 511 ปากน้ำ - สายใต้ใหม่',
+    nameEn: 'Bus Line 511 (Pak Nam - Southern Bus Terminal)',
+    type: 'BUS',
+    colorCode: '#f97316', // Orange
+    status: 'NORMAL',
+    statusDetail: 'เดินรถแกนหลักสุขุมวิท, เพลินจิต, ประตูน้ำ, ราชดำเนินกลาง ข้ามสะพานปิ่นเกล้า',
+    updatedAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
+    coordinates: [
+      [13.5990, 100.6000], // Pak Nam
+      [13.6685, 100.6044], // Bang Na
+      [13.7025, 100.6053], // On Nut
+      [13.7371, 100.5604], // Asok Sukhumvit
+      [13.7440, 100.5420], // Phloen Chit
+      [13.7505, 100.5390], // Pratunam
+      [13.7560, 100.5050], // Democracy Monument
+      [13.7620, 100.4850], // Pinklao Bridge
+      [13.7800, 100.4250]  // Southern Bus Terminal (Sai Tai Mai)
+    ],
+    stations: [
+      { id: 'bus-511-1', code: 'B511-1', name: 'ปากน้ำ', nameEn: 'Pak Nam', latitude: 13.5990, longitude: 100.6000, status: 'NORMAL' },
+      { id: 'bus-511-2', code: 'B511-2', name: 'ประตูน้ำ', nameEn: 'Pratunam', latitude: 13.7505, longitude: 100.5390, status: 'NORMAL' },
+      { id: 'bus-511-3', code: 'B511-3', name: 'สายใต้ใหม่', nameEn: 'Southern Bus Terminal', latitude: 13.7800, longitude: 100.4250, status: 'NORMAL' }
+    ]
+  },
+  {
+    id: 'bus-route-137',
+    name: 'สาย 137 วงกลมรามคำแหง - รัชดาภิเษก',
+    nameEn: 'Bus Line 137 (Ramkhamhaeng - Ratchadaphisek Circle)',
+    type: 'BUS',
+    colorCode: '#06b6d4', // Cyan
+    status: 'NORMAL',
+    statusDetail: 'เดินรถวงกลมเชื่อมต่อ MRT รัชดา, ลาดพร้าว, พระราม 9, ม.รามคำแหง',
+    updatedAt: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+    coordinates: [
+      [13.7578, 100.5649], // Rama IX
+      [13.7710, 100.5730], // Thailand Cultural Centre
+      [13.7890, 100.5740], // Huai Khwang
+      [13.8185, 100.5750], // Ratchada-Lat Phrao
+      [13.8050, 100.5980], // Lat Phrao 71
+      [13.7620, 100.6280], // The Mall Bangkapi
+      [13.7520, 100.6180], // Ramkhamhaeng University
+      [13.7430, 100.6010], // Airport Link Ramkhamhaeng
+      [13.7578, 100.5649]  // Rama IX (Loop closed)
+    ],
+    stations: [
+      { id: 'bus-137-1', code: 'B137-1', name: 'เซ็นทรัลพระราม 9', nameEn: 'Central Rama IX', latitude: 13.7578, longitude: 100.5649, status: 'NORMAL' },
+      { id: 'bus-137-2', code: 'B137-2', name: 'แยกรัชดา-ลาดพร้าว', nameEn: 'Ratchada-Lat Phrao', latitude: 13.8185, longitude: 100.5750, status: 'NORMAL' },
+      { id: 'bus-137-3', code: 'B137-3', name: 'ม.รามคำแหง', nameEn: 'Ramkhamhaeng Univ', latitude: 13.7520, longitude: 100.6180, status: 'NORMAL' }
+    ]
   }
 ];

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
-import { SafetyBanner } from '@/components/SafetyBanner';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { AirportFlightRadarSection } from '@/components/transit/AirportFlightRadarSection';
@@ -22,7 +21,7 @@ import {
 
 export default function TransportPage() {
   const [lines, setLines] = useState<TransportLine[]>(BANGKOK_TRANSIT_LINES);
-  const [filterType, setFilterType] = useState<'ALL' | 'BTS' | 'MRT' | 'ARL' | 'SRT'>('ALL');
+  const [filterType, setFilterType] = useState<'ALL' | 'BTS' | 'MRT' | 'ARL' | 'SRT' | 'BUS'>('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchStatus = async () => {
@@ -48,7 +47,6 @@ export default function TransportPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar />
-      <SafetyBanner />
 
       <main className="max-w-5xl w-full mx-auto p-4 sm:p-6 pb-24 md:pb-6 space-y-5 flex-1">
         {/* Universal Page Switcher Navigation Tabs (Desktop / Tablet) */}
@@ -132,7 +130,7 @@ export default function TransportPage() {
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          {(['ALL', 'BTS', 'MRT', 'ARL', 'SRT'] as const).map((t) => (
+          {(['ALL', 'BTS', 'MRT', 'ARL', 'SRT', 'BUS'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
@@ -142,7 +140,7 @@ export default function TransportPage() {
                   : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
               }`}
             >
-              {t === 'ALL' ? 'All Networks' : t}
+              {t === 'ALL' ? 'All Networks' : t === 'BUS' ? 'City Bus Routes' : `${t} Lines`}
             </button>
           ))}
         </div>

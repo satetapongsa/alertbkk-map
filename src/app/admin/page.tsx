@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
-import { SafetyBanner } from '@/components/SafetyBanner';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { Incident } from '@/types';
 import {
@@ -169,7 +168,6 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar />
-      <SafetyBanner />
 
       {/* Screen 1: Passcode Login Modal / Gate */}
       {isAuthenticated === false && (

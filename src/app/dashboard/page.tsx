@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
-import { SafetyBanner } from '@/components/SafetyBanner';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import {
@@ -71,7 +70,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar />
-      <SafetyBanner />
 
       <main className="max-w-6xl w-full mx-auto p-4 sm:p-6 pb-24 md:pb-6 space-y-5 flex-1">
         {/* Universal Page Switcher Navigation Tabs (Desktop / Tablet) */}

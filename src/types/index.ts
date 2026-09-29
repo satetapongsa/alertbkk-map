@@ -129,7 +129,7 @@ export interface TransportLine {
   id: string;
   name: string;
   nameEn: string;
-  type: 'BTS' | 'MRT' | 'ARL' | 'SRT';
+  type: 'BTS' | 'MRT' | 'ARL' | 'SRT' | 'BUS';
   colorCode: string;
   status: TransitStatus;
   statusDetail?: string;

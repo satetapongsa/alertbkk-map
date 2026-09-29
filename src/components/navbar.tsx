@@ -79,14 +79,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Quick preset locations in Bangkok for instant search suggestions
   const presetLocations = [
-    { label: 'Asok Intersection (Sukhumvit 21)', type: 'LOCATION', lat: 13.7371, lng: 100.5604, icon: '🏙️' },
-    { label: 'Siam Square / Paragon', type: 'LOCATION', lat: 13.7460, lng: 100.5347, icon: '🛍️' },
-    { label: 'Ha Yaek Lat Phrao', type: 'LOCATION', lat: 13.8123, lng: 100.5604, icon: '🛣️' },
-    { label: 'Rama IX Road', type: 'LOCATION', lat: 13.7578, lng: 100.5649, icon: '🚗' },
-    { label: 'BTS Asok Station', type: 'TRANSIT', lat: 13.7371, lng: 100.5604, icon: '🚇' },
-    { label: 'MRT Sukhumvit Station', type: 'TRANSIT', lat: 13.7371, lng: 100.5604, icon: '🚇' },
-    { label: 'Nong Chok TMD Weather Radar', type: 'TMD', lat: 13.8552, lng: 100.8654, icon: '📡' },
-    { label: 'Chalong Rat Expressway KM.14', type: 'ACCIDENT', lat: 13.8050, lng: 100.6280, icon: '🚨' },
+    { label: 'Asok Intersection (Sukhumvit 21)', type: 'LOCATION', lat: 13.7371, lng: 100.5604, icon: '[LOC]' },
+    { label: 'Siam Square / Paragon', type: 'LOCATION', lat: 13.7460, lng: 100.5347, icon: '[HUB]' },
+    { label: 'Ha Yaek Lat Phrao', type: 'LOCATION', lat: 13.8123, lng: 100.5604, icon: '[ROAD]' },
+    { label: 'Rama IX Road', type: 'LOCATION', lat: 13.7578, lng: 100.5649, icon: '[TRAFFIC]' },
+    { label: 'BTS Asok Station', type: 'TRANSIT', lat: 13.7371, lng: 100.5604, icon: '[BTS]' },
+    { label: 'MRT Sukhumvit Station', type: 'TRANSIT', lat: 13.7371, lng: 100.5604, icon: '[MRT]' },
+    { label: 'Nong Chok TMD Weather Radar', type: 'TMD', lat: 13.8552, lng: 100.8654, icon: '[RADAR]' },
+    { label: 'Chalong Rat Expressway KM.14', type: 'ACCIDENT', lat: 13.8050, lng: 100.6280, icon: '[EXPWY]' },
   ];
 
   useEffect(() => {

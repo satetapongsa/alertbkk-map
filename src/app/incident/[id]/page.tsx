@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
-import { SafetyBanner } from '@/components/SafetyBanner';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { Incident } from '@/types';
 import {
@@ -122,7 +121,6 @@ export default function IncidentDetailPage() {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
         <Navbar />
-        <SafetyBanner />
         <main className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-5 flex-1 flex flex-col items-center justify-center">
           <PageNavigationTabs />
           <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mb-3"></div>
@@ -136,7 +134,6 @@ export default function IncidentDetailPage() {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
         <Navbar />
-        <SafetyBanner />
         <main className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-5 flex-1 flex flex-col items-center justify-center text-center">
           <PageNavigationTabs />
           <AlertTriangle className="w-12 h-12 text-amber-500 mb-3" />
@@ -167,7 +164,6 @@ export default function IncidentDetailPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar />
-      <SafetyBanner />
 
       <main className="max-w-4xl w-full mx-auto p-4 sm:p-6 pb-24 md:pb-6 space-y-5 flex-1">
         {/* Universal Page Switcher Navigation Tabs */}
@@ -199,7 +195,10 @@ export default function IncidentDetailPage() {
         {/* Header Hero Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-3xl">{cfg.icon}</span>
+            <div
+              className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center p-1.5"
+              dangerouslySetInnerHTML={{ __html: cfg.icon.replace(/width="16" height="16"/g, 'width="20" height="20"') }}
+            />
             <span className={`px-3 py-1 rounded-full text-xs font-bold border ${cfg.bgBadge}`}>
               {cfg.label}
             </span>
