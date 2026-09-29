@@ -260,6 +260,17 @@ export default function HomePage() {
           }}
         />
 
+        {/* Satellite Orbital HUD Overlay (Non-intrusive transparent grid & reticle) */}
+        <div className="absolute inset-0 pointer-events-none satellite-grid-overlay z-[400] opacity-40" />
+
+        {/* Orbit Telemetry Stamp (Bottom-Left) */}
+        <div className="hidden lg:flex absolute bottom-6 left-6 z-[500] pointer-events-none items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 border border-slate-800/80 backdrop-blur-md text-[10px] font-mono text-slate-400 select-none shadow-2xl">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+          <span>ORBITAL RECON: 35,786 KM GEO-SYNCHRONOUS</span>
+          <span className="text-slate-600">|</span>
+          <span className="text-cyan-300">BASIN SCAN: ACTIVE</span>
+        </div>
+
         {/* Top-Left Filter Bar (pointer-events-none on outer container so it never blocks map clicks) */}
         <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-100px)] sm:max-w-xl z-[500] pointer-events-none flex flex-col gap-2">
           <div className="pointer-events-auto">

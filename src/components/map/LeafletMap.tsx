@@ -49,8 +49,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const watchCircleRef = useRef<L.Circle | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
-  // Map Tile Mode: Default to REAL STREET MAP (OpenStreetMap)
-  const [mapMode, setMapMode] = useState<MapTileMode>('STREET');
+  // Map Tile Mode: Default to REAL HIGH-RESOLUTION SATELLITE (Like looking down from orbit)
+  const [mapMode, setMapMode] = useState<MapTileMode>('SATELLITE');
   const [showTransit, setShowTransit] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -90,8 +90,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       attributionControl: false,
     });
 
-    // Initial Tile: Real OpenStreetMap Street Map
-    const initialConfig = TILE_PROVIDERS.STREET;
+    // Initial Tile: Real Google Satellite Imagery (Down-looking satellite view)
+    const initialConfig = TILE_PROVIDERS.SATELLITE;
     activeTileLayerRef.current = L.tileLayer(initialConfig.url, initialConfig.options).addTo(map);
 
     L.control
