@@ -6,6 +6,7 @@ import { Navbar } from '@/components/navbar';
 import { SafetyBanner } from '@/components/SafetyBanner';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { AirportFlightRadarSection } from '@/components/transit/AirportFlightRadarSection';
 import { TransportLine } from '@/types';
 import { BANGKOK_TRANSIT_LINES } from '@/lib/transit-data';
 import {
@@ -219,6 +220,9 @@ export default function TransportPage() {
             );
           })}
         </div>
+
+        {/* Live Airport Flight Schedule & Airspace Radar (Suvarnabhumi BKK & Don Mueang DMK) */}
+        <AirportFlightRadarSection />
       </main>
 
       {/* Mobile App Bottom Navigation Bar */}
