@@ -7,19 +7,11 @@ import { SafetyBanner } from '@/components/SafetyBanner';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import {
   BarChart3,
-  Activity,
-  Droplets,
-  Car,
   AlertTriangle,
-  Train,
-  CheckCircle2,
-  Clock,
-  ShieldCheck,
-  TrendingUp,
   MapPin,
   RefreshCw,
   ArrowRight,
-  Shield,
+  TrendingUp,
 } from 'lucide-react';
 import { INCIDENT_CONFIG, SEVERITY_CONFIG } from '@/lib/utils';
 
@@ -92,11 +84,11 @@ export default function DashboardPage() {
                 <BarChart3 className="w-4 h-4" />
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                ศูนย์ข้อมูลและสถิติภาพรวมสถานการณ์ (Live Analytics)
+                Metropolitan Incident Analytics & Intelligence
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-slate-400">
-              วิเคราะห์ความถี่เหตุการณ์ ระดับความรุนแรง และการมีส่วนร่วมของภาคประชาชนในกรุงเทพฯ
+              Aggregated frequency, severity trends, and community verifications across Bangkok districts
             </p>
           </div>
 
@@ -107,7 +99,7 @@ export default function DashboardPage() {
               className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
-              <span>{isRefreshing ? 'กำลังคำนวณ...' : 'รีเฟรชสถิติ'}</span>
+              <span>{isRefreshing ? 'Re-calculating...' : 'Refresh Stats'}</span>
             </button>
 
             <a
@@ -119,7 +111,7 @@ export default function DashboardPage() {
               className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer select-none"
             >
               <MapPin className="w-4 h-4" />
-              <span>เปิดดูบนแผนที่</span>
+              <span>Explore Map</span>
             </a>
           </div>
         </div>
@@ -135,12 +127,12 @@ export default function DashboardPage() {
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 transition-all group block cursor-pointer select-none"
           >
             <span className="text-xs text-slate-400 font-medium group-hover:text-emerald-300">
-              เหตุการณ์ Active ทั้งหมด ➔
+              Total Active Hotspots ➔
             </span>
             <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">
               {stats.activeCount || 0}
             </p>
-            <span className="text-[11px] text-slate-500">รายงานที่กำลังเกิดขึ้น</span>
+            <span className="text-[11px] text-slate-500">Live active events</span>
           </a>
 
           <a
@@ -152,12 +144,12 @@ export default function DashboardPage() {
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition-all group block cursor-pointer select-none"
           >
             <span className="text-xs text-slate-400 font-medium group-hover:text-cyan-300">
-              จุดน้ำท่วมขัง ➔
+              Flood Warning Points ➔
             </span>
             <p className="text-2xl sm:text-3xl font-extrabold text-cyan-400 mt-1">
               {byType.FLOOD || 0}
             </p>
-            <span className="text-[11px] text-slate-500">ผิวจราจร & ซอย</span>
+            <span className="text-[11px] text-slate-500">Roadways & Sois</span>
           </a>
 
           <a
@@ -169,12 +161,12 @@ export default function DashboardPage() {
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all group block cursor-pointer select-none"
           >
             <span className="text-xs text-slate-400 font-medium group-hover:text-amber-300">
-              การจราจรติดขัด ➔
+              Heavy Congestion ➔
             </span>
             <p className="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-1">
               {byType.TRAFFIC || 0}
             </p>
-            <span className="text-[11px] text-slate-500">สายหลักกรุงเทพฯ</span>
+            <span className="text-[11px] text-slate-500">Arterial roads</span>
           </a>
 
           <a
@@ -186,12 +178,12 @@ export default function DashboardPage() {
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-red-500/50 transition-all group block cursor-pointer select-none"
           >
             <span className="text-xs text-slate-400 font-medium group-hover:text-red-300">
-              อุบัติเหตุบนท้องถนน ➔
+              Traffic Collisions ➔
             </span>
             <p className="text-2xl sm:text-3xl font-extrabold text-red-400 mt-1">
               {byType.ACCIDENT || 0}
             </p>
-            <span className="text-[11px] text-slate-500">กีดขวางช่องทาง</span>
+            <span className="text-[11px] text-slate-500">Lane obstructions</span>
           </a>
         </div>
 
@@ -201,7 +193,7 @@ export default function DashboardPage() {
           <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-cyan-400" />
-              <span>สัดส่วนเหตุการณ์ตามประเภท (Incident by Category)</span>
+              <span>Incidents by Category Distribution</span>
             </h3>
 
             <div className="space-y-2.5 pt-2">
@@ -218,7 +210,7 @@ export default function DashboardPage() {
                     key={key}
                     href={`/?type=${key}`}
                     className="block space-y-1 p-1.5 rounded-xl hover:bg-slate-800/60 transition-colors group"
-                    title={`คลิกเพื่อดูหมุด ${cfg.label} บนแผนที่`}
+                    title={`Click to view ${cfg.label} pins on live map`}
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-slate-200 group-hover:text-cyan-400 font-medium">
@@ -245,7 +237,7 @@ export default function DashboardPage() {
           <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
-              <span>ระดับความรุนแรงของสถานการณ์ (Severity Breakdown)</span>
+              <span>Risk & Severity Classification</span>
             </h3>
 
             <div className="space-y-2.5 pt-2">
@@ -262,10 +254,10 @@ export default function DashboardPage() {
                   <div key={sevKey} className="space-y-1 p-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className={`font-bold ${sc.color}`}>
-                        ระดับ {sc.label}
+                        {sc.label} Severity
                       </span>
                       <span className="font-mono text-slate-400 font-semibold">
-                        {count} จุด ({pct}%)
+                        {count} Points ({pct}%)
                       </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
@@ -288,7 +280,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-4 p-3 bg-slate-950/70 border border-slate-800 rounded-2xl text-[11px] text-slate-400">
-              💡 <strong>ข้อสังเกต:</strong> ข้อมูลสดจากเซ็นเซอร์ดาวเทียมและประชาชนยืนยันว่าน้ำท่วมและอุบัติเหตุทางด่วนมีความรุนแรงระดับสูง
+              💡 <strong>System Note:</strong> Weather radar sensor telemetry and verified citizen reports feed directly into continuous risk index updates.
             </div>
           </div>
         </div>
@@ -297,7 +289,7 @@ export default function DashboardPage() {
         <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
           <h3 className="font-bold text-sm text-white flex items-center gap-2">
             <MapPin className="w-4 h-4 text-rose-400" />
-            <span>พื้นที่รายงานหนาแน่น (Current Incident Hotspots)</span>
+            <span>High-Density Hotspot Zones</span>
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -310,11 +302,11 @@ export default function DashboardPage() {
               className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl hover:border-cyan-500/50 transition-colors block cursor-pointer select-none"
             >
               <h4 className="font-bold text-xs text-cyan-400 flex items-center justify-between">
-                <span>เขตจตุจักร & ลาดพร้าว</span>
+                <span>Chatuchak & Lat Phrao Corridor</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </h4>
               <p className="text-[11px] text-slate-400 mt-1">
-                ถนนรัชดาภิเษก, วิภาวดีรังสิต, ห้าแยกลาดพร้าว (น้ำท่วม & รถติดสะสม)
+                Ratchadaphisek Rd, Vibhavadi Rangsit, Ha Yaek Lat Phrao (Waterlogging & heavy congestion)
               </p>
             </a>
 
@@ -327,11 +319,11 @@ export default function DashboardPage() {
               className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl hover:border-purple-500/50 transition-colors block cursor-pointer select-none"
             >
               <h4 className="font-bold text-xs text-purple-400 flex items-center justify-between">
-                <span>เขตวัฒนา & สุขุมวิท</span>
+                <span>Watthana & Sukhumvit Axis</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </h4>
               <p className="text-[11px] text-slate-400 mt-1">
-                อโศกมนตรี, รถไฟฟ้า BTS สุขุมวิท (ขบวนรถล่าช้า & ซอยน้ำขัง)
+                Asok Montri, BTS Sukhumvit Line transit delays & soi drainage watch
               </p>
             </a>
 
@@ -344,11 +336,11 @@ export default function DashboardPage() {
               className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl hover:border-rose-500/50 transition-colors block cursor-pointer select-none"
             >
               <h4 className="font-bold text-xs text-rose-400 flex items-center justify-between">
-                <span>เขตห้วยขวาง & พระราม 9</span>
+                <span>Huai Khwang & Rama IX</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </h4>
               <p className="text-[11px] text-slate-400 mt-1">
-                ถนนพระราม 9 แยก อสมท., ทางด่วนศรีรัช (อุบัติเหตุกีดขวางทาง)
+                Rama IX MCOT intersection & Sirat Expressway lane obstruction alerts
               </p>
             </a>
           </div>

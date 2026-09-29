@@ -2,11 +2,44 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Thailand Real-Time Incident Map | แผนที่สถานการณ์เรียลไทม์ประเทศไทย',
-  description: 'แผนที่สถานการณ์แบบ Real-Time ที่ประชาชนช่วยกันรายงาน น้ำท่วม รถติด อุบัติเหตุ ถนนปิด และสถานะรถไฟฟ้า BTS/MRT ทั่วกรุงเทพฯ และประเทศไทย',
+  title: 'AlertBKK | Real-Time Bangkok Incident & Transit Map',
+  description: 'Official real-time emergency, flood, traffic, accident monitoring and BTS/MRT transit intelligence network for Bangkok and metropolitan areas.',
+  applicationName: 'AlertBKK Map',
+  keywords: ['Bangkok', 'incident map', 'realtime traffic', 'flood warning', 'BTS status', 'MRT status', 'emergency alert Thailand'],
+  authors: [{ name: 'AlertBKK Team' }],
+  metadataBase: new URL('https://alertbkk.com'),
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/logo.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
+    ],
+    apple: [
+      { url: '/logo.svg' },
+    ],
+    shortcut: ['/logo.svg'],
+  },
+  openGraph: {
+    title: 'AlertBKK | Real-Time Bangkok Incident & Transit Map',
+    description: 'Official real-time emergency, flood, traffic, accident monitoring and BTS/MRT transit intelligence network.',
+    url: 'https://alertbkk.com',
+    siteName: 'AlertBKK Map',
+    images: [
+      {
+        url: '/og-preview.jpg',
+        width: 1200,
+        height: 675,
+        alt: 'AlertBKK Real-Time Incident Map Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AlertBKK | Real-Time Bangkok Incident & Transit Map',
+    description: 'Real-time emergency, flood, traffic, and BTS/MRT status monitoring across Bangkok.',
+    images: ['/og-preview.jpg'],
   },
 };
 
@@ -15,7 +48,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#090d16',
+  themeColor: '#080c14',
 };
 
 export default function RootLayout({
@@ -24,8 +57,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="th" className="dark h-full antialiased">
-      <body className="min-h-full bg-[#090d16] text-[#f1f5f9] flex flex-col font-sans select-none">
+    <html lang="en" className="dark h-full antialiased">
+      <body className="min-h-full bg-[#080c14] text-[#f1f5f9] flex flex-col font-sans select-none">
         {children}
       </body>
     </html>

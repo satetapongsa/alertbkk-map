@@ -10,7 +10,6 @@ import {
   Shield,
   Trash2,
   CheckCircle,
-  AlertTriangle,
   RefreshCw,
   Search,
   ExternalLink,
@@ -82,7 +81,7 @@ export default function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passcode.trim()) {
-      setAuthError('กรุณากรอกรหัสผ่านผู้ดูแล');
+      setAuthError('Please enter the admin passcode');
       return;
     }
 
@@ -102,10 +101,10 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         setPasscode('');
       } else {
-        setAuthError(data.error || 'รหัสผ่านไม่ถูกต้อง');
+        setAuthError(data.error || 'Incorrect passcode provided');
       }
-    } catch (err) {
-      setAuthError('เกิดข้อผิดพลาดในการตรวจสอบ กรุณาลองใหม่อีกครั้ง');
+    } catch {
+      setAuthError('Authentication service error. Please try again.');
     } finally {
       setIsVerifying(false);
     }
@@ -114,7 +113,7 @@ export default function AdminPage() {
   const handleLogout = async () => {
     try {
       await fetch('/api/admin/auth', { method: 'DELETE' });
-    } catch (e) {
+    } catch {
       // ignore
     }
     sessionStorage.removeItem('admin_authenticated');
@@ -132,7 +131,7 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setActionSuccessMsg(`ทำเครื่องหมายเหตุการณ์ ${incidentId} คลี่คลายแล้ว`);
+        setActionSuccessMsg(`Incident ${incidentId} marked as resolved`);
         loadData();
         setTimeout(() => setActionSuccessMsg(''), 3000);
       }
@@ -142,7 +141,7 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (incidentId: string) => {
-    if (!confirm('ยืนยันที่จะลบรายงานนี้ออกจากระบบหรือไม่?')) return;
+    if (!confirm('Are you sure you want to permanently delete this incident report?')) return;
     try {
       const res = await fetch('/api/admin', {
         method: 'POST',
@@ -151,7 +150,7 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setActionSuccessMsg(`ลบรายงานเหตุการณ์ ${incidentId} เรียบร้อยแล้ว`);
+        setActionSuccessMsg(`Incident ${incidentId} deleted successfully`);
         loadData();
         setTimeout(() => setActionSuccessMsg(''), 3000);
       }
@@ -176,8 +175,7 @@ export default function AdminPage() {
       {isAuthenticated === false && (
         <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
           <PageNavigationTabs />
-          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Top decorative gradient glow */}
+          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 mt-6">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500"></div>
 
             <div className="flex flex-col items-center text-center mb-6">
@@ -185,15 +183,15 @@ export default function AdminPage() {
                 <Lock className="w-7 h-7" />
               </div>
               <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                ศูนย์ควบคุมผู้ดูแลระบบ
+                Operations Command Center
               </h1>
               <p className="text-xs text-slate-400 mt-1 max-w-xs">
-                ระบบจัดการ Moderation และควบคุมสถานการณ์ กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน
+                Incident moderation and verification gateway. Enter authorized access credentials.
               </p>
             </div>
 
             {authError && (
-              <div className="mb-4 p-3 bg-red-500/15 border border-red-500/30 rounded-2xl text-red-300 text-xs font-semibold flex items-center gap-2 animate-shake">
+              <div className="mb-4 p-3 bg-red-500/15 border border-red-500/30 rounded-2xl text-red-300 text-xs font-semibold flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-red-400 flex-shrink-0" />
                 <span>{authError}</span>
               </div>
@@ -201,8 +199,8 @@ export default function AdminPage() {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
-                  <span>รหัสผ่านผู้ดูแล (Admin Passcode)</span>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>Admin Passcode</span>
                   <KeyRound className="w-3.5 h-3.5 text-slate-500" />
                 </label>
                 <div className="relative">
@@ -210,7 +208,7 @@ export default function AdminPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
-                    placeholder="กรอกรหัสผ่านผู้ดูแล..."
+                    placeholder="Enter security key..."
                     autoFocus
                     className="w-full pl-4 pr-11 py-2.5 bg-slate-950/80 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/60 font-mono tracking-widest"
                   />
@@ -227,14 +225,14 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={isVerifying || !passcode.trim()}
-                className="w-full py-3 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98]"
+                className="w-full py-3 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98] cursor-pointer"
               >
                 {isVerifying ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
                   <Unlock className="w-4 h-4" />
                 )}
-                <span>{isVerifying ? 'กำลังตรวจสอบ...' : 'ยืนยันรหัสผ่านเพื่อเข้าใช้งาน'}</span>
+                <span>{isVerifying ? 'Authenticating...' : 'Unlock Command Portal'}</span>
               </button>
             </form>
 
@@ -247,7 +245,7 @@ export default function AdminPage() {
                 }}
                 className="text-xs text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer select-none"
               >
-                ← กลับสู่หน้าหลัก
+                ← Return to Live Map
               </a>
             </div>
           </div>
@@ -268,11 +266,11 @@ export default function AdminPage() {
                   <Shield className="w-4 h-4" />
                 </div>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                  ศูนย์ควบคุมและตรวจสอบรายงาน (Moderation Portal)
+                  Incident Moderation & Verification Portal
                 </h1>
               </div>
               <p className="text-xs sm:text-sm text-slate-400">
-                ตรวจสอบรายงานจากประชาชน ยืนยันความถูกต้อง ซ่อนสแปม และแก้ไขสถานะเหตุการณ์
+                Audit crowdsourced citizen reports, manage verification states, and resolve hazards
               </p>
             </div>
 
@@ -285,25 +283,25 @@ export default function AdminPage() {
                 }}
                 className="px-3.5 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer select-none"
               >
-                <span>← กลับสู่แผนที่</span>
+                <span>← Back to Map</span>
               </a>
 
               <button
                 onClick={loadData}
                 disabled={loading}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                <span>รีเฟรช</span>
+                <span>Refresh</span>
               </button>
 
               <button
                 onClick={handleLogout}
-                className="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
-                title="ออกจากระบบผู้ดูแล"
+                className="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Log out of admin session"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>ออกจากระบบ</span>
+                <span>Log Out</span>
               </button>
             </div>
           </div>
@@ -322,7 +320,7 @@ export default function AdminPage() {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="ค้นหารหัส ID, หัวข้อเหตุการณ์ หรือสถานที่..."
+                placeholder="Search incident ID, title, or location..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -330,7 +328,7 @@ export default function AdminPage() {
             </div>
 
             <div className="text-xs text-slate-400 font-mono">
-              แสดง {filtered.length} จาก {incidents.length} รายการ
+              Showing {filtered.length} of {incidents.length} records
             </div>
           </div>
 
@@ -340,12 +338,12 @@ export default function AdminPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase font-semibold">
                   <tr>
-                    <th className="p-3.5">ประเภท & ID</th>
-                    <th className="p-3.5">หัวข้อ & สถานที่</th>
-                    <th className="p-3.5">ความรุนแรง</th>
-                    <th className="p-3.5">สถานะ</th>
-                    <th className="p-3.5">ยืนยัน/โต้แย้ง</th>
-                    <th className="p-3.5 text-right">การจัดการ</th>
+                    <th className="p-3.5">Category & ID</th>
+                    <th className="p-3.5">Title & Location</th>
+                    <th className="p-3.5">Severity</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5">Verifications</th>
+                    <th className="p-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -396,23 +394,23 @@ export default function AdminPage() {
                             {inc.status !== 'RESOLVED' && (
                               <button
                                 onClick={() => handleResolve(inc.id)}
-                                title="ทำเครื่องหมายว่าคลี่คลายแล้ว"
-                                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold transition-colors"
+                                title="Mark incident as resolved"
+                                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold transition-colors cursor-pointer"
                               >
-                                คลี่คลาย
+                                Resolve
                               </button>
                             )}
                             <Link
                               href={`/incident/${inc.id}`}
-                              title="ดูรายละเอียด"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+                              title="View details"
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                             </Link>
                             <button
                               onClick={() => handleDelete(inc.id)}
-                              title="ลบรายงานนี้"
-                              className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 transition-colors"
+                              title="Delete report"
+                              className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -430,7 +428,7 @@ export default function AdminPage() {
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl space-y-3">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
               <FileText className="w-4 h-4 text-purple-400" />
-              <span>ประวัติการตรวจสอบของแอดมิน (Audit Logs)</span>
+              <span>Moderation Activity Audit Logs</span>
             </h3>
 
             <div className="space-y-2 pt-1">
@@ -444,7 +442,7 @@ export default function AdminPage() {
                     <span className="text-slate-400 ml-2">[{log.action}]</span>
                     <span className="text-slate-300 ml-2">{log.details}</span>
                   </div>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-slate-500 font-mono">
                     {formatThaiRelativeTime(log.createdAt)}
                   </span>
                 </div>

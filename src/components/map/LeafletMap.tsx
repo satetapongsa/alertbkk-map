@@ -15,7 +15,6 @@ import {
   Layers,
   Map as MapIcon,
   Globe,
-  Moon,
 } from 'lucide-react';
 
 interface LeafletMapProps {
@@ -26,9 +25,10 @@ interface LeafletMapProps {
   userCoords?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
   watchArea?: { lat: number; lng: number; radiusKm: number } | null;
+  onLocateUser?: (coords: { lat: number; lng: number }) => void;
 }
 
-export type MapTileMode = 'STREET' | 'SATELLITE' | 'DARK';
+export type MapTileMode = 'STREET' | 'SATELLITE';
 
 export const LeafletMap: React.FC<LeafletMapProps> = ({
   incidents,
@@ -38,7 +38,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   userCoords,
   onMapClick,
   watchArea,
+  onLocateUser,
 }) => {
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const activeTileLayerRef = useRef<L.TileLayer | null>(null);
@@ -58,10 +60,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const DEFAULT_CENTER: [number, number] = [13.7563, 100.5018];
   const DEFAULT_ZOOM = 12;
 
-  // Tile URL configuration
+  // Tile URL configuration: Real Street Map and Real High-Resolution Satellite
   const TILE_PROVIDERS: Record<MapTileMode, { url: string; options: L.TileLayerOptions; name: string }> = {
     STREET: {
-      name: 'แผนที่ถนนจริง (OpenStreetMap)',
+      name: 'OpenStreetMap Road Telemetry',
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       options: {
         maxZoom: 19,
@@ -69,20 +71,11 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       },
     },
     SATELLITE: {
-      name: 'ภาพถ่ายดาวเทียมจริง (Satellite Hybrid)',
+      name: 'Google Maps Satellite Imagery',
       url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
       options: {
         maxZoom: 20,
         attribution: '&copy; Google Maps Satellite Imagery',
-      },
-    },
-    DARK: {
-      name: 'โหมดมืด (Dark Dashboard)',
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      options: {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; CartoDB & OSM',
       },
     },
   };
@@ -248,11 +241,11 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           </div>
           <div style="display: flex; align-items: center; gap: 4px; font-weight: 600; margin-bottom: 4px;">
             <span style="color: ${line.status === 'NORMAL' ? '#22c55e' : '#f59e0b'};">
-              ● ${line.status === 'NORMAL' ? 'การเดินรถปกติ' : 'มีความล่าช้า (Delayed)'}
+              ● ${line.status === 'NORMAL' ? 'Normal Operations' : 'Delayed Service'}
             </span>
           </div>
           <div style="font-size: 11px; color: #cbd5e1; line-height: 1.4;">
-            ${line.statusDetail || 'ให้บริการปกติ'}
+            ${line.statusDetail || 'Regular scheduled frequency'}
           </div>
         </div>
       `);
@@ -381,11 +374,39 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
   const handleCenterBangkok = () =>
     mapInstanceRef.current?.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 1 });
+
   const handleFlyToUser = () => {
     if (userCoords && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([userCoords.lat, userCoords.lng], 15, {
-        duration: 1,
+      mapInstanceRef.current.flyTo([userCoords.lat, userCoords.lng], 16, {
+        duration: 1.2,
       });
+      return;
+    }
+
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      setIsLocatingUser(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setIsLocatingUser(false);
+          const coords = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          if (onLocateUser) onLocateUser(coords);
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([coords.lat, coords.lng], 16, {
+              duration: 1.2,
+            });
+          }
+        },
+        (err) => {
+          setIsLocatingUser(false);
+          alert('Could not retrieve current location. Please allow browser location access.');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser.');
     }
   };
 
@@ -394,64 +415,57 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       {/* Map DOM target */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[500px]" />
 
-      {/* Map Layer Mode Switcher Pill (Top Right) */}
-      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-[600] pointer-events-auto flex items-center bg-slate-900/95 border border-slate-700/80 rounded-2xl p-0.5 sm:p-1 shadow-2xl backdrop-blur-md">
-        <button
-          onClick={() => setMapMode('STREET')}
-          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
-            mapMode === 'STREET'
-              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-          title="แผนที่ถนนจริง OpenStreetMap แสดงชื่อถนน ซอย และสถานที่ชัดเจน"
-        >
-          <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          <span>แผนที่จริง</span>
-        </button>
-
-        <button
-          onClick={() => setMapMode('SATELLITE')}
-          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
-            mapMode === 'SATELLITE'
-              ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-          title="ภาพถ่ายจากดาวเทียมความละเอียดสูงและเส้นทางจริง"
-        >
-          <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          <span>ดาวเทียม</span>
-        </button>
-
-        <button
-          onClick={() => setMapMode('DARK')}
-          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
-            mapMode === 'DARK'
-              ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-          title="โหมดมืด Dark Dashboard สำหรับการใช้งานกลางคืน"
-        >
-          <Moon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          <span>โหมดมืด</span>
-        </button>
-      </div>
-
-      {/* Floating Map Controls on Right Side */}
-      <div className="absolute top-16 sm:top-18 right-3 sm:right-4 z-[600] pointer-events-auto flex flex-col gap-2">
-        {userCoords && (
+      {/* Floating Map Controls on Right Side (Top-Right under summary) */}
+      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 lg:top-auto lg:bottom-28 z-[600] pointer-events-auto flex flex-col gap-2 items-center">
+        {/* Compact Map Layer Mode Switcher Pill (Street vs Satellite Icons) */}
+        <div className="flex flex-col bg-slate-900/95 border border-slate-700/80 rounded-xl p-1 shadow-2xl backdrop-blur-md gap-1">
           <button
-            onClick={handleFlyToUser}
-            title="ตำแหน่งของฉัน (GPS)"
-            className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-cyan-400 border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95"
+            onClick={() => setMapMode('STREET')}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+              mapMode === 'STREET'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+            title="Street Map (OpenStreetMap)"
+            aria-label="Street Map"
           >
-            <Navigation className="w-5 h-5 fill-cyan-400" />
+            <MapIcon className="w-4 h-4" />
           </button>
-        )}
+
+          <button
+            onClick={() => setMapMode('SATELLITE')}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+              mapMode === 'SATELLITE'
+                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+            }`}
+            title="Satellite Imagery (Google Satellite)"
+            aria-label="Satellite Imagery"
+          >
+            <Globe className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* GPS Warp to My Current Location Button (Always Visible) */}
+        <button
+          onClick={handleFlyToUser}
+          disabled={isLocatingUser}
+          title="Warp to My Current GPS Location"
+          className="w-10 h-10 rounded-xl bg-slate-900/95 hover:bg-slate-800 text-cyan-400 border border-cyan-500/50 shadow-2xl flex items-center justify-center transition-all active:scale-90 hover:scale-105 cursor-pointer relative group"
+        >
+          <Navigation className={`w-5 h-5 fill-cyan-400 ${isLocatingUser ? 'animate-spin text-cyan-300' : ''}`} />
+          {userCoords && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 border border-slate-900"></span>
+            </span>
+          )}
+        </button>
 
         <button
           onClick={handleCenterBangkok}
-          title="กรุงเทพมหานคร (Default View)"
-          className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95"
+          title="Reset to Bangkok Center"
+          className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer"
         >
           <Crosshair className="w-5 h-5" />
         </button>
@@ -459,15 +473,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         <div className="flex flex-col bg-slate-900/90 border border-slate-700/80 rounded-xl shadow-xl overflow-hidden">
           <button
             onClick={handleZoomIn}
-            title="ขยายแผนที่"
-            className="w-10 h-10 hover:bg-slate-800 text-slate-200 flex items-center justify-center transition-colors border-b border-slate-800"
+            title="Zoom In"
+            className="w-10 h-10 hover:bg-slate-800 text-slate-200 flex items-center justify-center transition-colors border-b border-slate-800 cursor-pointer"
           >
             <Plus className="w-5 h-5" />
           </button>
           <button
             onClick={handleZoomOut}
-            title="ย่อแผนที่"
-            className="w-10 h-10 hover:bg-slate-800 text-slate-200 flex items-center justify-center transition-colors"
+            title="Zoom Out"
+            className="w-10 h-10 hover:bg-slate-800 text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
           >
             <Minus className="w-5 h-5" />
           </button>
@@ -476,8 +490,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         {/* Toggle Transit Layer */}
         <button
           onClick={() => setShowTransit(!showTransit)}
-          title={showTransit ? 'ซ่อนเส้นทางรถไฟฟ้า' : 'แสดงเส้นทางรถไฟฟ้า BTS/MRT'}
-          className={`w-10 h-10 rounded-xl border shadow-xl flex items-center justify-center transition-all active:scale-95 ${
+          title={showTransit ? 'Hide Rapid Transit Network' : 'Show BTS/MRT Rapid Transit'}
+          className={`w-10 h-10 rounded-xl border shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
             showTransit
               ? 'bg-purple-600/30 border-purple-500 text-purple-300'
               : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-400'
@@ -489,8 +503,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         {/* Toggle Heatmap */}
         <button
           onClick={() => setShowHeatmap(!showHeatmap)}
-          title={showHeatmap ? 'ปิด Heatmap' : 'เปิด Incident Heatmap'}
-          className={`w-10 h-10 rounded-xl border shadow-xl flex items-center justify-center transition-all active:scale-95 ${
+          title={showHeatmap ? 'Disable Density Heatmap' : 'Enable Incident Density Heatmap'}
+          className={`w-10 h-10 rounded-xl border shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
             showHeatmap
               ? 'bg-amber-600/30 border-amber-500 text-amber-300'
               : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-400'

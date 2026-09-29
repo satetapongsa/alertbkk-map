@@ -11,6 +11,7 @@ import { CreateReportModal } from '@/components/incidents/CreateReportModal';
 import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
 import { CurrentEventSummary } from '@/components/CurrentEventSummary';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
+import { SatelliteWeatherBar } from '@/components/weather/SatelliteWeatherBar';
 import { Incident, IncidentType, TimeFilter } from '@/types';
 import { Bell, Radio, CheckCircle2 } from 'lucide-react';
 
@@ -102,7 +103,7 @@ export default function HomePage() {
             const newInc: Incident = parsed.data;
             setIncidents((prev) => [newInc, ...prev.filter((i) => i.id !== newInc.id)]);
             setLiveToast({
-              title: 'มีรายงานเหตุการณ์ใหม่!',
+              title: 'New Incident Reported',
               message: `${newInc.title} (${newInc.locationName})`,
             });
             setTimeout(() => setLiveToast(null), 5000);
@@ -185,7 +186,7 @@ export default function HomePage() {
   const handleSearchLocation = (lat: number, lng: number, label: string) => {
     setFlyToCoords({ lat, lng, zoom: 15 });
     setLiveToast({
-      title: 'ไปยังตำแหน่ง',
+      title: 'Navigating to Location',
       message: label,
     });
     setTimeout(() => setLiveToast(null), 3000);
@@ -238,7 +239,10 @@ export default function HomePage() {
         onSyncCompleted={fetchIncidents}
       />
 
-      {/* 2. Mandatory Safety Banner */}
+      {/* 2. Real-time Satellite & Meteorology Telemetry Bar */}
+      <SatelliteWeatherBar />
+
+      {/* 3. Mandatory Safety Banner */}
       <SafetyBanner />
 
       {/* 3. Main Map & Overlays Container */}
@@ -251,6 +255,14 @@ export default function HomePage() {
           flyToCoords={flyToCoords}
           userCoords={userCoords}
           watchArea={watchArea}
+          onLocateUser={(coords) => {
+            setUserCoords(coords);
+            setLiveToast({
+              title: 'Warped to Current Location',
+              message: `GPS Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`,
+            });
+            setTimeout(() => setLiveToast(null), 3000);
+          }}
         />
 
         {/* Top-Left Navigation Tabs & Filter Bar (pointer-events-none on outer container so it never blocks map clicks) */}
@@ -271,8 +283,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Left Bottom Summary Widget */}
-        <div className="hidden md:block absolute bottom-6 left-4 w-72 z-[500] pointer-events-auto">
+        {/* Top-Right Bangkok Overview Summary Widget */}
+        <div className="hidden lg:block absolute top-3 sm:top-4 right-3 sm:right-4 w-72 z-[500] pointer-events-auto">
           <CurrentEventSummary
             incidents={incidents}
             onSelectCategory={(type: any) => setSelectedType(type)}

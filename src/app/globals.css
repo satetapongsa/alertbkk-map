@@ -1,15 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #090d16;
+  --background: #080c14;
   --foreground: #f1f5f9;
 }
 
 body {
-  background-color: #090d16;
+  background-color: #080c14;
   color: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, "Sarabun", "Inter", "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.011em;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Leaflet Dark Styles and Overrides */

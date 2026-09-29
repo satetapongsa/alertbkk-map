@@ -12,10 +12,8 @@ import { INCIDENT_CONFIG, SEVERITY_CONFIG } from '@/lib/utils';
 import {
   X,
   MapPin,
-  Camera,
   Upload,
   AlertTriangle,
-  CheckCircle2,
   Navigation,
   ArrowRight,
   ArrowLeft,
@@ -23,8 +21,6 @@ import {
   Sparkles,
   Droplets,
   Car,
-  Train,
-  Check,
 } from 'lucide-react';
 
 interface CreateReportModalProps {
@@ -48,12 +44,12 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
   const [type, setType] = useState<IncidentType>('FLOOD');
   const [latitude, setLatitude] = useState<number>(currentMapCoords?.lat || 13.7563);
   const [longitude, setLongitude] = useState<number>(currentMapCoords?.lng || 100.5018);
-  const [locationName, setLocationName] = useState('ถนนรัชดาภิเษก');
-  const [district, setDistrict] = useState('จตุจักร');
+  const [locationName, setLocationName] = useState('Ratchadaphisek Road');
+  const [district, setDistrict] = useState('Chatuchak');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<Severity>('MEDIUM');
-  const [reporterName, setReporterName] = useState('ประชาชนผู้ร่วมรายงาน');
+  const [reporterName, setReporterName] = useState('Citizen Reporter');
   const [images, setImages] = useState<{ url: string; caption?: string }[]>([]);
 
   // Category specifics
@@ -70,16 +66,16 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
   const [trafficDetails, setTrafficDetails] = useState<TrafficDetails>({
     speedKmh: 15,
     queueLengthKm: 2.5,
-    cause: 'ปริมาณรถสะสมหนาแน่น',
-    direction: 'มุ่งหน้าแยกหลัก',
+    cause: 'Heavy rush hour volume',
+    direction: 'Inbound toward main intersection',
     trafficLevel: 'HEAVY',
   });
 
   const [transitDetails, setTransitDetails] = useState<TransitDetails>({
     lineId: 'bts-sukhumvit',
-    lineName: 'BTS สายสุขุมวิท',
+    lineName: 'BTS Sukhumvit Line',
     lineColor: '#22c55e',
-    stationName: 'อโศก',
+    stationName: 'Asok',
     delayMinutes: 10,
     status: 'DELAYED',
   });
@@ -93,16 +89,15 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
         (pos) => {
           setLatitude(Number(pos.coords.latitude.toFixed(5)));
           setLongitude(Number(pos.coords.longitude.toFixed(5)));
-          setLocationName('ตำแหน่งปัจจุบันของคุณ (GPS)');
+          setLocationName('Current GPS Coordinates');
         },
-        (err) => {
-          setErrorMessage('ไม่สามารถดึงตำแหน่ง GPS ได้ กรุณาระบุชื่อสถานที่');
+        () => {
+          setErrorMessage('Unable to retrieve GPS position. Please enter location name manually.');
         }
       );
     }
   };
 
-  // Simulated image upload with preset realistic photos or custom file
   const handleAddSampleImage = (imgUrl: string, caption: string) => {
     setImages((prev) => [...prev, { url: imgUrl, caption }]);
   };
@@ -125,12 +120,12 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      setErrorMessage('กรุณาระบุหัวข้อเหตุการณ์');
+      setErrorMessage('Please provide a title for the incident');
       setStep(3);
       return;
     }
     if (!locationName.trim()) {
-      setErrorMessage('กรุณาระบุชื่อสถานที่เกิดเหตุ');
+      setErrorMessage('Please provide the location or road name');
       setStep(2);
       return;
     }
@@ -142,14 +137,14 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
       const payload: any = {
         type,
         title,
-        description: description || `มีเหตุการณ์ ${INCIDENT_CONFIG[type]?.label} ที่ ${locationName}`,
+        description: description || `Reported ${INCIDENT_CONFIG[type]?.label} at ${locationName}`,
         latitude,
         longitude,
         locationName,
-        district: district || 'กรุงเทพมหานคร',
-        province: 'กรุงเทพมหานคร',
+        district: district || 'Bangkok',
+        province: 'Bangkok',
         severity,
-        createdByName: reporterName || 'พลเมืองจิตอาสา',
+        createdByName: reporterName || 'Citizen Reporter',
         images,
       };
 
@@ -165,20 +160,20 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to submit');
+        throw new Error(data.error || 'Failed to submit report');
       }
 
       onSubmitSuccess(data.data);
       onClose();
     } catch (err: any) {
-      setErrorMessage(err.message || 'เกิดข้อผิดพลาดในการส่งรายงาน');
+      setErrorMessage(err.message || 'Error occurred submitting the report');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
         <div className="px-5 py-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
@@ -188,14 +183,14 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
             </span>
             <div>
               <h2 className="font-bold text-base text-slate-100">
-                {step === 1 && 'ขั้นตอนที่ 1: เลือกประเภทเหตุการณ์'}
-                {step === 2 && 'ขั้นตอนที่ 2: ระบุตำแหน่งเกิดเหตุ'}
-                {step === 3 && 'ขั้นตอนที่ 3: กรอกรายละเอียด'}
-                {step === 4 && 'ขั้นตอนที่ 4: แนบรูปภาพ'}
-                {step === 5 && 'ขั้นตอนที่ 5: ตรวจสอบและเผยแพร่'}
+                {step === 1 && 'Step 1: Incident Category'}
+                {step === 2 && 'Step 2: Location & Coordinates'}
+                {step === 3 && 'Step 3: Details & Severity'}
+                {step === 4 && 'Step 4: Media Attachments'}
+                {step === 5 && 'Step 5: Review & Publish'}
               </h2>
               <p className="text-[11px] text-slate-400">
-                ร่วมเป็นหูเป็นตาให้ชุมชน รายงานสถานการณ์จริง
+                Crowdsourced intelligence for Bangkok commuters and safety responders
               </p>
             </div>
           </div>
@@ -241,12 +236,12 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                     onClick={() => {
                       setType(catKey);
                       if (!title) {
-                        if (catKey === 'FLOOD') setTitle('น้ำท่วมขังผิวจราจร');
-                        if (catKey === 'TRAFFIC') setTitle('รถติดสะสมเคลื่อนตัวช้า');
-                        if (catKey === 'ACCIDENT') setTitle('อุบัติเหตุเฉี่ยวชนกีดขวางทาง');
-                        if (catKey === 'ROAD_CLOSED') setTitle('ถนนปิดชั่วคราว');
-                        if (catKey === 'TRANSIT') setTitle('รถไฟฟ้าขัดข้องหรือล่าช้า');
-                        if (catKey === 'EMERGENCY') setTitle('เหตุการณ์ฉุกเฉินต้องการความช่วยเหลือ');
+                        if (catKey === 'FLOOD') setTitle('Waterlogged Roadway Alert');
+                        if (catKey === 'TRAFFIC') setTitle('Severe Congestion & Slow Movement');
+                        if (catKey === 'ACCIDENT') setTitle('Traffic Collision Blocking Lanes');
+                        if (catKey === 'ROAD_CLOSED') setTitle('Roadway Closed to Traffic');
+                        if (catKey === 'TRANSIT') setTitle('Train Signal Fault or Station Delay');
+                        if (catKey === 'EMERGENCY') setTitle('Urgent Public Safety Emergency');
                       }
                     }}
                     className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-2 ${
@@ -259,13 +254,13 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                     <div>
                       <h4 className="font-bold text-sm text-slate-100">{cfg.label}</h4>
                       <p className="text-[11px] text-slate-400">
-                        {catKey === 'FLOOD' && 'น้ำขัง ลุยไม่พ้น ท่อระบาย'}
-                        {catKey === 'TRAFFIC' && 'ชะลอตัว ท้ายแถวยาว'}
-                        {catKey === 'ACCIDENT' && 'รถชน ชนท้าย ล้มขวาง'}
-                        {catKey === 'ROAD_CLOSED' && 'ปิดซ่อม ต้นไม้ล้ม น้ำท่วมสูง'}
-                        {catKey === 'TRANSIT' && 'BTS MRT ARL ขัดข้อง'}
-                        {catKey === 'EMERGENCY' && 'ไฟไหม้ สารเคมี กู้ภัย'}
-                        {catKey === 'GENERAL' && 'สถานการณ์ทั่วไป'}
+                        {catKey === 'FLOOD' && 'Deep water, flash floods, drain backup'}
+                        {catKey === 'TRAFFIC' && 'Standstill traffic, queue tailbacks'}
+                        {catKey === 'ACCIDENT' && 'Vehicle collision, overturned vehicles'}
+                        {catKey === 'ROAD_CLOSED' && 'Repairs, fallen tree, roadblocks'}
+                        {catKey === 'TRANSIT' && 'BTS, MRT, Airport Link disruptions'}
+                        {catKey === 'EMERGENCY' && 'Fire, hazard, rescue dispatch'}
+                        {catKey === 'GENERAL' && 'General advisory notices'}
                       </p>
                     </div>
                   </button>
@@ -281,61 +276,61 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                 <button
                   type="button"
                   onClick={handleUseCurrentGPS}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Navigation className="w-4 h-4" />
-                  <span>ใช้พิกัดตำแหน่งปัจจุบันของฉัน (GPS)</span>
+                  <span>Use My Current Device GPS</span>
                 </button>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  ชื่อสถานที่ / ถนน / บริเวณจุดสังเกต *
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Location / Landmark / Road Name *
                 </label>
                 <input
                   type="text"
                   value={locationName}
                   onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="เช่น ถนนรัชดาภิเษก หน้าศาลอาญา, แยกอโศกมนตรี"
+                  placeholder="e.g. Ratchadaphisek Rd near Criminal Court, Asok Intersection"
                   className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    เขต / อำเภอ
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    District
                   </label>
                   <input
                     type="text"
                     value={district}
                     onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="เช่น จตุจักร, วัฒนา, ห้วยขวาง"
+                    placeholder="e.g. Chatuchak, Watthana, Bang Rak"
                     className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    จังหวัด
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Province
                   </label>
                   <input
                     type="text"
-                    defaultValue="กรุงเทพมหานคร"
+                    defaultValue="Bangkok"
                     disabled
                     className="w-full px-3.5 py-2 bg-slate-800/50 border border-slate-700/60 rounded-xl text-sm text-slate-400"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-300 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-cyan-400 font-mono">
+              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-300 flex items-center justify-between font-mono">
+                <div className="flex items-center gap-1.5 text-cyan-400">
                   <MapPin className="w-3.5 h-3.5" />
                   <span>
                     Lat: {latitude.toFixed(5)}, Lng: {longitude.toFixed(5)}
                   </span>
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  (สามารถขยับพิกัดได้)
+                  (Bangkok Metro Grid)
                 </span>
               </div>
             </div>
@@ -345,21 +340,21 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
           {step === 3 && (
             <div className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  หัวข้อเหตุการณ์ *
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Incident Title *
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="เช่น น้ำท่วมสูงระดับฟุตบาท รถเล็กผ่านไม่ได้"
+                  placeholder="e.g. High water level on left lanes, sedans avoid"
                   className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  ระดับความรุนแรง
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Severity Level
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as Severity[]).map((sevKey) => {
@@ -386,13 +381,13 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
               {/* SPECIFIC FLOOD SECTION */}
               {type === 'FLOOD' && (
                 <div className="bg-cyan-950/30 border border-cyan-800/40 rounded-2xl p-3.5 space-y-3">
-                  <h4 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
+                  <h4 className="font-semibold text-xs text-cyan-300 flex items-center gap-1.5">
                     <Droplets className="w-4 h-4 text-cyan-400" />
-                    ข้อมูลจำเพาะสำหรับน้ำท่วม
+                    Flood Parameters
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[11px] text-slate-300 block mb-1">ระดับน้ำ</label>
+                      <label className="text-[11px] text-slate-300 block mb-1">Water Depth</label>
                       <select
                         value={floodDetails.waterLevelCategory}
                         onChange={(e: any) =>
@@ -400,11 +395,11 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                         }
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-xs text-slate-100"
                       >
-                        <option value="<10cm">ต่ำกว่า 10 ซม.</option>
-                        <option value="10-30cm">10 - 30 ซม.</option>
-                        <option value="30-50cm">30 - 50 ซม.</option>
-                        <option value="50-100cm">50 - 100 ซม.</option>
-                        <option value=">100cm">มากกว่า 100 ซม.</option>
+                        <option value="<10cm">Below 10 cm</option>
+                        <option value="10-30cm">10 - 30 cm</option>
+                        <option value="30-50cm">30 - 50 cm</option>
+                        <option value="50-100cm">50 - 100 cm</option>
+                        <option value=">100cm">Above 100 cm</option>
                       </select>
                     </div>
 
@@ -419,7 +414,7 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                         className="rounded bg-slate-800 border-slate-700 text-cyan-500 w-4 h-4"
                       />
                       <label htmlFor="smallCar" className="text-xs text-slate-300">
-                        รถเล็กผ่านได้
+                        Sedans Passable
                       </label>
                     </div>
 
@@ -434,7 +429,7 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                         className="rounded bg-slate-800 border-slate-700 text-cyan-500 w-4 h-4"
                       />
                       <label htmlFor="roadBlocked" className="text-xs text-slate-300">
-                        ถนนปิดสัญจรไม่ได้
+                        Road Blocked
                       </label>
                     </div>
                   </div>
@@ -444,14 +439,14 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
               {/* SPECIFIC TRAFFIC SECTION */}
               {type === 'TRAFFIC' && (
                 <div className="bg-amber-950/30 border border-amber-800/40 rounded-2xl p-3.5 space-y-3">
-                  <h4 className="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+                  <h4 className="font-semibold text-xs text-amber-300 flex items-center gap-1.5">
                     <Car className="w-4 h-4 text-amber-400" />
-                    ข้อมูลสภาพการจราจร
+                    Traffic Condition Metrics
                   </h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[11px] text-slate-300 block mb-1">
-                        ความเร็วโดยประมาณ (km/h)
+                        Est. Speed (km/h)
                       </label>
                       <input
                         type="number"
@@ -464,7 +459,7 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                     </div>
                     <div>
                       <label className="text-[11px] text-slate-300 block mb-1">
-                        ความยาวท้ายแถว (กม.)
+                        Tailback Queue (km)
                       </label>
                       <input
                         type="number"
@@ -481,14 +476,14 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  รายละเอียดเพิ่มเติม
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Additional Details & Guidelines
                 </label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="บอกข้อมูลเสริม เช่น เลนที่ติดขัด มีหน่วยงานเข้าช่วยเหลือหรือยัง..."
+                  placeholder="Provide helpful context: which lanes are affected, emergency responders on scene, detour advice..."
                   className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
@@ -499,9 +494,9 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
           {step === 4 && (
             <div className="space-y-3.5">
               <div className="flex gap-2">
-                <label className="flex-1 py-3 px-3 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all">
+                <label className="flex-1 py-3 px-3 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all">
                   <Upload className="w-4 h-4" />
-                  <span>เลือกรูปภาพจากเครื่อง</span>
+                  <span>Choose Image File from Device</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -511,10 +506,9 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                 </label>
               </div>
 
-              {/* Sample quick photos for instant demonstration */}
               <div>
-                <p className="text-[11px] font-semibold text-slate-400 mb-2">
-                  หรือเลือกภาพตัวอย่างสถานการณ์จำลอง:
+                <p className="text-[11px] font-medium text-slate-400 mb-2">
+                  Or select realistic sample verification imagery:
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -522,63 +516,62 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                     onClick={() =>
                       handleAddSampleImage(
                         'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80',
-                        'น้ำท่วมขังผิวถนน'
+                        'Flood on road'
                       )
                     }
-                    className="p-1.5 bg-slate-800 border border-slate-700 rounded-xl text-left hover:border-cyan-400 transition-all"
+                    className="p-1.5 bg-slate-800 border border-slate-700 rounded-xl text-left hover:border-cyan-400 transition-all cursor-pointer"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=300&q=80"
-                      alt="น้ำท่วม"
+                      alt="Flood"
                       className="w-full h-14 object-cover rounded-lg"
                     />
-                    <span className="text-[10px] text-slate-300 block mt-1 truncate">น้ำท่วม</span>
+                    <span className="text-[10px] text-slate-300 block mt-1 truncate">Flood</span>
                   </button>
                   <button
                     type="button"
                     onClick={() =>
                       handleAddSampleImage(
                         'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80',
-                        'รถติดสะสม'
+                        'Heavy traffic congestion'
                       )
                     }
-                    className="p-1.5 bg-slate-800 border border-slate-700 rounded-xl text-left hover:border-amber-400 transition-all"
+                    className="p-1.5 bg-slate-800 border border-slate-700 rounded-xl text-left hover:border-amber-400 transition-all cursor-pointer"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=300&q=80"
-                      alt="รถติด"
+                      alt="Traffic"
                       className="w-full h-14 object-cover rounded-lg"
                     />
-                    <span className="text-[10px] text-slate-300 block mt-1 truncate">รถติด</span>
+                    <span className="text-[10px] text-slate-300 block mt-1 truncate">Traffic</span>
                   </button>
                   <button
                     type="button"
                     onClick={() =>
                       handleAddSampleImage(
                         'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
-                        'อุบัติเหตุ'
+                        'Road accident'
                       )
                     }
-                    className="p-1.5 bg-slate-800 border border-slate-700 rounded-xl text-left hover:border-red-400 transition-all"
+                    className="p-1.5 bg-slate-800 border border-slate-700 rounded-xl text-left hover:border-red-400 transition-all cursor-pointer"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=300&q=80"
-                      alt="อุบัติเหตุ"
+                      alt="Accident"
                       className="w-full h-14 object-cover rounded-lg"
                     />
-                    <span className="text-[10px] text-slate-300 block mt-1 truncate">อุบัติเหตุ</span>
+                    <span className="text-[10px] text-slate-300 block mt-1 truncate">Accident</span>
                   </button>
                 </div>
               </div>
 
-              {/* Uploaded images preview list */}
               {images.length > 0 && (
                 <div className="pt-2">
-                  <p className="text-xs font-bold text-slate-300 mb-2">
-                    รูปภาพที่แนบ ({images.length})
+                  <p className="text-xs font-semibold text-slate-300 mb-2">
+                    Attached Files ({images.length})
                   </p>
                   <div className="grid grid-cols-3 gap-2">
                     {images.map((img, idx) => (
@@ -589,7 +582,7 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={img.url}
-                          alt="แนบภาพ"
+                          alt="Attachment"
                           className="w-full h-full object-cover"
                         />
                         <button
@@ -620,19 +613,19 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
                 </div>
 
                 <div className="text-xs text-slate-300 bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
-                  {description || 'ไม่มีรายละเอียดเพิ่มเติม'}
+                  {description || 'No additional description provided.'}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-                  <div>ประเภท: <strong className="text-slate-200">{INCIDENT_CONFIG[type]?.label}</strong></div>
-                  <div>ความรุนแรง: <strong className="text-slate-200">{SEVERITY_CONFIG[severity]?.label}</strong></div>
-                  <div>ผู้รายงาน: <strong className="text-slate-200">{reporterName}</strong></div>
-                  <div>รูปภาพแนบ: <strong className="text-slate-200">{images.length} รูป</strong></div>
+                  <div>Type: <strong className="text-slate-200">{INCIDENT_CONFIG[type]?.label}</strong></div>
+                  <div>Severity: <strong className="text-slate-200">{SEVERITY_CONFIG[severity]?.label}</strong></div>
+                  <div>Reporter: <strong className="text-slate-200">{reporterName}</strong></div>
+                  <div>Attachments: <strong className="text-slate-200">{images.length} images</strong></div>
                 </div>
               </div>
 
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
-                เมื่อกดเผยแพร่ ระบบจะบันทึกข้อมูลและกระจายสัญญาณ (Real-time Broadcast) ไปยังผู้ใช้งานทุกคนบนแผนที่ทันที
+                Upon publishing, this event will instantly sync and broadcast in real-time to all live map viewers across Bangkok.
               </div>
             </div>
           )}
@@ -644,10 +637,10 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
             <button
               type="button"
               onClick={() => setStep((step - 1) as any)}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>ย้อนกลับ</span>
+              <span>Back</span>
             </button>
           ) : (
             <div />
@@ -657,9 +650,9 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
             <button
               type="button"
               onClick={() => setStep((step + 1) as any)}
-              className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-cyan-500/20 transition-all"
+              className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
             >
-              <span>ถัดไป</span>
+              <span>Next</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
@@ -667,14 +660,14 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all cursor-pointer"
             >
               {isSubmitting ? (
-                <span>กำลังเผยแพร่...</span>
+                <span>Publishing Incident...</span>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-slate-950" />
-                  <span>เผยแพร่รายงานทันที</span>
+                  <span>Broadcast Report</span>
                 </>
               )}
             </button>

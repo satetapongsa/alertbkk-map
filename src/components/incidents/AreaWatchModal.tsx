@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Bell, MapPin, ShieldCheck, Check } from 'lucide-react';
+import { X, Bell, Check } from 'lucide-react';
 
 interface AreaWatchModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
   userCoords,
   onSaveWatchArea,
 }) => {
-  const [areaName, setAreaName] = useState('บริเวณที่พักอาศัย / ที่ทำงาน');
+  const [areaName, setAreaName] = useState('Home / Work Perimeter');
   const [radiusKm, setRadiusKm] = useState(3.0);
   const [notifyFlood, setNotifyFlood] = useState(true);
   const [notifyTraffic, setNotifyTraffic] = useState(true);
@@ -38,7 +38,7 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
@@ -47,10 +47,10 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base text-slate-100">
-                ติดตามพื้นที่ (Area Watch)
+                Area Watch Radius
               </h3>
               <p className="text-[11px] text-slate-400">
-                รับการแจ้งเตือนทันทีเมื่อมีเหตุการณ์ใกล้จุดที่กำหนด
+                Receive live alerts whenever an incident happens in your vicinity
               </p>
             </div>
           </div>
@@ -65,8 +65,8 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">
-              ชื่อพื้นที่ติดตาม
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Watch Perimeter Name
             </label>
             <input
               type="text"
@@ -77,9 +77,9 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-1">
-              <span>รัศมีการแจ้งเตือน</span>
-              <span className="text-amber-400 font-mono text-sm">{radiusKm} กม.</span>
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-1">
+              <span>Alert Radius</span>
+              <span className="text-amber-400 font-mono text-sm">{radiusKm} km</span>
             </div>
             <input
               type="range"
@@ -99,48 +99,48 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
           </div>
 
           <div className="pt-2 border-t border-slate-800">
-            <label className="block text-xs font-bold text-slate-300 mb-2">
-              ประเภทเหตุการณ์ที่ต้องการรับแจ้งเตือน
+            <label className="block text-xs font-semibold text-slate-300 mb-2">
+              Notification Incident Types
             </label>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <label className="flex items-center gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/60 cursor-pointer">
+              <label className="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
                 <input
                   type="checkbox"
                   checked={notifyFlood}
                   onChange={(e) => setNotifyFlood(e.target.checked)}
                   className="rounded text-amber-500"
                 />
-                <span>💧 น้ำท่วม</span>
+                <span>💧 Flooding</span>
               </label>
 
-              <label className="flex items-center gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/60 cursor-pointer">
+              <label className="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
                 <input
                   type="checkbox"
                   checked={notifyAccident}
                   onChange={(e) => setNotifyAccident(e.target.checked)}
                   className="rounded text-amber-500"
                 />
-                <span>🚨 อุบัติเหตุ</span>
+                <span>🚨 Accidents</span>
               </label>
 
-              <label className="flex items-center gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/60 cursor-pointer">
+              <label className="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
                 <input
                   type="checkbox"
                   checked={notifyTraffic}
                   onChange={(e) => setNotifyTraffic(e.target.checked)}
                   className="rounded text-amber-500"
                 />
-                <span>🚗 รถติดหนัก</span>
+                <span>🚗 Congestion</span>
               </label>
 
-              <label className="flex items-center gap-2 bg-slate-800/60 p-2 rounded-xl border border-slate-700/60 cursor-pointer">
+              <label className="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
                 <input
                   type="checkbox"
                   checked={notifyTransit}
                   onChange={(e) => setNotifyTransit(e.target.checked)}
                   className="rounded text-amber-500"
                 />
-                <span>🚇 รถไฟฟ้าขัดข้อง</span>
+                <span>🚇 Transit Delays</span>
               </label>
             </div>
           </div>
@@ -149,23 +149,23 @@ export const AreaWatchModal: React.FC<AreaWatchModalProps> = ({
         <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
           >
-            ยกเลิก
+            Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all"
+            className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
           >
             {isSaved ? (
               <>
                 <Check className="w-4 h-4 text-slate-950" />
-                <span>บันทึกสำเร็จ!</span>
+                <span>Saved!</span>
               </>
             ) : (
               <>
                 <Bell className="w-4 h-4 text-slate-950" />
-                <span>เปิดการติดตามพื้นที่</span>
+                <span>Activate Area Watch</span>
               </>
             )}
           </button>

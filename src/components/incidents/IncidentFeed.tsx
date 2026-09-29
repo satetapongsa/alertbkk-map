@@ -6,7 +6,6 @@ import { Incident } from '@/types';
 import {
   formatThaiRelativeTime,
   INCIDENT_CONFIG,
-  SEVERITY_CONFIG,
   formatDistance,
   calculateDistanceKm,
 } from '@/lib/utils';
@@ -15,7 +14,6 @@ import {
   ChevronDown,
   Clock,
   MapPin,
-  Flame,
   Radio,
   ExternalLink,
 } from 'lucide-react';
@@ -51,8 +49,8 @@ export const IncidentFeed: React.FC<IncidentFeedProps> = ({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
           </span>
-          <h2 className="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide">
-            เหตุการณ์ล่าสุด (Live Feed)
+          <h2 className="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wider">
+            Live Feed
           </h2>
           <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full border border-cyan-500/30">
             {incidents.length}
@@ -61,7 +59,7 @@ export const IncidentFeed: React.FC<IncidentFeedProps> = ({
 
         <div className="flex items-center gap-1 text-slate-400">
           <span className="text-[11px] hidden sm:inline text-slate-400">
-            {isExpanded ? 'ย่อลง' : 'ขยายดู'}
+            {isExpanded ? 'Collapse' : 'Expand'}
           </span>
           {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
         </div>
@@ -73,12 +71,11 @@ export const IncidentFeed: React.FC<IncidentFeedProps> = ({
           {incidents.length === 0 ? (
             <div className="p-6 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
               <Radio className="w-8 h-8 text-slate-600 animate-pulse" />
-              <span>ไม่มีเหตุการณ์ที่ตรงตามตัวกรองในขณะนี้</span>
+              <span>No incidents matching active filters</span>
             </div>
           ) : (
             incidents.map((incident) => {
               const cfg = INCIDENT_CONFIG[incident.type] || INCIDENT_CONFIG.GENERAL;
-              const sev = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.MEDIUM;
               const isSelected = selectedIncident?.id === incident.id;
 
               const distanceKm = userCoords
@@ -101,13 +98,13 @@ export const IncidentFeed: React.FC<IncidentFeedProps> = ({
                       <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${cfg.bgBadge}`}>
                         {cfg.label}
                       </span>
-                      <span className="text-[10px] text-slate-400 flex items-center gap-1 flex-shrink-0">
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1 flex-shrink-0 font-medium">
                         <Clock className="w-3 h-3" />
                         {formatThaiRelativeTime(incident.createdAt)}
                       </span>
                     </div>
 
-                    <h4 className="text-xs font-bold text-slate-200 truncate group-hover:text-cyan-400">
+                    <h4 className="text-xs font-semibold text-slate-200 truncate group-hover:text-cyan-400">
                       {incident.title}
                     </h4>
 
@@ -118,17 +115,17 @@ export const IncidentFeed: React.FC<IncidentFeedProps> = ({
                       </span>
                       <div className="flex items-center gap-2 flex-shrink-0 ml-1">
                         {distanceKm !== null && (
-                          <span className="text-amber-400 text-[10px] font-medium">
+                          <span className="text-amber-400 text-[10px] font-semibold">
                             {formatDistance(distanceKm)}
                           </span>
                         )}
                         <Link
                           href={`/incident/${incident.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold hover:underline flex items-center gap-0.5"
-                          title="ดูหน้าเหตุการณ์นี้เต็มรูปแบบ"
+                          className="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold hover:underline flex items-center gap-0.5"
+                          title="Open full incident report details"
                         >
-                          <span>ดูรายละเอียด</span>
+                          <span>Details</span>
                           <ExternalLink className="w-2.5 h-2.5" />
                         </Link>
                       </div>

@@ -13,6 +13,7 @@ interface MapWrapperProps {
   userCoords?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
   watchArea?: { lat: number; lng: number; radiusKm: number } | null;
+  onLocateUser?: (coords: { lat: number; lng: number }) => void;
 }
 
 const DynamicLeafletMap = dynamic(

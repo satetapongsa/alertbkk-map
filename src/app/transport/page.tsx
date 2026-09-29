@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { SafetyBanner } from '@/components/SafetyBanner';
@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  Filter,
   RefreshCw,
   MapPin,
 } from 'lucide-react';
@@ -61,11 +60,11 @@ export default function TransportPage() {
                 <Train className="w-4 h-4" />
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                สถานะระบบรถไฟฟ้าขนส่งมวลชน (Transit Status)
+                Bangkok Mass Rapid Transit Operations
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-slate-400">
-              ตรวจสอบความล่าช้า เหตุขัดข้อง และสถานะการเดินรถของ BTS, MRT, ARL และ SRT ในกรุงเทพฯ
+              Live status, technical delays, and service updates across BTS Skytrain, MRT Subway, ARL, and SRT lines
             </p>
           </div>
 
@@ -73,10 +72,10 @@ export default function TransportPage() {
             <button
               onClick={fetchStatus}
               disabled={isRefreshing}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-cyan-400' : ''}`} />
-              <span>รีเฟรช</span>
+              <span>Refresh</span>
             </button>
             <a
               href="/"
@@ -87,7 +86,7 @@ export default function TransportPage() {
               className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer select-none"
             >
               <MapPin className="w-3.5 h-3.5" />
-              <span>ดูบนแผนที่</span>
+              <span>View On Map</span>
             </a>
           </div>
         </div>
@@ -96,8 +95,8 @@ export default function TransportPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 font-medium">สายรถไฟฟ้าทั้งหมด</p>
-              <p className="text-xl font-extrabold text-white mt-0.5">{lines.length} สาย</p>
+              <p className="text-xs text-slate-400 font-medium">Total Monitored Lines</p>
+              <p className="text-xl font-extrabold text-white mt-0.5">{lines.length} Lines</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400">
               <Train className="w-5 h-5" />
@@ -106,9 +105,9 @@ export default function TransportPage() {
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 font-medium">การเดินรถปกติ</p>
+              <p className="text-xs text-slate-400 font-medium">Normal Operations</p>
               <p className="text-xl font-extrabold text-emerald-400 mt-0.5">
-                {lines.length - delayedCount} สาย
+                {lines.length - delayedCount} Lines
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -118,8 +117,8 @@ export default function TransportPage() {
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 font-medium">ล่าช้า / ขัดข้อง</p>
-              <p className="text-xl font-extrabold text-amber-400 mt-0.5">{delayedCount} สาย</p>
+              <p className="text-xs text-slate-400 font-medium">Delayed / Disrupted</p>
+              <p className="text-xl font-extrabold text-amber-400 mt-0.5">{delayedCount} Lines</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
               <AlertTriangle className="w-5 h-5" />
@@ -133,13 +132,13 @@ export default function TransportPage() {
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 filterType === t
                   ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
                   : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
               }`}
             >
-              {t === 'ALL' ? 'ทุกระบบขนส่ง' : t}
+              {t === 'ALL' ? 'All Networks' : t}
             </button>
           ))}
         </div>
@@ -149,7 +148,6 @@ export default function TransportPage() {
           {filteredLines.map((line) => {
             const isDelayed = line.status === 'DELAYED';
             const isDisrupted = line.status === 'SERVICE_DISRUPTION';
-            const isNormal = line.status === 'NORMAL';
 
             return (
               <div
@@ -170,13 +168,13 @@ export default function TransportPage() {
                         style={{ backgroundColor: line.colorCode }}
                       />
                       <div>
-                        <h3 className="font-bold text-base text-white">{line.name}</h3>
-                        <p className="text-xs text-slate-400">{line.nameEn}</p>
+                        <h3 className="font-bold text-base text-white">{line.nameEn || line.name}</h3>
+                        <p className="text-xs text-slate-400">{line.name}</p>
                       </div>
                     </div>
 
                     <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-extrabold border ${
+                      className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
                         isDelayed
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 animate-pulse'
                           : isDisrupted
@@ -184,18 +182,18 @@ export default function TransportPage() {
                           : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                       }`}
                     >
-                      {isDelayed ? '🟠 ล่าช้า (Delayed)' : isDisrupted ? '🔴 ขัดข้อง (Disruption)' : '🟢 ปกติ (Normal)'}
+                      {isDelayed ? 'Delayed Service' : isDisrupted ? 'Disrupted' : 'Normal'}
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-2xl border border-slate-800/80">
-                    {line.statusDetail || 'การเดินรถเป็นไปตามตารางเวลาปกติ'}
+                    {line.statusDetail || 'Train operations are running on scheduled timetable.'}
                   </p>
 
                   {line.affectedStations && line.affectedStations.length > 0 && (
                     <div className="mt-2.5 flex items-center gap-1.5 text-xs text-amber-400">
                       <AlertCircle className="w-3.5 h-3.5" />
-                      <span>สถานีที่ได้รับผลกระทบ: <strong>{line.affectedStations.join(' ➔ ')}</strong></span>
+                      <span>Affected Stations: <strong>{line.affectedStations.join(' ➔ ')}</strong></span>
                     </div>
                   )}
                 </div>
@@ -203,14 +201,14 @@ export default function TransportPage() {
                 <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
                   <div className="flex items-center gap-1" suppressHydrationWarning>
                     <Clock className="w-3 h-3 text-slate-500" />
-                    <span>อัปเดตล่าสุด: {new Date(line.updatedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>Last Updated: {new Date(line.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
 
                   <Link
                     href={`/?type=TRANSIT`}
                     className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1"
                   >
-                    <span>ดูบนแผนที่</span>
+                    <span>View Track</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

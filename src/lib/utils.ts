@@ -8,33 +8,33 @@ export function formatThaiRelativeTime(dateInput: string | Date | number): strin
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 30) return 'เมื่อสักครู่';
-  if (diffInSeconds < 60) return `${diffInSeconds} วินาทีที่แล้ว`;
+  if (diffInSeconds < 30) return 'Just now';
+  if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `${diffInMinutes} นาทีที่แล้ว`;
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
 
   const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours} ชั่วโมงที่แล้ว`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
 
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays} วันที่แล้ว`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
 
-  return date.toLocaleDateString('th-TH', {
+  return date.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
-    year: '2-digit',
+    year: 'numeric',
   });
 }
 
 /**
- * Format full exact Thai timestamp
+ * Format full exact English timestamp
  */
 export function formatThaiExactTime(dateInput: string | Date): string {
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-  return date.toLocaleString('th-TH', {
+  return date.toLocaleString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -62,9 +62,9 @@ export function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lo
 
 export function formatDistance(distanceKm: number): string {
   if (distanceKm < 1) {
-    return `${Math.round(distanceKm * 1000)} ม.`;
+    return `${Math.round(distanceKm * 1000)} m`;
   }
-  return `${distanceKm.toFixed(1)} กม.`;
+  return `${distanceKm.toFixed(1)} km`;
 }
 
 /**
@@ -82,49 +82,49 @@ export const INCIDENT_CONFIG: Record<
   }
 > = {
   FLOOD: {
-    label: 'น้ำท่วม',
+    label: 'Flood Alert',
     icon: '💧',
     color: 'text-cyan-400',
     bgBadge: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300',
     markerHex: '#06b6d4',
   },
   TRAFFIC: {
-    label: 'รถติด',
+    label: 'Heavy Traffic',
     icon: '🚗',
     color: 'text-amber-400',
     bgBadge: 'bg-amber-500/15 border-amber-500/30 text-amber-300',
     markerHex: '#f59e0b',
   },
   ACCIDENT: {
-    label: 'อุบัติเหตุ',
+    label: 'Accident',
     icon: '🚨',
     color: 'text-red-400',
     bgBadge: 'bg-red-500/15 border-red-500/30 text-red-300',
     markerHex: '#ef4444',
   },
   ROAD_CLOSED: {
-    label: 'ถนนปิด',
+    label: 'Road Closure',
     icon: '🚧',
     color: 'text-orange-400',
     bgBadge: 'bg-orange-500/15 border-orange-500/30 text-orange-300',
     markerHex: '#f97316',
   },
   TRANSIT: {
-    label: 'รถไฟฟ้าขัดข้อง',
+    label: 'Transit Delay',
     icon: '🚇',
     color: 'text-purple-400',
     bgBadge: 'bg-purple-500/15 border-purple-500/30 text-purple-300',
     markerHex: '#a855f7',
   },
   EMERGENCY: {
-    label: 'เหตุการณ์ฉุกเฉิน',
+    label: 'Emergency',
     icon: '⚠️',
     color: 'text-rose-400',
     bgBadge: 'bg-rose-500/15 border-rose-500/30 text-rose-300',
     markerHex: '#f43f5e',
   },
   GENERAL: {
-    label: 'รายงานทั่วไป',
+    label: 'General Notice',
     icon: '📍',
     color: 'text-blue-400',
     bgBadge: 'bg-blue-500/15 border-blue-500/30 text-blue-300',
@@ -142,25 +142,25 @@ export const SEVERITY_CONFIG: Record<
   }
 > = {
   LOW: {
-    label: 'ต่ำ',
+    label: 'Low',
     color: 'text-emerald-400',
     border: 'border-emerald-500/30',
     bg: 'bg-emerald-500/10',
   },
   MEDIUM: {
-    label: 'ปานกลาง',
+    label: 'Moderate',
     color: 'text-amber-400',
     border: 'border-amber-500/30',
     bg: 'bg-amber-500/10',
   },
   HIGH: {
-    label: 'สูง',
+    label: 'High',
     color: 'text-orange-400',
     border: 'border-orange-500/30',
     bg: 'bg-orange-500/10',
   },
   CRITICAL: {
-    label: 'วิกฤต',
+    label: 'Critical',
     color: 'text-red-400 animate-pulse',
     border: 'border-red-500/40',
     bg: 'bg-red-500/20',
@@ -175,19 +175,19 @@ export const STATUS_CONFIG: Record<
   }
 > = {
   ACTIVE: {
-    label: 'ยังเกิดอยู่',
+    label: 'Active',
     badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   },
   MONITORING: {
-    label: 'เฝ้าระวัง',
+    label: 'Monitoring',
     badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   },
   RESOLVED: {
-    label: 'คลี่คลายแล้ว',
+    label: 'Resolved',
     badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   },
   EXPIRED: {
-    label: 'หมดอายุ',
+    label: 'Expired',
     badge: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
   },
 };
