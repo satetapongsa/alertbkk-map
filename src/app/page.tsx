@@ -12,6 +12,7 @@ import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
 import { CurrentEventSummary } from '@/components/CurrentEventSummary';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { SatelliteWeatherBar } from '@/components/weather/SatelliteWeatherBar';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Incident, IncidentType, TimeFilter } from '@/types';
 import { Bell, Radio, CheckCircle2 } from 'lucide-react';
 
@@ -267,7 +268,8 @@ export default function HomePage() {
 
         {/* Top-Left Navigation Tabs & Filter Bar (pointer-events-none on outer container so it never blocks map clicks) */}
         <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-100px)] sm:max-w-xl z-[500] pointer-events-none flex flex-col gap-2">
-          <div className="pointer-events-auto">
+          {/* Desktop/Tablet Header Navigation Tabs */}
+          <div className="pointer-events-auto hidden md:block">
             <PageNavigationTabs />
           </div>
           <div className="pointer-events-auto">
@@ -351,6 +353,9 @@ export default function HomePage() {
           }
         }}
       />
+
+      {/* Mobile App Bottom Navigation Bar */}
+      <MobileBottomNav onOpenReport={() => setIsReportModalOpen(true)} />
     </div>
   );
 }

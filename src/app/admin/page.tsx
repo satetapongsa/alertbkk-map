@@ -174,8 +174,7 @@ export default function AdminPage() {
       {/* Screen 1: Passcode Login Modal / Gate */}
       {isAuthenticated === false && (
         <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
-          <PageNavigationTabs />
-          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 mt-6">
+          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500"></div>
 
             <div className="flex flex-col items-center text-center mb-6">

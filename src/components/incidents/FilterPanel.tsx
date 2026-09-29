@@ -144,34 +144,6 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           <History className="w-3 h-3" />
           <span>Archive</span>
         </button>
-
-        <div className="h-3 w-[1px] bg-slate-800 mx-1 flex-shrink-0" />
-
-        <a
-          href="/transport"
-          onClick={(e) => {
-            e.preventDefault();
-            window.location.href = '/transport';
-          }}
-          className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 border border-purple-500/30 transition-colors font-medium flex-shrink-0 cursor-pointer select-none"
-          title="Open BTS & MRT rapid transit status overview"
-        >
-          <Train className="w-3 h-3 text-purple-400" />
-          <span>BTS/MRT</span>
-        </a>
-
-        <a
-          href="/dashboard"
-          onClick={(e) => {
-            e.preventDefault();
-            window.location.href = '/dashboard';
-          }}
-          className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 transition-colors font-medium flex-shrink-0 cursor-pointer select-none"
-          title="Open city analytics overview"
-        >
-          <BarChart3 className="w-3 h-3 text-emerald-400" />
-          <span>Analytics</span>
-        </a>
       </div>
     </div>
   );

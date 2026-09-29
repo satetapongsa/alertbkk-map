@@ -318,19 +318,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
               <span>Analytics</span>
             </a>
-
-            <a
-              href="/admin"
-              onClick={(e) => navigateTo(e, '/admin')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
-                pathname === '/admin'
-                  ? 'bg-rose-500/15 text-rose-300 border border-rose-500/40 shadow-sm shadow-rose-500/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5 text-rose-400" />
-              <span>Admin</span>
-            </a>
           </nav>
 
           {/* Action Buttons: TMD Live Sync & Quick Report */}
@@ -432,7 +419,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setIsMobileMenuOpen(false);
                   navigateTo(e, '/dashboard');
                 }}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none ${
+                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none col-span-2 sm:col-span-1 ${
                   pathname === '/dashboard'
                     ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
                     : 'bg-slate-800/80 text-slate-200 border-slate-700/80 hover:bg-slate-800'
@@ -441,25 +428,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="w-7 h-7 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
                   <BarChart3 className="w-4 h-4" />
                 </div>
-                <span>Analytics</span>
-              </a>
-
-              <a
-                href="/admin"
-                onClick={(e) => {
-                  setIsMobileMenuOpen(false);
-                  navigateTo(e, '/admin');
-                }}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none ${
-                  pathname === '/admin'
-                    ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
-                    : 'bg-slate-800/80 text-slate-200 border-slate-700/80 hover:bg-slate-800'
-                }`}
-              >
-                <div className="w-7 h-7 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
-                  <Shield className="w-4 h-4" />
-                </div>
-                <span>Admin Ops</span>
+                <span>Analytics Dashboard</span>
               </a>
             </div>
 

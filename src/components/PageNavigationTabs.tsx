@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { MapPin, Train, BarChart3, Shield } from 'lucide-react';
+import { MapPin, Train, BarChart3 } from 'lucide-react';
 
 export const PageNavigationTabs: React.FC = () => {
   const pathname = usePathname();
@@ -10,31 +10,24 @@ export const PageNavigationTabs: React.FC = () => {
   const tabs = [
     {
       href: '/',
-      label: 'Live Incident Map',
+      label: 'Live Map',
       icon: MapPin,
       activeColor: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/20 font-semibold',
       iconColor: 'text-cyan-400',
     },
     {
       href: '/transport',
-      label: 'Transit Status (BTS/MRT)',
+      label: 'Transit Status',
       icon: Train,
       activeColor: 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-sm shadow-purple-500/20 font-semibold',
       iconColor: 'text-purple-400',
     },
     {
       href: '/dashboard',
-      label: 'City Analytics',
+      label: 'Analytics',
       icon: BarChart3,
       activeColor: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm shadow-emerald-500/20 font-semibold',
       iconColor: 'text-emerald-400',
-    },
-    {
-      href: '/admin',
-      label: 'Command Center',
-      icon: Shield,
-      activeColor: 'bg-rose-500/15 text-rose-300 border-rose-500/40 shadow-sm shadow-rose-500/20 font-semibold',
-      iconColor: 'text-rose-400',
     },
   ];
 
