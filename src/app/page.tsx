@@ -17,6 +17,7 @@ import { VehicleFloodRiskModal } from '@/components/modals/VehicleFloodRiskModal
 import { BangkokWaterTideModal } from '@/components/modals/BangkokWaterTideModal';
 import { BangkokExpresswayModal } from '@/components/modals/BangkokExpresswayModal';
 import { EmergencySurvivalGuideModal } from '@/components/modals/EmergencySurvivalGuideModal';
+import { AllFeaturesHubModal } from '@/components/modals/AllFeaturesHubModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -36,6 +37,7 @@ import {
   Car,
   ShieldAlert,
   Layers,
+  Grid,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -52,6 +54,7 @@ export default function HomePage() {
   const [clickedMapCoords, setClickedMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedType, setSelectedType] = useState<IncidentType | 'ALL'>('ALL');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isFeaturesHubOpen, setIsFeaturesHubOpen] = useState(false);
 
   // Navigation / Camera
   const [flyToCoords, setFlyToCoords] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
@@ -342,6 +345,16 @@ export default function HomePage() {
 
         {/* Top-Left Action Bar & Categories Icon Pill (Real-Time Always) */}
         <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-20px)] sm:max-w-2xl z-[500] pointer-events-none flex flex-wrap items-center gap-1.5 sm:gap-2">
+          {/* All Features Hub Launcher Pill */}
+          <button
+            onClick={() => setIsFeaturesHubOpen(true)}
+            className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 via-sky-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-white border border-cyan-400/50 backdrop-blur-xl text-xs font-bold shadow-lg shadow-cyan-500/10 transition-all cursor-pointer select-none active:scale-95"
+            title="เปิดศูนย์รวมฟีเจอร์และเครื่องมือทั้งหมด (All Features Hub)"
+          >
+            <Grid className="w-3.5 h-3.5 text-cyan-400" />
+            <span>รวมทุกฟีเจอร์</span>
+          </button>
+
           {/* Consolidated Incident Category Launcher Pill */}
           <button
             onClick={() => setIsCategoryModalOpen(true)}
@@ -652,6 +665,23 @@ export default function HomePage() {
         selectedType={selectedType}
         onSelectType={setSelectedType}
         incidents={incidents.filter((i) => i.status === 'ACTIVE' || i.status === 'MONITORING')}
+      />
+
+      {/* All Features & Tools Command Hub Modal */}
+      <AllFeaturesHubModal
+        isOpen={isFeaturesHubOpen}
+        onClose={() => setIsFeaturesHubOpen(false)}
+        onOpenCategories={() => setIsCategoryModalOpen(true)}
+        onOpenVehicleSimulator={() => setIsVehicleModalOpen(true)}
+        onOpenWaterTide={() => setIsWaterTideModalOpen(true)}
+        onOpenExpressway={() => setIsExpresswayModalOpen(true)}
+        onOpenFlightRadar={() => setShowFlightRadar(true)}
+        onOpenHazardScanner={() => setIsHazardModalOpen(true)}
+        onOpenDistricts={() => setIsDistrictsModalOpen(true)}
+        onOpenSos={() => setIsSosModalOpen(true)}
+        onOpenSurvivalGuide={() => setIsSurvivalGuideModalOpen(true)}
+        onOpenAreaWatch={() => setIsAreaWatchModalOpen(true)}
+        onOpenReport={() => setIsReportModalOpen(true)}
       />
 
       {/* Mobile App Bottom Navigation Bar */}
