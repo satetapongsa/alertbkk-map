@@ -12,7 +12,12 @@ import {
   Radio,
   ExternalLink,
   MapPin,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  Clock,
+  ArrowRight,
+  LayoutGrid,
+  Table,
 } from 'lucide-react';
 import { FlightItem, AirportFlightResponse } from '@/app/api/flights/route';
 
@@ -21,6 +26,7 @@ export function AirportFlightRadarSection() {
   const [loading, setLoading] = useState(true);
   const [selectedAirport, setSelectedAirport] = useState<'ALL' | 'BKK' | 'DMK'>('ALL');
   const [selectedFlight, setSelectedFlight] = useState<FlightItem | null>(null);
+  const [viewMode, setViewMode] = useState<'SCHEDULE_TABLE' | 'CARDS'>('SCHEDULE_TABLE');
 
   const fetchFlights = async () => {
     try {
@@ -54,7 +60,7 @@ export function AirportFlightRadarSection() {
       : [...bkkFlights, ...dmkFlights].sort((a, b) => a.distanceToAirportKm - b.distanceToAirportKm);
 
   return (
-    <section className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
+    <section id="flights" className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
         <div>
@@ -67,12 +73,13 @@ export function AirportFlightRadarSection() {
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-400">
-            Real-time ADS-B airspace tracking for Suvarnabhumi (BKK/VTBS) and Don Mueang (DMK/VTBD)
+            Real-time ADS-B airspace tracking, routes, and flight timetables for Suvarnabhumi (BKK) & Don Mueang (DMK)
           </p>
         </div>
 
-        {/* Airport Switcher Tabs & Live Refresh */}
+        {/* Airport Switcher Tabs, View Mode Toggle & Live Refresh */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Airport Filter */}
           <div className="flex bg-slate-950/80 p-1 rounded-2xl border border-slate-800 text-xs">
             <button
               onClick={() => setSelectedAirport('ALL')}
@@ -82,7 +89,7 @@ export function AirportFlightRadarSection() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              All Airspace ({data?.totalAirborneInBKKBasin || 0})
+              All ({data?.totalAirborneInBKKBasin || 0})
             </button>
             <button
               onClick={() => setSelectedAirport('BKK')}
@@ -92,7 +99,7 @@ export function AirportFlightRadarSection() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Suvarnabhumi BKK ({bkkFlights.length})
+              BKK ({bkkFlights.length})
             </button>
             <button
               onClick={() => setSelectedAirport('DMK')}
@@ -102,7 +109,33 @@ export function AirportFlightRadarSection() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Don Mueang DMK ({dmkFlights.length})
+              DMK ({dmkFlights.length})
+            </button>
+          </div>
+
+          {/* Table vs Card View Toggle */}
+          <div className="flex bg-slate-950/80 p-1 rounded-2xl border border-slate-800 text-xs">
+            <button
+              onClick={() => setViewMode('SCHEDULE_TABLE')}
+              className={`p-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                viewMode === 'SCHEDULE_TABLE'
+                  ? 'bg-slate-800 text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Flight Schedule Timetable"
+            >
+              <Table className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('CARDS')}
+              className={`p-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                viewMode === 'CARDS'
+                  ? 'bg-slate-800 text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="ADS-B Telemetry Cards"
+            >
+              <LayoutGrid className="w-4 h-4" />
             </button>
           </div>
 
@@ -168,110 +201,239 @@ export function AirportFlightRadarSection() {
         </div>
       </div>
 
-      {/* Flight Schedule Table / Telemetry Feed */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>Active Airborne Aircraft Trajectories ({displayFlights.length})</span>
-          </span>
-          <span className="text-[11px] font-mono text-slate-500">Live ADS-B Radar Feed</span>
-        </div>
+      {/* Flight Schedule Table / Timetable (Grid Format) */}
+      {viewMode === 'SCHEDULE_TABLE' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Real-Time Flight Timetable & Flight Routes ({displayFlights.length})</span>
+            </span>
+            <span className="text-[11px] font-mono text-slate-500">Live Airport Terminal FIDS</span>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {displayFlights.map((f) => {
-            const isBkk = f.airport === 'BKK';
-            const isLanding = f.status === 'LANDING';
-            const isClimbing = f.status === 'CLIMBING';
-            const isGround = f.status === 'ON_GROUND';
+          <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/80 shadow-2xl">
+            <table className="w-full text-left text-xs font-mono">
+              <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th className="py-3 px-4">Flight / Airline</th>
+                  <th className="py-3 px-4">Airport</th>
+                  <th className="py-3 px-4">Flight Route Path</th>
+                  <th className="py-3 px-4">Schedule</th>
+                  <th className="py-3 px-4">Gate</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Distance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {displayFlights.map((f) => {
+                  const isBkk = f.airport === 'BKK';
+                  const isLanding = f.status === 'LANDING';
+                  const isClimbing = f.status === 'CLIMBING';
+                  const isGround = f.status === 'ON_GROUND';
 
-            return (
-              <div
-                key={f.icao24 + f.callsign}
-                onClick={() => setSelectedFlight(f)}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer hover:scale-[1.01] ${
-                  selectedFlight?.icao24 === f.icao24
-                    ? 'bg-slate-800/90 border-cyan-500 shadow-lg shadow-cyan-500/20'
-                    : 'bg-slate-950/70 border-slate-800/90 hover:border-slate-700'
-                }`}
-              >
-                {/* Flight Top Row: Callsign & Status Badge */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
-                        isBkk
-                          ? 'bg-blue-950/80 text-blue-300 border border-blue-800/60'
-                          : 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+                  return (
+                    <tr
+                      key={f.icao24 + f.callsign}
+                      onClick={() => setSelectedFlight(f)}
+                      className={`hover:bg-slate-850/80 transition-colors cursor-pointer ${
+                        selectedFlight?.icao24 === f.icao24 ? 'bg-slate-800/90' : ''
                       }`}
                     >
-                      {f.airport}
-                    </span>
-                    <div>
-                      <span className="font-extrabold text-sm text-white font-mono tracking-wider">
-                        {f.callsign}
-                      </span>
-                      <p className="text-[10px] text-slate-400 truncate max-w-[140px]">{f.airline}</p>
-                    </div>
-                  </div>
+                      {/* Callsign & Airline */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <Plane className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                          <div>
+                            <span className="font-extrabold text-sm text-white">{f.callsign}</span>
+                            <p className="text-[10px] text-slate-400 font-sans truncate max-w-[140px]">{f.airline}</p>
+                          </div>
+                        </div>
+                      </td>
 
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
-                      isLanding
-                        ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 animate-pulse'
-                        : isClimbing
-                        ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
-                        : isGround
-                        ? 'bg-slate-800 text-slate-400 border-slate-700'
-                        : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
-                    }`}
-                  >
-                    {isLanding && <ArrowDownRight className="w-3 h-3 text-emerald-400" />}
-                    {isClimbing && <ArrowUpRight className="w-3 h-3 text-cyan-400" />}
-                    <span>{f.status}</span>
-                  </span>
-                </div>
+                      {/* Airport Badge */}
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                            isBkk
+                              ? 'bg-blue-950/80 text-blue-300 border-blue-800/60'
+                              : 'bg-amber-950/80 text-amber-300 border-amber-800/60'
+                          }`}
+                        >
+                          {f.airport}
+                        </span>
+                      </td>
 
-                {/* Telemetry Metrics: Altitude, Speed, Distance */}
-                <div className="grid grid-cols-3 gap-2 bg-slate-900/80 p-2 rounded-xl border border-slate-800/60 text-center font-mono text-[11px] mb-2">
-                  <div>
-                    <div className="text-[9px] uppercase text-slate-500">Altitude</div>
-                    <div className="font-bold text-slate-200">
-                      {f.altitudeFeet.toLocaleString()} <span className="text-[9px] text-slate-500">ft</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase text-slate-500">Speed</div>
-                    <div className="font-bold text-slate-200">
-                      {f.speedKmh} <span className="text-[9px] text-slate-500">km/h</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase text-slate-500">Range</div>
-                    <div className="font-bold text-cyan-300">
-                      {f.distanceToAirportKm} <span className="text-[9px] text-slate-500">km</span>
-                    </div>
-                  </div>
-                </div>
+                      {/* Flight Route Path (Origin -> Destination) */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5 text-slate-200 font-semibold">
+                          <span className="text-slate-300">{f.routeOrigin || 'Bangkok'}</span>
+                          <ArrowRight className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                          <span className="text-white">{f.routeDestination || 'Arrival'}</span>
+                        </div>
+                      </td>
 
-                {/* Footer: Heading vector & Coordinates */}
-                <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-900 font-mono">
-                  <div className="flex items-center gap-1">
-                    <Navigation
-                      className="w-3 h-3 text-cyan-400"
-                      style={{ transform: `rotate(${f.heading}deg)` }}
-                    />
-                    <span>{f.heading}° Vector</span>
-                  </div>
-                  <span className="text-slate-500">
-                    {f.latitude.toFixed(2)}°N, {f.longitude.toFixed(2)}°E
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+                      {/* Schedule Time */}
+                      <td className="py-3 px-4 text-slate-300">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <span>{f.scheduledTime || f.timeFormatted}</span>
+                        </div>
+                      </td>
+
+                      {/* Gate */}
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200 font-bold text-[11px]">
+                          {f.gate || 'TBA'}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
+                            isLanding
+                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 animate-pulse'
+                              : isClimbing
+                              ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+                              : isGround
+                              ? 'bg-slate-800 text-slate-400 border-slate-700'
+                              : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                          }`}
+                        >
+                          {isLanding && <ArrowDownRight className="w-3 h-3 text-emerald-400" />}
+                          {isClimbing && <ArrowUpRight className="w-3 h-3 text-cyan-400" />}
+                          <span>{f.status}</span>
+                        </span>
+                      </td>
+
+                      {/* Distance */}
+                      <td className="py-3 px-4 text-right">
+                        <span className="font-bold text-cyan-300">{f.distanceToAirportKm} km</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Flight Schedule Table / Telemetry Feed (Card Mode) */}
+      {viewMode === 'CARDS' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span>Active Airborne Aircraft Trajectories ({displayFlights.length})</span>
+            </span>
+            <span className="text-[11px] font-mono text-slate-500">Live ADS-B Radar Feed</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {displayFlights.map((f) => {
+              const isBkk = f.airport === 'BKK';
+              const isLanding = f.status === 'LANDING';
+              const isClimbing = f.status === 'CLIMBING';
+              const isGround = f.status === 'ON_GROUND';
+
+              return (
+                <div
+                  key={f.icao24 + f.callsign}
+                  onClick={() => setSelectedFlight(f)}
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer hover:scale-[1.01] ${
+                    selectedFlight?.icao24 === f.icao24
+                      ? 'bg-slate-800/90 border-cyan-500 shadow-lg shadow-cyan-500/20'
+                      : 'bg-slate-950/70 border-slate-800/90 hover:border-slate-700'
+                  }`}
+                >
+                  {/* Flight Top Row: Callsign & Status Badge */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                          isBkk
+                            ? 'bg-blue-950/80 text-blue-300 border border-blue-800/60'
+                            : 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+                        }`}
+                      >
+                        {f.airport}
+                      </span>
+                      <div>
+                        <span className="font-extrabold text-sm text-white font-mono tracking-wider">
+                          {f.callsign}
+                        </span>
+                        <p className="text-[10px] text-slate-400 truncate max-w-[140px]">{f.airline}</p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                        isLanding
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 animate-pulse'
+                          : isClimbing
+                          ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+                          : isGround
+                          ? 'bg-slate-800 text-slate-400 border-slate-700'
+                          : 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                      }`}
+                    >
+                      {isLanding && <ArrowDownRight className="w-3 h-3 text-emerald-400" />}
+                      {isClimbing && <ArrowUpRight className="w-3 h-3 text-cyan-400" />}
+                      <span>{f.status}</span>
+                    </span>
+                  </div>
+
+                  {/* Route Bar */}
+                  <div className="mb-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-300 text-[11px] truncate max-w-[110px]">{f.routeOrigin || 'BKK'}</span>
+                    <ArrowRight className="w-3 h-3 text-cyan-400 flex-shrink-0 mx-1" />
+                    <span className="text-white text-[11px] font-bold truncate max-w-[110px]">{f.routeDestination || 'DMK'}</span>
+                    <span className="text-[10px] text-slate-400 ml-1">Gate {f.gate || 'TBA'}</span>
+                  </div>
+
+                  {/* Telemetry Metrics: Altitude, Speed, Distance */}
+                  <div className="grid grid-cols-3 gap-2 bg-slate-900/80 p-2 rounded-xl border border-slate-800/60 text-center font-mono text-[11px] mb-2">
+                    <div>
+                      <div className="text-[9px] uppercase text-slate-500">Altitude</div>
+                      <div className="font-bold text-slate-200">
+                        {f.altitudeFeet.toLocaleString()} <span className="text-[9px] text-slate-500">ft</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase text-slate-500">Speed</div>
+                      <div className="font-bold text-slate-200">
+                        {f.speedKmh} <span className="text-[9px] text-slate-500">km/h</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase text-slate-500">Range</div>
+                      <div className="font-bold text-cyan-300">
+                        {f.distanceToAirportKm} <span className="text-[9px] text-slate-500">km</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer: Heading vector & Coordinates */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-900 font-mono">
+                    <div className="flex items-center gap-1">
+                      <Navigation
+                        className="w-3 h-3 text-cyan-400"
+                        style={{ transform: `rotate(${f.heading}deg)` }}
+                      />
+                      <span>{f.heading}° Vector</span>
+                    </div>
+                    <span className="text-slate-500">
+                      {f.latitude.toFixed(2)}°N, {f.longitude.toFixed(2)}°E
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Selected Flight Live Radar Drawer */}
       {selectedFlight && (

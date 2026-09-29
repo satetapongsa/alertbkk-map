@@ -9,8 +9,7 @@ import {
   Navigation,
   Plus,
   Minus,
-  Train,
-  Flame,
+  Plane,
   Crosshair,
   Layers,
   Map as MapIcon,
@@ -487,31 +486,14 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           </button>
         </div>
 
-        {/* Toggle Transit Layer */}
-        <button
-          onClick={() => setShowTransit(!showTransit)}
-          title={showTransit ? 'Hide Rapid Transit Network' : 'Show BTS/MRT Rapid Transit'}
-          className={`w-10 h-10 rounded-xl border shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
-            showTransit
-              ? 'bg-purple-600/30 border-purple-500 text-purple-300'
-              : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-400'
-          }`}
+        {/* Flight Radar & Airport Operations Shortcut */}
+        <a
+          href="/dashboard#flights"
+          title="Live Flight Radar & Airport Flight Telemetry"
+          className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 border border-cyan-500/40 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer select-none group"
         >
-          <Train className="w-5 h-5" />
-        </button>
-
-        {/* Toggle Heatmap */}
-        <button
-          onClick={() => setShowHeatmap(!showHeatmap)}
-          title={showHeatmap ? 'Disable Density Heatmap' : 'Enable Incident Density Heatmap'}
-          className={`w-10 h-10 rounded-xl border shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
-            showHeatmap
-              ? 'bg-amber-600/30 border-amber-500 text-amber-300'
-              : 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 text-slate-400'
-          }`}
-        >
-          <Flame className="w-5 h-5" />
-        </button>
+          <Plane className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        </a>
       </div>
     </div>
   );
