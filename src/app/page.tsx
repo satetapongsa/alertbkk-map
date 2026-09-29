@@ -5,11 +5,10 @@ import { Navbar } from '@/components/navbar';
 import { SafetyBanner } from '@/components/SafetyBanner';
 import { MapWrapper } from '@/components/map/MapWrapper';
 import { FilterPanel } from '@/components/incidents/FilterPanel';
-import { IncidentFeed } from '@/components/incidents/IncidentFeed';
+import { UnifiedOverviewFeedWidget } from '@/components/incidents/UnifiedOverviewFeedWidget';
 import { IncidentCard } from '@/components/incidents/IncidentCard';
 import { CreateReportModal } from '@/components/incidents/CreateReportModal';
 import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
-import { CurrentEventSummary } from '@/components/CurrentEventSummary';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { SatelliteWeatherBar } from '@/components/weather/SatelliteWeatherBar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -285,11 +284,14 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Top-Right Bangkok Overview Summary Widget */}
-        <div className="hidden lg:block absolute top-3 sm:top-4 right-3 sm:right-4 w-72 z-[500] pointer-events-auto">
-          <CurrentEventSummary
-            incidents={incidents}
+        {/* Unified Bangkok Overview & Live Incident Feed Widget (Top-Right, Collapsible to Icon) */}
+        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-[500] pointer-events-auto">
+          <UnifiedOverviewFeedWidget
+            incidents={filteredIncidents}
+            selectedIncident={selectedIncident}
+            onSelectIncident={handleSelectIncident}
             onSelectCategory={(type: any) => setSelectedType(type)}
+            userCoords={userCoords}
           />
         </div>
 
@@ -305,16 +307,6 @@ export default function HomePage() {
             />
           </div>
         )}
-
-        {/* Right-Bottom Live Incident Feed (with safe margin above mobile bottom nav) */}
-        <div className="absolute bottom-16 sm:bottom-4 right-3 sm:right-4 w-full sm:w-80 md:w-96 max-w-[calc(100%-24px)] z-[500] pointer-events-auto">
-          <IncidentFeed
-            incidents={filteredIncidents}
-            selectedIncident={selectedIncident}
-            onSelectIncident={handleSelectIncident}
-            userCoords={userCoords}
-          />
-        </div>
 
         {/* Real-time Broadcast Toast */}
         {liveToast && (
