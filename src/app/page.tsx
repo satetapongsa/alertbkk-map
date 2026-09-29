@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '@/components/navbar';
 import { MapWrapper } from '@/components/map/MapWrapper';
-import { FilterPanel } from '@/components/incidents/FilterPanel';
+import { IncidentCategoryModal } from '@/components/modals/IncidentCategoryModal';
 import { IncidentCard } from '@/components/incidents/IncidentCard';
 import { CreateReportModal } from '@/components/incidents/CreateReportModal';
 import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
@@ -35,6 +35,7 @@ import {
   Waves,
   Car,
   ShieldAlert,
+  Layers,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -50,8 +51,7 @@ export default function HomePage() {
   // Filters & Selected Coordinates
   const [clickedMapCoords, setClickedMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedType, setSelectedType] = useState<IncidentType | 'ALL'>('ALL');
-  const [selectedTime, setSelectedTime] = useState<TimeFilter>('LIVE');
-  const [showHistorical, setShowHistorical] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // Navigation / Camera
   const [flyToCoords, setFlyToCoords] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
@@ -212,36 +212,17 @@ export default function HomePage() {
    *    remain fully loaded and queryable on the map without cluttering the UI with dedicated
    *    scope filter toggle buttons.
    */
-  // Apply Client Filtering
+  // Apply Real-Time Active Filtering (Always LIVE Real-Time on Main Page)
   useEffect(() => {
-    let list = [...incidents];
+    let list = incidents.filter((i) => i.status === 'ACTIVE' || i.status === 'MONITORING');
 
-    // Filter Type
+    // Filter Type if selected
     if (selectedType !== 'ALL') {
       list = list.filter((i) => i.type === selectedType);
     }
 
-    // Filter Historical / Active
-    if (!showHistorical) {
-      list = list.filter((i) => i.status === 'ACTIVE' || i.status === 'MONITORING');
-    }
-
-    // Filter Time Horizon
-    const now = Date.now();
-    if (selectedTime === '1H') {
-      list = list.filter((i) => now - new Date(i.createdAt).getTime() <= 1000 * 60 * 60);
-    } else if (selectedTime === '3H') {
-      list = list.filter((i) => now - new Date(i.createdAt).getTime() <= 1000 * 60 * 60 * 3);
-    } else if (selectedTime === '6H') {
-      list = list.filter((i) => now - new Date(i.createdAt).getTime() <= 1000 * 60 * 60 * 6);
-    } else if (selectedTime === '24H' || selectedTime === 'TODAY') {
-      list = list.filter((i) => now - new Date(i.createdAt).getTime() <= 1000 * 60 * 60 * 24);
-    } else if (selectedTime === '7D') {
-      list = list.filter((i) => now - new Date(i.createdAt).getTime() <= 1000 * 60 * 60 * 24 * 7);
-    }
-
     setFilteredIncidents(list);
-  }, [incidents, selectedType, selectedTime, showHistorical]);
+  }, [incidents, selectedType]);
 
   // Incident Select Handlers
   const handleSelectIncident = (incident: Incident) => {
@@ -330,7 +311,7 @@ export default function HomePage() {
           flights={activeFlights}
           showFlights={showFlightRadar}
           onToggleFlights={() => setShowFlightRadar((prev) => !prev)}
-          onMapClick={(lat, lng) => {
+          onMapClick={(lat: number, lng: number) => {
             setClickedMapCoords({ lat, lng });
             setLiveToast({
               title: 'ปักหมุดตำแหน่งบนแผนที่',
@@ -338,7 +319,7 @@ export default function HomePage() {
             });
             setTimeout(() => setLiveToast(null), 3500);
           }}
-          onLocateUser={(coords) => {
+          onLocateUser={(coords: { lat: number; lng: number }) => {
             setUserCoords(coords);
             setLiveToast({
               title: 'Warped to Current Location',
@@ -359,19 +340,53 @@ export default function HomePage() {
           <span className="text-cyan-300">BASIN SCAN: ACTIVE</span>
         </div>
 
-        {/* Top-Left Filter Bar & Quick Flight Radar Launcher */}
-        <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-100px)] sm:max-w-xl z-[500] pointer-events-none flex flex-col gap-2">
-          <div className="pointer-events-auto">
-            <FilterPanel
-              selectedType={selectedType}
-              onSelectType={setSelectedType}
-              selectedTime={selectedTime}
-              onSelectTime={setSelectedTime}
-              showHistorical={showHistorical}
-              onToggleHistorical={setShowHistorical}
-              incidents={incidents}
-            />
-          </div>
+        {/* Top-Left Action Bar & Categories Icon Pill (Real-Time Always) */}
+        <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-20px)] sm:max-w-2xl z-[500] pointer-events-none flex flex-wrap items-center gap-1.5 sm:gap-2">
+          {/* Consolidated Incident Category Launcher Pill */}
+          <button
+            onClick={() => setIsCategoryModalOpen(true)}
+            className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none active:scale-95 ${
+              selectedType !== 'ALL'
+                ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400 font-bold shadow-cyan-500/20'
+                : 'bg-slate-900/95 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-700/90'
+            }`}
+            title="เลือกดูแยกตามหมวดหมู่เหตุการณ์สด (น้ำท่วม, รถติด, อุบัติเหตุ ฯลฯ)"
+          >
+            <Layers className="w-3.5 h-3.5 text-cyan-400" />
+            <span>
+              {selectedType === 'ALL'
+                ? 'หมวดหมู่เหตุการณ์'
+                : selectedType === 'FLOOD'
+                ? 'น้ำท่วม'
+                : selectedType === 'TRAFFIC'
+                ? 'รถติด'
+                : selectedType === 'ACCIDENT'
+                ? 'อุบัติเหตุ'
+                : selectedType === 'ROAD_CLOSED'
+                ? 'ถนนปิด'
+                : selectedType === 'TRANSIT'
+                ? 'รถไฟฟ้า'
+                : selectedType === 'EMERGENCY'
+                ? 'เหตุฉุกเฉิน'
+                : 'ทั่วไป'}
+            </span>
+            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-cyan-300 border border-slate-700 font-bold">
+              {filteredIncidents.length}
+            </span>
+            {selectedType !== 'ALL' && (
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedType('ALL');
+                }}
+                className="hover:text-rose-400 ml-0.5 cursor-pointer text-slate-400"
+                title="รีเซ็ตเป็นทั้งหมด"
+              >
+                <X className="w-3 h-3" />
+              </span>
+            )}
+          </button>
 
           {/* Quick Tactical Action Pills */}
           <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -628,6 +643,15 @@ export default function HomePage() {
       <EmergencySurvivalGuideModal
         isOpen={isSurvivalGuideModalOpen}
         onClose={() => setIsSurvivalGuideModalOpen(false)}
+      />
+
+      {/* Consolidated Incident Category Selector Modal */}
+      <IncidentCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        selectedType={selectedType}
+        onSelectType={setSelectedType}
+        incidents={incidents.filter((i) => i.status === 'ACTIVE' || i.status === 'MONITORING')}
       />
 
       {/* Mobile App Bottom Navigation Bar */}
