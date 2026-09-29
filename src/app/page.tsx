@@ -15,6 +15,8 @@ import { BangkokDistrictsModal } from '@/components/modals/BangkokDistrictsModal
 import { SafeRouteHazardModal } from '@/components/modals/SafeRouteHazardModal';
 import { VehicleFloodRiskModal } from '@/components/modals/VehicleFloodRiskModal';
 import { BangkokWaterTideModal } from '@/components/modals/BangkokWaterTideModal';
+import { BangkokExpresswayModal } from '@/components/modals/BangkokExpresswayModal';
+import { EmergencySurvivalGuideModal } from '@/components/modals/EmergencySurvivalGuideModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -31,6 +33,8 @@ import {
   ShieldCheck,
   Gauge,
   Waves,
+  Car,
+  ShieldAlert,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -62,6 +66,8 @@ export default function HomePage() {
   const [isHazardModalOpen, setIsHazardModalOpen] = useState(false);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [isWaterTideModalOpen, setIsWaterTideModalOpen] = useState(false);
+  const [isExpresswayModalOpen, setIsExpresswayModalOpen] = useState(false);
+  const [isSurvivalGuideModalOpen, setIsSurvivalGuideModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -436,6 +442,28 @@ export default function HomePage() {
               <span className="sm:hidden">ระดับน้ำ</span>
             </button>
 
+            {/* Expressway Flood Escape Network Pill */}
+            <button
+              onClick={() => setIsExpresswayModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-blue-300 hover:text-white border border-blue-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="โครงข่ายทางด่วน กทม. และทางลงหนีน้ำท่วม"
+            >
+              <Car className="w-3.5 h-3.5 text-blue-400" />
+              <span className="hidden sm:inline">ทางด่วน กทม.</span>
+              <span className="sm:hidden">ทางด่วน</span>
+            </button>
+
+            {/* Emergency Electrical Flood Survival Guide Pill */}
+            <button
+              onClick={() => setIsSurvivalGuideModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-rose-300 hover:text-white border border-rose-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="คู่มือตัดไฟฟ้ารั่วและเอาตัวรอดน้ำท่วม กทม."
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+              <span className="hidden sm:inline">คู่มือตัดไฟ & เอาตัวรอด</span>
+              <span className="sm:hidden">คู่มือตัดไฟ</span>
+            </button>
+
             {/* SOS Hotline Button */}
             <button
               onClick={() => setIsSosModalOpen(true)}
@@ -585,6 +613,21 @@ export default function HomePage() {
       <BangkokWaterTideModal
         isOpen={isWaterTideModalOpen}
         onClose={() => setIsWaterTideModalOpen(false)}
+      />
+
+      {/* Bangkok Expressways & Flood Escape Ramps Modal */}
+      <BangkokExpresswayModal
+        isOpen={isExpresswayModalOpen}
+        onClose={() => setIsExpresswayModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
+      />
+
+      {/* Emergency Survival & Electrical Flood Safety Guide Modal */}
+      <EmergencySurvivalGuideModal
+        isOpen={isSurvivalGuideModalOpen}
+        onClose={() => setIsSurvivalGuideModalOpen(false)}
       />
 
       {/* Mobile App Bottom Navigation Bar */}

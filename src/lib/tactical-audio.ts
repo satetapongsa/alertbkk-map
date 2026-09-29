@@ -123,6 +123,15 @@ class TacticalSoundManager {
       });
     } catch {}
   }
+
+  // Aliases for intuitive API usage
+  public playRadarPing() {
+    this.playRadarSonarPing();
+  }
+
+  public playEmergencyChime() {
+    this.playEmergencyAlert();
+  }
 }
 
 export const tacticalAudio = new TacticalSoundManager();

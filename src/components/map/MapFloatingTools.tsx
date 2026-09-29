@@ -6,6 +6,8 @@ import {
   Waves,
   Plane,
   ShieldCheck,
+  ShieldAlert,
+  Car,
   ChevronRight,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
@@ -15,6 +17,8 @@ interface MapFloatingToolsProps {
   onOpenWaterTide: () => void;
   onOpenFlightRadar: () => void;
   onOpenHazardScanner: () => void;
+  onOpenExpressway?: () => void;
+  onOpenSurvivalGuide?: () => void;
 }
 
 export const MapFloatingTools: React.FC<MapFloatingToolsProps> = ({
@@ -22,6 +26,8 @@ export const MapFloatingTools: React.FC<MapFloatingToolsProps> = ({
   onOpenWaterTide,
   onOpenFlightRadar,
   onOpenHazardScanner,
+  onOpenExpressway,
+  onOpenSurvivalGuide,
 }) => {
   const triggerTool = (fn: () => void) => {
     tacticalAudio.playTacticalBeep(880, 0.04);
@@ -77,6 +83,34 @@ export const MapFloatingTools: React.FC<MapFloatingToolsProps> = ({
         </div>
         <span className="text-xs font-semibold hidden md:inline">เรดาร์สายการบิน</span>
       </button>
+
+      {/* 5. Bangkok Expressway Flood Network */}
+      {onOpenExpressway && (
+        <button
+          onClick={() => triggerTool(onOpenExpressway)}
+          title="โครงข่ายทางด่วน กทม. และทางลงหนีน้ำท่วม (Bangkok Expressways)"
+          className="group flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-blue-500/50 p-2 sm:px-3 sm:py-2 rounded-2xl shadow-xl backdrop-blur-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          <div className="w-6 h-6 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-slate-950 transition-colors">
+            <Car className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-xs font-semibold hidden md:inline">ทางด่วน กทม.</span>
+        </button>
+      )}
+
+      {/* 6. Flood & Electrical Safety Survival Guide */}
+      {onOpenSurvivalGuide && (
+        <button
+          onClick={() => triggerTool(onOpenSurvivalGuide)}
+          title="คู่มือเอาตัวรอดน้ำท่วมและตัดไฟฟ้ารั่ว (Flood Survival Guide)"
+          className="group flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-rose-500/50 p-2 sm:px-3 sm:py-2 rounded-2xl shadow-xl backdrop-blur-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          <div className="w-6 h-6 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-slate-950 transition-colors">
+            <ShieldAlert className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-xs font-semibold hidden md:inline">คู่มือตัดไฟ & เอาตัวรอด</span>
+        </button>
+      )}
     </div>
   );
 };
