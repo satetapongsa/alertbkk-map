@@ -168,6 +168,7 @@ When deploying to Vercel:
 | `/api/incidents/[id]/confirm` | `POST` | Upvote and corroborate incident confidence |
 | `/api/incidents/[id]/dispute` | `POST` | Dispute unverified or expired incident |
 | `/api/weather` | `GET` | Live satellite telemetry, radar echo, temperature & rain probability |
+| `/api/flights` | `GET` | Live Suvarnabhumi (BKK) & Don Mueang (DMK) OpenSky ADS-B flights |
 | `/api/sync` | `POST` | Synchronize feeds from TMD, BMA radar, and highway cameras |
 | `/api/realtime` | `GET` | Server-Sent Events (SSE) live incident broadcast stream |
 | `/api/admin/auth` | `POST`, `DELETE` | Authenticate and manage administrative session |
@@ -177,10 +178,25 @@ When deploying to Vercel:
 
 ## 🗺️ Live Navigation Pages
 
-- **`/`**: Real-time interactive command map with satellite telemetry bar, GPS location warp, and live incident feed.
-- **`/transport`**: Bangkok mass transit line route network status and transit disruptions.
-- **`/dashboard`**: Incident category analytics, hot-spot density metrics, and historical logs.
-- **`/admin`**: Protected administration portal for incident moderation and resolution.
+- **`/`**: Real-time interactive command map with satellite telemetry bar, GPS location warp, unified incident overview & live feed.
+- **`/dashboard`**: All-in-One Operations & Analytics Center:
+  - Incident Category Analytics & Severity Distributions
+  - BTS, MRT, SRT, ARL Rapid Transit Network Status
+  - Bangkok City Bus Routes & Live Station Stops
+  - Live Airport Flight Radar (Suvarnabhumi BKK & Don Mueang DMK live ADS-B telemetry)
+- **`/admin`**: Protected administration portal for incident moderation and resolution (hidden from public navigation).
+
+---
+
+## 🌐 Vercel Deployment Checklist
+
+When deploying to **Vercel** (`https://vercel.com`), configure these environment variables under **Project Settings > Environment Variables**:
+
+| Variable | Required | Description | Example |
+| :--- | :--- | :--- | :--- |
+| `DATABASE_URL` | **Yes** | Neon PostgreSQL pooled connection string | `postgresql://user:password@ep-xyz-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require` |
+| `ADMIN_PASSCODE` | **Yes** | Secret administrator passphrase for `/admin` | `YourStrongAdminPassword2026` |
+| `NEXT_PUBLIC_APP_URL` | Recommended | Production domain URL | `https://alertbkk-map.vercel.app` |
 
 ---
 

@@ -278,45 +278,31 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Navigation Links (Visible on tablets and desktop: 768px+) */}
-          <nav className="hidden md:flex items-center gap-1 z-[600]">
+          <nav className="hidden md:flex items-center gap-1.5 z-[600]">
             <a
               href="/"
               onClick={(e) => navigateTo(e, '/')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                 pathname === '/'
                   ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/20'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
               <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Map</span>
-            </a>
-
-            <a
-              href="/transport"
-              onClick={(e) => navigateTo(e, '/transport')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
-                pathname === '/transport'
-                  ? 'bg-purple-500/15 text-purple-300 border border-purple-500/40 shadow-sm shadow-purple-500/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <Train className="w-3.5 h-3.5 text-purple-400" />
-              <span>Transit</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>Live Map</span>
             </a>
 
             <a
               href="/dashboard"
               onClick={(e) => navigateTo(e, '/dashboard')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                 pathname === '/dashboard'
                   ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/20'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Analytics</span>
+              <span>Operations & Analytics</span>
             </a>
           </nav>
 
@@ -393,33 +379,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               </a>
 
               <a
-                href="/transport"
-                onClick={(e) => {
-                  setIsMobileMenuOpen(false);
-                  navigateTo(e, '/transport');
-                }}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none ${
-                  pathname === '/transport'
-                    ? 'bg-purple-500/15 text-purple-300 border-purple-500/40'
-                    : 'bg-slate-800/80 text-slate-200 border-slate-700/80 hover:bg-slate-800'
-                }`}
-              >
-                <div className="w-7 h-7 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400">
-                  <Train className="w-4 h-4" />
-                </div>
-                <div>
-                  <p>Transit Status</p>
-                  <span className="text-[10px] text-amber-400 font-normal">BTS / MRT</span>
-                </div>
-              </a>
-
-              <a
                 href="/dashboard"
                 onClick={(e) => {
                   setIsMobileMenuOpen(false);
                   navigateTo(e, '/dashboard');
                 }}
-                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none col-span-2 sm:col-span-1 ${
+                className={`p-3 rounded-2xl border flex items-center gap-2.5 font-semibold text-xs transition-colors cursor-pointer select-none ${
                   pathname === '/dashboard'
                     ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
                     : 'bg-slate-800/80 text-slate-200 border-slate-700/80 hover:bg-slate-800'
@@ -428,7 +393,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="w-7 h-7 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
                   <BarChart3 className="w-4 h-4" />
                 </div>
-                <span>Analytics Dashboard</span>
+                <span>Operations Center</span>
               </a>
             </div>
 
@@ -454,7 +419,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Mobile Bottom Navigation Bar (Fixed bottom for thumb-friendly navigation) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl px-2 py-1.5 flex items-center justify-around text-[10px] font-medium shadow-2xl">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl px-4 py-1.5 flex items-center justify-around text-[10px] font-medium shadow-2xl">
         <a
           href="/"
           onClick={(e) => navigateTo(e, '/')}
@@ -463,24 +428,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <MapPin className="w-4 h-4" />
-          <span>Map</span>
-        </a>
-
-        <a
-          href="/transport"
-          onClick={(e) => navigateTo(e, '/transport')}
-          className={`flex flex-col items-center gap-0.5 p-1 rounded-lg cursor-pointer select-none ${
-            pathname === '/transport' ? 'text-purple-400 font-semibold' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Train className="w-4 h-4" />
-          <span>Transit</span>
+          <span>Live Map</span>
         </a>
 
         {/* Center thumb-friendly Action Button: Always Active */}
         <button
           onClick={handleReportClick}
-          className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold -mt-3 shadow-lg shadow-emerald-500/40 active:scale-95 transition-transform cursor-pointer"
+          className="flex flex-col items-center gap-0.5 px-3.5 py-1 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold -mt-3 shadow-lg shadow-emerald-500/40 active:scale-95 transition-transform cursor-pointer"
         >
           <PlusCircle className="w-5 h-5 text-slate-950" />
           <span className="text-[10px] font-bold">Report</span>
@@ -494,7 +448,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <BarChart3 className="w-4 h-4" />
-          <span>Stats</span>
+          <span>Dashboard</span>
         </a>
 
         <a

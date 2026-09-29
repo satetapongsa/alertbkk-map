@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { PageNavigationTabs } from '@/components/PageNavigationTabs';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { IntegratedTransitSection } from '@/components/transit/IntegratedTransitSection';
+import { AirportFlightRadarSection } from '@/components/transit/AirportFlightRadarSection';
 import {
   BarChart3,
   AlertTriangle,
@@ -280,8 +282,9 @@ export default function DashboardPage() {
               })}
             </div>
 
-            <div className="mt-4 p-3 bg-slate-950/70 border border-slate-800 rounded-2xl text-[11px] text-slate-400">
-              💡 <strong>System Note:</strong> Weather radar sensor telemetry and verified citizen reports feed directly into continuous risk index updates.
+            <div className="mt-4 p-3 bg-slate-950/70 border border-slate-800 rounded-2xl text-[11px] text-slate-400 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
+              <span><strong>System Note:</strong> Weather radar sensor telemetry and verified citizen reports feed directly into continuous risk index updates.</span>
             </div>
           </div>
         </div>
@@ -312,11 +315,7 @@ export default function DashboardPage() {
             </a>
 
             <a
-              href="/transport"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = '/transport';
-              }}
+              href="#transit"
               className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl hover:border-purple-500/50 transition-colors block cursor-pointer select-none"
             >
               <h4 className="font-bold text-xs text-purple-400 flex items-center justify-between">
@@ -346,6 +345,12 @@ export default function DashboardPage() {
             </a>
           </div>
         </div>
+
+        {/* Integrated Transit Network (BTS, MRT, SRT, ARL, and City Bus Routes) */}
+        <IntegratedTransitSection />
+
+        {/* Live Airport Flight Radar & Airspace Trajectory (Suvarnabhumi BKK & Don Mueang DMK) */}
+        <AirportFlightRadarSection />
       </main>
 
       {/* Mobile App Bottom Navigation Bar */}

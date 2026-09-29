@@ -16,15 +16,8 @@ export const PageNavigationTabs: React.FC = () => {
       iconColor: 'text-cyan-400',
     },
     {
-      href: '/transport',
-      label: 'Transit Status',
-      icon: Train,
-      activeColor: 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-sm shadow-purple-500/20 font-semibold',
-      iconColor: 'text-purple-400',
-    },
-    {
       href: '/dashboard',
-      label: 'Analytics',
+      label: 'Operations & Analytics',
       icon: BarChart3,
       activeColor: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm shadow-emerald-500/20 font-semibold',
       iconColor: 'text-emerald-400',
