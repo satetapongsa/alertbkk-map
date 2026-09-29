@@ -213,3 +213,202 @@ export const BANGKOK_RECON_UNITS: ReconCorridor[] = [
     zone: 'Chao Phraya River South Sector',
   },
 ];
+
+// 4. Bangkok Wi-Fi Hotspots & Cyber Telemetry
+export type WifiCategory = 'CORPORATE_ISP' | 'COMMERCIAL_MALL_CAFE' | 'SUSPICIOUS_UNSECURED';
+
+export interface BangkokWifiHotspot {
+  id: string;
+  ssid: string;
+  bssid: string;
+  provider: string;
+  category: WifiCategory;
+  lat: number;
+  lng: number;
+  locationName: string;
+  signalStrength: number; // dBm e.g. -45, -60, -85
+  securityType: 'WPA3_ENTERPRISE' | 'WPA2_PSK' | 'OPEN_CAPTIVE' | 'ROGUE_EVIL_TWIN' | 'UNENCRYPTED_HONEYPOT';
+  warningMessage?: string;
+  status: 'ONLINE' | 'FLAGGED';
+}
+
+export const BANGKOK_WIFI_HOTSPOTS: BangkokWifiHotspot[] = [
+  // 1. Green: Corporate / Service Provider Networks
+  {
+    id: 'wifi-ais-siam-paragon',
+    ssid: '@ AIS SMART 5G WiFi',
+    bssid: 'E4:8D:8C:91:2A:40',
+    provider: 'AIS (Advanced Info Service)',
+    category: 'CORPORATE_ISP',
+    lat: 13.7460,
+    lng: 100.5348,
+    locationName: 'Siam Paragon Flagship Terminal',
+    signalStrength: -48,
+    securityType: 'WPA3_ENTERPRISE',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-true-centralworld',
+    ssid: '.@ TrueMove H GigaWiFi',
+    bssid: '70:F1:A1:34:B8:12',
+    provider: 'True Corporation',
+    category: 'CORPORATE_ISP',
+    lat: 13.7466,
+    lng: 100.5393,
+    locationName: 'CentralWorld Ratchaprasong Plaza',
+    signalStrength: -52,
+    securityType: 'WPA3_ENTERPRISE',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-nt-government-chaengwattana',
+    ssid: 'Free_Gov_WiFi_by_NT',
+    bssid: '00:26:86:E0:41:88',
+    provider: 'National Telecom (NT)',
+    category: 'CORPORATE_ISP',
+    lat: 13.8824,
+    lng: 100.5652,
+    locationName: 'Government Complex Chaeng Watthana',
+    signalStrength: -55,
+    securityType: 'WPA2_PSK',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-ais-bangsue-grand',
+    ssid: '@ AIS SMART WiFi Krung Thep Aphiwat',
+    bssid: 'D8:B3:70:9A:11:3C',
+    provider: 'AIS (State Railway Hub)',
+    category: 'CORPORATE_ISP',
+    lat: 13.8037,
+    lng: 100.5408,
+    locationName: 'Krung Thep Aphiwat Central Terminal',
+    signalStrength: -50,
+    securityType: 'WPA3_ENTERPRISE',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-true-suvarnabhumi',
+    ssid: '.@ TrueWiFi_Suvarnabhumi_Terminal',
+    bssid: 'BC:67:1C:88:5F:29',
+    provider: 'Airports of Thailand (AOT) / True',
+    category: 'CORPORATE_ISP',
+    lat: 13.6900,
+    lng: 100.7501,
+    locationName: 'Suvarnabhumi Airport Departure Concourse D',
+    signalStrength: -45,
+    securityType: 'WPA3_ENTERPRISE',
+    status: 'ONLINE',
+  },
+
+  // 2. Yellow: Coffee Shops / Shopping Malls
+  {
+    id: 'wifi-starbucks-emquartier',
+    ssid: 'Starbucks_Free_WiFi',
+    bssid: '44:65:7F:A1:EE:33',
+    provider: 'Starbucks Coffee Thailand',
+    category: 'COMMERCIAL_MALL_CAFE',
+    lat: 13.7314,
+    lng: 100.5698,
+    locationName: 'Starbucks Reserve EmQuartier Sukhumvit',
+    signalStrength: -58,
+    securityType: 'OPEN_CAPTIVE',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-iconsiam-guest',
+    ssid: 'ICONSIAM_FreeWiFi_Guest',
+    bssid: 'A8:BD:27:12:44:90',
+    provider: 'ICONSIAM Retail Management',
+    category: 'COMMERCIAL_MALL_CAFE',
+    lat: 13.7267,
+    lng: 100.5108,
+    locationName: 'ICONSIAM Riverside Walkway',
+    signalStrength: -54,
+    securityType: 'OPEN_CAPTIVE',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-cafe-amazon-ptt-vibhavadi',
+    ssid: 'CafeAmazon_CustomerWiFi',
+    bssid: '18:64:72:90:3A:CC',
+    provider: 'PTT Oil and Retail Business (OR)',
+    category: 'COMMERCIAL_MALL_CAFE',
+    lat: 13.8205,
+    lng: 100.5601,
+    locationName: 'Café Amazon Vibhavadi Rangsit Hub',
+    signalStrength: -62,
+    securityType: 'WPA2_PSK',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-terminal21-asok',
+    ssid: 'Terminal21_Visitor_WiFi',
+    bssid: '2C:30:33:DE:7F:10',
+    provider: 'Terminal 21 Asok Retail Tech',
+    category: 'COMMERCIAL_MALL_CAFE',
+    lat: 13.7378,
+    lng: 100.5604,
+    locationName: 'Terminal 21 Asok Food Island',
+    signalStrength: -59,
+    securityType: 'OPEN_CAPTIVE',
+    status: 'ONLINE',
+  },
+  {
+    id: 'wifi-roast-thonglor',
+    ssid: 'theCOMMONS_Patron_WiFi',
+    bssid: '74:83:C2:5F:AA:19',
+    provider: 'theCOMMONS Community Mall',
+    category: 'COMMERCIAL_MALL_CAFE',
+    lat: 13.7348,
+    lng: 100.5833,
+    locationName: 'theCOMMONS Thonglor Soi 17',
+    signalStrength: -64,
+    securityType: 'WPA2_PSK',
+    status: 'ONLINE',
+  },
+
+  // 3. Red: Suspicious Public Wi-Fi Networks (Warning Markers)
+  {
+    id: 'wifi-suspicious-khao-san',
+    ssid: 'FREE_INTERNET_NO_PASSWORD_FAST',
+    bssid: '00:14:22:98:X7:01',
+    provider: 'UNKNOWN (Unverified Rogue AP)',
+    category: 'SUSPICIOUS_UNSECURED',
+    lat: 13.7592,
+    lng: 100.4975,
+    locationName: 'Khao San Road Walking Street',
+    signalStrength: -42,
+    securityType: 'ROGUE_EVIL_TWIN',
+    warningMessage: 'WARNING: Detected fake Evil Twin hotspot broadcasting unencrypted packets. Potential man-in-the-middle phishing attack.',
+    status: 'FLAGGED',
+  },
+  {
+    id: 'wifi-suspicious-chatuchak',
+    ssid: '@_Free_HighSpeed_Market_WiFi',
+    bssid: '28:EF:01:A0:5B:DE',
+    provider: 'ANONYMOUS PROXY NODE',
+    category: 'SUSPICIOUS_UNSECURED',
+    lat: 13.7999,
+    lng: 100.5504,
+    locationName: 'Chatuchak Weekend Market Gate 3',
+    signalStrength: -49,
+    securityType: 'UNENCRYPTED_HONEYPOT',
+    warningMessage: 'WARNING: HoneyPot credential sniffer detected. Captive portal mimics banking login pages. Do not connect.',
+    status: 'FLAGGED',
+  },
+  {
+    id: 'wifi-suspicious-nana-plaza',
+    ssid: 'Bangkok_Metro_Public_FreeNet',
+    bssid: 'AC:7F:3E:99:00:2A',
+    provider: 'SPOOFED_MAC_IDENTITY',
+    category: 'SUSPICIOUS_UNSECURED',
+    lat: 13.7420,
+    lng: 100.5530,
+    locationName: 'Sukhumvit Soi 4 (Nana Intersection)',
+    signalStrength: -44,
+    securityType: 'ROGUE_EVIL_TWIN',
+    warningMessage: 'WARNING: Spoofed public network name without valid digital certificates. Traffic injection active.',
+    status: 'FLAGGED',
+  },
+];
+

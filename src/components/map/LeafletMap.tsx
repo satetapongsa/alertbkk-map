@@ -9,7 +9,9 @@ import {
   BANGKOK_CCTV_CAMERAS,
   BANGKOK_BOAT_ROUTES,
   BANGKOK_RECON_UNITS,
+  BANGKOK_WIFI_HOTSPOTS,
   BangkokCCTVCamera,
+  BangkokWifiHotspot,
 } from '@/lib/recon-data';
 import {
   Navigation,
@@ -27,6 +29,8 @@ import {
   Shield,
   Bus,
   Train,
+  Wifi,
+  AlertTriangle,
   Check,
   X,
 } from 'lucide-react';
@@ -74,6 +78,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const [showBoats, setShowBoats] = useState(true);
   const [showCCTV, setShowCCTV] = useState(true);
   const [showRecon, setShowRecon] = useState(true);
+  const [showWifi, setShowWifi] = useState(true);
   const [showFlights, setShowFlights] = useState(true);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
@@ -82,6 +87,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const boatsLayerRef = useRef<L.LayerGroup | null>(null);
   const cctvLayerRef = useRef<L.LayerGroup | null>(null);
   const reconLayerRef = useRef<L.LayerGroup | null>(null);
+  const wifiLayerRef = useRef<L.LayerGroup | null>(null);
   const flightsLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Default Center: Bangkok Grand Palace / Siam / City Center
@@ -136,6 +142,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     boatsLayerRef.current = L.layerGroup().addTo(map);
     cctvLayerRef.current = L.layerGroup().addTo(map);
     reconLayerRef.current = L.layerGroup().addTo(map);
+    wifiLayerRef.current = L.layerGroup().addTo(map);
     flightsLayerRef.current = L.layerGroup().addTo(map);
     heatmapLayerRef.current = L.layerGroup().addTo(map);
 
@@ -471,6 +478,91 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       marker.addTo(reconLayerRef.current!);
     });
   }, [showRecon]);
+
+  // Update Bangkok Wi-Fi Hotspots & Cyber Telemetry
+  // Green: Corporate / Service Provider Networks
+  // Yellow: Coffee Shops / Shopping Malls
+  // Red: Suspicious Unsecured / Rogue Evil Twin Networks
+  useEffect(() => {
+    if (!mapInstanceRef.current || !wifiLayerRef.current) return;
+    wifiLayerRef.current.clearLayers();
+    if (!showWifi) return;
+
+    BANGKOK_WIFI_HOTSPOTS.forEach((spot) => {
+      let iconColor = '#22c55e'; // Green for corporate / ISP
+      let bgColor = 'rgba(20, 83, 45, 0.9)';
+      let borderColor = '#22c55e';
+      let shadowColor = 'rgba(34, 197, 94, 0.45)';
+      let badgeLabel = 'VERIFIED ISP';
+
+      if (spot.category === 'COMMERCIAL_MALL_CAFE') {
+        iconColor = '#eab308'; // Yellow for coffee shop / mall
+        bgColor = 'rgba(113, 63, 18, 0.9)';
+        borderColor = '#eab308';
+        shadowColor = 'rgba(234, 179, 8, 0.45)';
+        badgeLabel = 'CAFE / MALL';
+      } else if (spot.category === 'SUSPICIOUS_UNSECURED') {
+        iconColor = '#ef4444'; // Red warning
+        bgColor = 'rgba(127, 29, 29, 0.95)';
+        borderColor = '#ef4444';
+        shadowColor = 'rgba(239, 68, 68, 0.6)';
+        badgeLabel = 'SUSPICIOUS';
+      }
+
+      const wifiIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: ${bgColor};
+            border: 1.5px solid ${borderColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px ${shadowColor};
+            cursor: pointer;
+          ">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+          </div>
+        `,
+        className: 'wifi-pin',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([spot.lat, spot.lng], { icon: wifiIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 220px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <span style="font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: ${bgColor}; color: ${iconColor}; border: 1px solid ${borderColor};">
+              ${badgeLabel}
+            </span>
+            <span style="font-size: 10px; color: #94a3b8; font-family: monospace;">${spot.signalStrength} dBm</span>
+          </div>
+          <div style="font-weight: bold; font-size: 13px; color: #ffffff; margin-bottom: 2px;">
+            ${spot.ssid}
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">Provider: <strong style="color:#e2e8f0;">${spot.provider}</strong></div>
+          <div style="font-size: 10px; color: #64748b; margin-bottom: 6px;">Location: ${spot.locationName}</div>
+          <div style="font-size: 10px; color: #cbd5e1; margin-bottom: 4px;">Security: <span style="font-family: monospace; color:${iconColor};">${spot.securityType}</span></div>
+          ${
+            spot.warningMessage
+              ? `<div style="margin-top: 6px; padding: 6px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; font-size: 10px; line-height: 1.4;">
+                  ${spot.warningMessage}
+                </div>`
+              : ''
+          }
+        </div>
+      `);
+      marker.addTo(wifiLayerRef.current!);
+    });
+  }, [showWifi]);
   useEffect(() => {
     if (!mapInstanceRef.current || !heatmapLayerRef.current) return;
 
@@ -786,6 +878,31 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     {showRecon && <Check className="w-3 h-3 stroke-[3]" />}
                   </span>
                 </button>
+
+                {/* Free Wi-Fi Hotspots & Cyber Telemetry */}
+                <button
+                  onClick={() => setShowWifi((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showWifi
+                      ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="flex items-center gap-1.5">
+                      <span>Free Wi-Fi Hotspots</span>
+                      <span className="flex items-center gap-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Corporate/ISP: Green"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Café/Mall: Yellow"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" title="Suspicious: Red"></span>
+                      </span>
+                    </span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showWifi ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showWifi && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
               </div>
 
               {/* Master Bulk Action */}
@@ -798,6 +915,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     setShowBoats(true);
                     setShowCCTV(true);
                     setShowRecon(true);
+                    setShowWifi(true);
                   }}
                   className="text-cyan-400 hover:text-cyan-300 font-medium px-2 py-1 rounded hover:bg-slate-900"
                 >
@@ -811,6 +929,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     setShowBoats(false);
                     setShowCCTV(false);
                     setShowRecon(false);
+                    setShowWifi(false);
                   }}
                   className="text-slate-400 hover:text-rose-400 font-medium px-2 py-1 rounded hover:bg-slate-900"
                 >
