@@ -76,30 +76,7 @@ body {
 }
 
 .marker-pulse-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  pointer-events: none;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: translate(-50%, -50%) scale(0.6);
-    opacity: 0.9;
-  }
-  70% {
-    transform: translate(-50%, -50%) scale(1.6);
-    opacity: 0.2;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.0);
-    opacity: 0;
-  }
+  display: none !important;
 }
 
 /* Leaflet Popup customization */
