@@ -25,6 +25,7 @@ import { BangkokOfflineSosModal } from '@/components/modals/BangkokOfflineSosMod
 import { BangkokHospitalsModal } from '@/components/modals/BangkokHospitalsModal';
 import { BangkokWaterwaysModal } from '@/components/modals/BangkokWaterwaysModal';
 import { BangkokPowerGridModal } from '@/components/modals/BangkokPowerGridModal';
+import { BangkokPetRescueModal } from '@/components/modals/BangkokPetRescueModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -85,6 +86,7 @@ export default function HomePage() {
   const [isHospitalsModalOpen, setIsHospitalsModalOpen] = useState(false);
   const [isWaterwaysModalOpen, setIsWaterwaysModalOpen] = useState(false);
   const [isPowerGridModalOpen, setIsPowerGridModalOpen] = useState(false);
+  const [isPetRescueModalOpen, setIsPetRescueModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -703,6 +705,7 @@ export default function HomePage() {
         onOpenHospitals={() => setIsHospitalsModalOpen(true)}
         onOpenWaterways={() => setIsWaterwaysModalOpen(true)}
         onOpenPowerGrid={() => setIsPowerGridModalOpen(true)}
+        onOpenPetRescue={() => setIsPetRescueModalOpen(true)}
       />
 
       {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
@@ -761,6 +764,15 @@ export default function HomePage() {
       <BangkokPowerGridModal
         isOpen={isPowerGridModalOpen}
         onClose={() => setIsPowerGridModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
+      />
+
+      {/* Bangkok Pet & Animal Flood Evacuation Shelters Modal */}
+      <BangkokPetRescueModal
+        isOpen={isPetRescueModalOpen}
+        onClose={() => setIsPetRescueModalOpen(false)}
         onFlyToCoords={(lat, lng) => {
           setFlyToCoords({ lat, lng, zoom: 16 });
         }}

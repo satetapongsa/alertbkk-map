@@ -1138,3 +1138,98 @@ export const BANGKOK_POWER_SUBSTATIONS: PowerSubstation[] = [
   },
 ];
 
+// 10. Bangkok Emergency Pet & Animal Flood Evacuation Shelters (ศูนย์พักพิงสัตว์เลี้ยงและหน่วยกู้ภัยสัตว์ กทม.)
+export interface PetRescueShelter {
+  id: string;
+  name: string;
+  organization: string;
+  district: string;
+  lat: number;
+  lng: number;
+  petCapacity: number;
+  acceptedAnimals: string[];
+  intakeStatus: 'OPEN' | 'LIMITED' | 'FULL';
+  intakeStatusTh: string;
+  vetOnDuty: boolean;
+  contactTel: string;
+  requirements: string[];
+}
+
+export const BANGKOK_PET_SHELTERS: PetRescueShelter[] = [
+  {
+    id: 'pet-bma-prawet',
+    name: 'ศูนย์ควบคุมและพักพิงสัตว์ กทม. (ประเวศ)',
+    organization: 'สำนักอนามัย กรุงเทพมหานคร',
+    district: 'ประเวศ',
+    lat: 13.7145,
+    lng: 100.6895,
+    petCapacity: 350,
+    acceptedAnimals: ['สุนัข', 'แมว'],
+    intakeStatus: 'OPEN',
+    intakeStatusTh: 'เปิดรับสัตว์เลี้ยงอพยพน้ำท่วม',
+    vetOnDuty: true,
+    contactTel: '02-328-7460',
+    requirements: ['กรงหรือสายจูงประจำตัว', 'อาหารสัตว์ 3-7 วัน', 'สมุดวัคซีน (ถ้ามี)'],
+  },
+  {
+    id: 'pet-ku-vet-bangkhen',
+    name: 'โรงพยาบาลสัตว์ มหาวิทยาลัยเกษตรศาสตร์ (บางเขน)',
+    organization: 'คณะสัตวแพทยศาสตร์ ม.เกษตรศาสตร์',
+    district: 'จตุจักร',
+    lat: 13.8475,
+    lng: 100.5732,
+    petCapacity: 200,
+    acceptedAnimals: ['สุนัข', 'แมว', 'สัตว์เลี้ยงพิเศษ (Exotic)'],
+    intakeStatus: 'OPEN',
+    intakeStatusTh: 'พร้อมรับสัตว์ป่วยวิกฤตและพักพิงฉุกเฉิน',
+    vetOnDuty: true,
+    contactTel: '02-797-1900',
+    requirements: ['ประวัติการรักษา', 'กรงหรือกระเป๋าเดินทางสัตว์', 'ยาประจำตัวสัตว์'],
+  },
+  {
+    id: 'pet-the-voice',
+    name: 'ศูนย์ประสานงานกู้ภัยสัตว์ มูลนิธิเดอะวอยซ์ (เสียงจากเรา)',
+    organization: 'The Voice Foundation',
+    district: 'วัฒนา',
+    lat: 13.7385,
+    lng: 100.5815,
+    petCapacity: 120,
+    acceptedAnimals: ['สุนัข', 'แมว'],
+    intakeStatus: 'LIMITED',
+    intakeStatusTh: 'รับเฉพาะเคสติดน้ำท่วมสูง/ไร้ที่ไป',
+    vetOnDuty: true,
+    contactTel: '098-922-3888',
+    requirements: ['แจ้งพิกัดน้ำท่วมเพื่อประสานเรือกู้ภัย', 'เบอร์ติดต่อเจ้าของ'],
+  },
+  {
+    id: 'pet-soi-dog-bkk',
+    name: 'หน่วยกู้ภัยสัตว์ฉุกเฉิน มูลนิธิเพื่อสุนัขในซอย (Soi Dog BKK Desk)',
+    organization: 'Soi Dog Foundation',
+    district: 'คลองเตย',
+    lat: 13.7125,
+    lng: 100.5655,
+    petCapacity: 150,
+    acceptedAnimals: ['สุนัข', 'แมว', 'สัตว์ไร้บ้านติดเกาะน้ำท่วม'],
+    intakeStatus: 'OPEN',
+    intakeStatusTh: 'ส่งทีมเรือเข้าช่วยเหลือสัตว์ติดค้าง',
+    vetOnDuty: true,
+    contactTel: '076-681-029',
+    requirements: ['พิกัด GPS จุดที่สัตว์ติดค้าง', 'รูปถ่ายสัตว์เพื่อประเมินอุปกรณ์'],
+  },
+  {
+    id: 'pet-chula-small-animal',
+    name: 'โรงพยาบาลสัตว์เล็ก จุฬาลงกรณ์มหาวิทยาลัย',
+    organization: 'คณะสัตวแพทยศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย',
+    district: 'ปทุมวัน',
+    lat: 13.7412,
+    lng: 100.5312,
+    petCapacity: 100,
+    acceptedAnimals: ['สุนัข', 'แมว', 'นก', 'กระต่าย'],
+    intakeStatus: 'OPEN',
+    intakeStatusTh: 'ห้องฉุกเฉินสัตว์ 24 ชั่วโมงเปิดบริการปกติ',
+    vetOnDuty: true,
+    contactTel: '02-218-9751',
+    requirements: ['นำสัตว์ใส่กรงที่ปลอดภัย', 'สายจูงและปลอกคอพร้อมป้ายชื่อ'],
+  },
+];
+

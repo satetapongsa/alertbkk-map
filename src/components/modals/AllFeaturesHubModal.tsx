@@ -28,6 +28,7 @@ import {
   Hospital,
   Ship,
   Zap,
+  Heart,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
 
@@ -66,6 +67,7 @@ interface AllFeaturesHubModalProps {
   onOpenHospitals?: () => void;
   onOpenWaterways?: () => void;
   onOpenPowerGrid?: () => void;
+  onOpenPetRescue?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -89,6 +91,7 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenHospitals,
   onOpenWaterways,
   onOpenPowerGrid,
+  onOpenPetRescue,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -329,6 +332,19 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'ตรวจสอบสถานะสถานีไฟฟ้าแรงสูง 230kV/115kV แนวกั้นน้ำสถานี และระบบจ่ายไฟฉุกเฉินเข้าโรงพยาบาล',
       badge: 'MEA GRID',
       onLaunch: onOpenPowerGrid || onOpenSurvivalGuide,
+    },
+    {
+      id: 'pet-rescue',
+      titleTh: 'ศูนย์พักพิงสัตว์เลี้ยง & กู้ภัยสัตว์',
+      titleEn: 'Pet & Animal Flood Rescue Shelters',
+      category: 'EMERGENCY',
+      categoryTh: 'ความปลอดภัยและฉุกเฉิน',
+      icon: Heart,
+      colorClasses: 'text-amber-400 bg-amber-500/15',
+      borderClasses: 'border-amber-500/40 hover:border-amber-400',
+      description: 'ค้นหาจุดรับฝากสัตว์เลี้ยงช่วงน้ำท่วม ทีมเรือกู้ภัยสัตว์ และคู่มือเตรียมกระเป๋าฉุกเฉินสัตว์เลี้ยง 72 ชม.',
+      badge: 'PET FRIENDLY',
+      onLaunch: onOpenPetRescue || onOpenSos,
     },
   ];
 
