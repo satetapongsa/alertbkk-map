@@ -27,6 +27,8 @@ import { BangkokWaterwaysModal } from '@/components/modals/BangkokWaterwaysModal
 import { BangkokPowerGridModal } from '@/components/modals/BangkokPowerGridModal';
 import { BangkokPetRescueModal } from '@/components/modals/BangkokPetRescueModal';
 import { BangkokTelemetryExportModal } from '@/components/modals/BangkokTelemetryExportModal';
+import { TacticalKeybindingsModal } from '@/components/modals/TacticalKeybindingsModal';
+import { tacticalAudio } from '@/lib/tactical-audio';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -89,6 +91,7 @@ export default function HomePage() {
   const [isPowerGridModalOpen, setIsPowerGridModalOpen] = useState(false);
   const [isPetRescueModalOpen, setIsPetRescueModalOpen] = useState(false);
   const [isTelemetryExportOpen, setIsTelemetryExportOpen] = useState(false);
+  const [isKeybindingsModalOpen, setIsKeybindingsModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -164,6 +167,77 @@ export default function HomePage() {
         { enableHighAccuracy: false, timeout: 6000 }
       );
     }
+  }, []);
+
+  // Global Tactical Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is currently typing in an input, textarea, or contentEditable element
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        if (e.key === 'Escape') {
+          target.blur();
+        }
+        return;
+      }
+
+      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+        e.preventDefault();
+        setIsKeybindingsModalOpen((prev) => !prev);
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        setIsReportModalOpen(true);
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        setIsSosModalOpen(true);
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        setIsCategoryModalOpen((prev) => !prev);
+      } else if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        setIsTelemetryExportOpen((prev) => !prev);
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        setShowFlightRadar((prev) => !prev);
+      } else if (e.key === 'w' || e.key === 'W') {
+        e.preventDefault();
+        setIsAreaWatchModalOpen(true);
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        tacticalAudio.toggleMute();
+      } else if (e.key === 'Escape') {
+        setIsReportModalOpen(false);
+        setIsCategoryModalOpen(false);
+        setIsFeaturesHubOpen(false);
+        setIsAreaWatchModalOpen(false);
+        setIsSosModalOpen(false);
+        setIsDistrictsModalOpen(false);
+        setIsHazardModalOpen(false);
+        setIsVehicleModalOpen(false);
+        setIsWaterTideModalOpen(false);
+        setIsExpresswayModalOpen(false);
+        setIsSurvivalGuideModalOpen(false);
+        setIsPumpTrucksModalOpen(false);
+        setIsSandbagDepotModalOpen(false);
+        setIsAirQualityModalOpen(false);
+        setIsOfflineSosModalOpen(false);
+        setIsHospitalsModalOpen(false);
+        setIsWaterwaysModalOpen(false);
+        setIsPowerGridModalOpen(false);
+        setIsPetRescueModalOpen(false);
+        setIsTelemetryExportOpen(false);
+        setIsKeybindingsModalOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Real-Time SSE Subscription
@@ -786,6 +860,12 @@ export default function HomePage() {
         isOpen={isTelemetryExportOpen}
         onClose={() => setIsTelemetryExportOpen(false)}
         incidents={incidents}
+      />
+
+      {/* Tactical Keyboard Shortcuts Modal */}
+      <TacticalKeybindingsModal
+        isOpen={isKeybindingsModalOpen}
+        onClose={() => setIsKeybindingsModalOpen(false)}
       />
 
       {/* Mobile App Bottom Navigation Bar */}
