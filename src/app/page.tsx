@@ -21,6 +21,7 @@ import { AllFeaturesHubModal } from '@/components/modals/AllFeaturesHubModal';
 import { BangkokPumpTrucksModal } from '@/components/modals/BangkokPumpTrucksModal';
 import { BangkokSandbagDepotModal } from '@/components/modals/BangkokSandbagDepotModal';
 import { BangkokAirQualityModal } from '@/components/modals/BangkokAirQualityModal';
+import { BangkokOfflineSosModal } from '@/components/modals/BangkokOfflineSosModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -77,6 +78,7 @@ export default function HomePage() {
   const [isPumpTrucksModalOpen, setIsPumpTrucksModalOpen] = useState(false);
   const [isSandbagDepotModalOpen, setIsSandbagDepotModalOpen] = useState(false);
   const [isAirQualityModalOpen, setIsAirQualityModalOpen] = useState(false);
+  const [isOfflineSosModalOpen, setIsOfflineSosModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -691,6 +693,7 @@ export default function HomePage() {
         onOpenPumpTrucks={() => setIsPumpTrucksModalOpen(true)}
         onOpenSandbagDepot={() => setIsSandbagDepotModalOpen(true)}
         onOpenAirQuality={() => setIsAirQualityModalOpen(true)}
+        onOpenOfflineSos={() => setIsOfflineSosModalOpen(true)}
       />
 
       {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
@@ -718,6 +721,13 @@ export default function HomePage() {
         onFlyToCoords={(lat, lng) => {
           setFlyToCoords({ lat, lng, zoom: 16 });
         }}
+      />
+
+      {/* Bangkok Offline SOS Satellite Distress Beacon Modal */}
+      <BangkokOfflineSosModal
+        isOpen={isOfflineSosModalOpen}
+        onClose={() => setIsOfflineSosModalOpen(false)}
+        userCoords={userCoords}
       />
 
       {/* Mobile App Bottom Navigation Bar */}

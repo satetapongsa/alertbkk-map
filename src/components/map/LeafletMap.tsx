@@ -16,6 +16,8 @@ import {
   BANGKOK_CANAL_STATIONS,
   BANGKOK_PM25_STATIONS,
   BANGKOK_SHELTERS,
+  BANGKOK_PUMP_TRUCKS,
+  BANGKOK_RELIEF_DEPOTS,
 } from '@/lib/bkk-environmental-data';
 import { tacticalAudio } from '@/lib/tactical-audio';
 import {
@@ -36,6 +38,8 @@ import {
   Wind,
   CloudRain,
   Building2,
+  Truck,
+  Package,
   AlertTriangle,
   Check,
   X,
@@ -91,6 +95,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const [showCanals, setShowCanals] = useState(true);
   const [showAirQuality, setShowAirQuality] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
+  const [showPumpTrucks, setShowPumpTrucks] = useState(true);
+  const [showSandbagDepots, setShowSandbagDepots] = useState(true);
   const [showTmdRadar, setShowTmdRadar] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -102,6 +108,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const canalsLayerRef = useRef<L.LayerGroup | null>(null);
   const airQualityLayerRef = useRef<L.LayerGroup | null>(null);
   const sheltersLayerRef = useRef<L.LayerGroup | null>(null);
+  const pumpTrucksLayerRef = useRef<L.LayerGroup | null>(null);
+  const sandbagDepotsLayerRef = useRef<L.LayerGroup | null>(null);
   const tmdRadarLayerRef = useRef<L.LayerGroup | null>(null);
   const flightsLayerRef = useRef<L.LayerGroup | null>(null);
 
@@ -158,6 +166,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     canalsLayerRef.current = L.layerGroup().addTo(map);
     airQualityLayerRef.current = L.layerGroup().addTo(map);
     sheltersLayerRef.current = L.layerGroup().addTo(map);
+    pumpTrucksLayerRef.current = L.layerGroup().addTo(map);
+    sandbagDepotsLayerRef.current = L.layerGroup().addTo(map);
     tmdRadarLayerRef.current = L.layerGroup().addTo(map);
     flightsLayerRef.current = L.layerGroup().addTo(map);
     heatmapLayerRef.current = L.layerGroup().addTo(map);
@@ -213,6 +223,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         if (canalsLayerRef.current) canalsLayerRef.current.clearLayers();
         if (airQualityLayerRef.current) airQualityLayerRef.current.clearLayers();
         if (sheltersLayerRef.current) sheltersLayerRef.current.clearLayers();
+        if (pumpTrucksLayerRef.current) pumpTrucksLayerRef.current.clearLayers();
+        if (sandbagDepotsLayerRef.current) sandbagDepotsLayerRef.current.clearLayers();
         if (tmdRadarLayerRef.current) tmdRadarLayerRef.current.clearLayers();
         if (clickMarkerRef.current) {
           clickMarkerRef.current.remove();
@@ -840,6 +852,132 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     });
   }, [showTmdRadar]);
 
+  // Update BMA Mobile Flood Pump Trucks Layer (หน่วยสูบน้ำเคลื่อนที่เร็ว BEST)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !pumpTrucksLayerRef.current) return;
+    pumpTrucksLayerRef.current.clearLayers();
+    if (!showPumpTrucks) return;
+
+    BANGKOK_PUMP_TRUCKS.forEach((truck) => {
+      const isPumping = truck.status === 'PUMPING';
+      const statusColor = isPumping ? '#38bdf8' : truck.status === 'STANDBY' ? '#f59e0b' : '#a855f7';
+      const statusBg = isPumping ? 'rgba(3, 105, 161, 0.95)' : 'rgba(180, 83, 9, 0.95)';
+
+      const truckIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: ${statusBg};
+            border: 1.5px solid ${statusColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px ${statusColor}77;
+            cursor: pointer;
+          ">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+              <path d="M15 18H9"/>
+              <path d="M19 18h2a1 1 0 0 0 1-1v-5l-4-4h-4v10"/>
+              <circle cx="7" cy="18" r="2"/>
+              <circle cx="17" cy="18" r="2"/>
+            </svg>
+          </div>
+        `,
+        className: 'pump-truck-pin',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+
+      const marker = L.marker([truck.lat, truck.lng], { icon: truckIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 240px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: ${statusColor}; font-size: 13px;">${truck.unitCode} (${truck.district})</strong>
+            <span style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}66;">
+              ${truck.statusTh}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+            จุดปฏิบัติการ: <strong style="color: #e2e8f0;">${truck.locationName}</strong>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.85); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace;">
+            <div><span style="color: #94a3b8;">กำลังสูบ:</span> <strong style="color: #38bdf8;">${truck.pumpCapacityLps} ลิตร/วินาที</strong></div>
+            <div><span style="color: #94a3b8;">ระบายลง:</span> <strong style="color: #f8fafc;">${truck.dischargingTo}</strong></div>
+            <div style="grid-column: span 2;"><span style="color: #94a3b8;">หน่วยงาน:</span> <strong style="color: #e2e8f0;">${truck.officerInCharge}</strong></div>
+          </div>
+          <div style="margin-top: 6px; font-size: 11px;">
+            เบอร์โทรฉุกเฉินประจำรถ: <a href="tel:${truck.contactTel}" style="color: #38bdf8; font-weight: bold;">${truck.contactTel}</a>
+          </div>
+        </div>
+      `);
+      marker.addTo(pumpTrucksLayerRef.current!);
+    });
+  }, [showPumpTrucks]);
+
+  // Update Bangkok Sandbag Distribution Depots Layer (คลังกระสอบทรายสำนักงานเขต)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !sandbagDepotsLayerRef.current) return;
+    sandbagDepotsLayerRef.current.clearLayers();
+    if (!showSandbagDepots) return;
+
+    BANGKOK_RELIEF_DEPOTS.forEach((depot) => {
+      const isCritical = depot.sandbagStock < 2000;
+      const statusColor = isCritical ? '#ef4444' : depot.sandbagStock < 3500 ? '#f59e0b' : '#10b981';
+
+      const depotIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1.5px solid ${statusColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px ${statusColor}55;
+            cursor: pointer;
+          ">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16.5 9.4 7.55 4.24a1.78 1.78 0 0 0-2.5 1.55v12.42a1.78 1.78 0 0 0 2.5 1.55L16.5 14.6a1.78 1.78 0 0 0 0-3.2z"/>
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+        `,
+        className: 'sandbag-depot-pin',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([depot.lat, depot.lng], { icon: depotIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 240px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: ${statusColor}; font-size: 13px;">${depot.officeName}</strong>
+            <span style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}66;">
+              ${depot.sandbagStatusTh}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+            เขตพื้นที่: <strong style="color: #cbd5e1;">เขต${depot.district}</strong>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.85); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace;">
+            <div><span style="color: #94a3b8;">คงเหลือ:</span> <strong style="color: ${statusColor};">${depot.sandbagStock.toLocaleString()} ใบ</strong></div>
+            <div><span style="color: #94a3b8;">สถานะ:</span> <strong style="color: #f8fafc;">${depot.sandbagStatus}</strong></div>
+            <div style="grid-column: span 2;"><span style="color: #94a3b8;">บริการ:</span> <strong style="color: #e2e8f0;">${depot.services.join(', ')}</strong></div>
+          </div>
+          <div style="margin-top: 6px; font-size: 11px;">
+            โทรประสานงาน: <a href="tel:${depot.contactTel}" style="color: #38bdf8; font-weight: bold;">${depot.contactTel}</a>
+          </div>
+        </div>
+      `);
+      marker.addTo(sandbagDepotsLayerRef.current!);
+    });
+  }, [showSandbagDepots]);
+
   useEffect(() => {
     if (!mapInstanceRef.current || !heatmapLayerRef.current) return;
 
@@ -1221,6 +1359,42 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     {showTmdRadar && <Check className="w-3 h-3 stroke-[3]" />}
                   </span>
                 </button>
+
+                {/* BMA Mobile Pump Trucks */}
+                <button
+                  onClick={() => setShowPumpTrucks((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showPumpTrucks
+                      ? 'bg-cyan-950/40 text-cyan-200 border border-cyan-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Truck className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Pump Trucks (หน่วยสูบน้ำ กทม.)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showPumpTrucks ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showPumpTrucks && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
+
+                {/* Sandbag Relief Depots */}
+                <button
+                  onClick={() => setShowSandbagDepots((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showSandbagDepots
+                      ? 'bg-amber-950/40 text-amber-200 border border-amber-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Package className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Sandbag Depots (คลังกระสอบทราย)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showSandbagDepots ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showSandbagDepots && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
               </div>
 
               {/* Master Bulk Action */}
@@ -1234,6 +1408,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     setShowCanals(true);
                     setShowAirQuality(true);
                     setShowShelters(true);
+                    setShowPumpTrucks(true);
+                    setShowSandbagDepots(true);
                     setShowTmdRadar(true);
                   }}
                   className="text-cyan-400 hover:text-cyan-300 font-medium px-2 py-1 rounded hover:bg-slate-900 cursor-pointer"
@@ -1249,6 +1425,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     setShowCanals(false);
                     setShowAirQuality(false);
                     setShowShelters(false);
+                    setShowPumpTrucks(false);
+                    setShowSandbagDepots(false);
                     setShowTmdRadar(false);
                   }}
                   className="text-slate-400 hover:text-rose-400 font-medium px-2 py-1 rounded hover:bg-slate-900 cursor-pointer"

@@ -59,6 +59,7 @@ interface AllFeaturesHubModalProps {
   onOpenPumpTrucks?: () => void;
   onOpenSandbagDepot?: () => void;
   onOpenAirQuality?: () => void;
+  onOpenOfflineSos?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -78,6 +79,7 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenPumpTrucks,
   onOpenSandbagDepot,
   onOpenAirQuality,
+  onOpenOfflineSos,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -266,6 +268,19 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'ตรวจวัดระดับฝุ่น PM2.5 และดัชนี AQI รายเขต พร้อมคำแนะนำการสวมหน้ากากอนามัย N95',
       badge: 'AIR QUALITY',
       onLaunch: onOpenAirQuality || onOpenDistricts,
+    },
+    {
+      id: 'offline-sos',
+      titleTh: 'ขอความช่วยเหลือฉุกเฉินผ่าน SMS / ดาวเทียม',
+      titleEn: 'Emergency Offline SOS Satellite Beacon',
+      category: 'EMERGENCY',
+      categoryTh: 'ความปลอดภัยและฉุกเฉิน',
+      icon: Radio,
+      colorClasses: 'text-rose-400 bg-rose-500/15',
+      borderClasses: 'border-rose-500/40 hover:border-rose-400',
+      description: 'สร้างรหัสพิกัดขอความช่วยเหลือฉุกเฉิน ส่งผ่าน SMS และโครงข่ายสัญญาณต่ำ เมื่อเน็ตมือถือดับหรือติดค้างในน้ำท่วมสูง',
+      badge: 'OFFLINE SOS',
+      onLaunch: onOpenOfflineSos || onOpenSos,
     },
   ];
 
