@@ -42,10 +42,24 @@ import {
   Truck,
   Package,
   Hospital,
+  Ruler,
   AlertTriangle,
   Check,
   X,
 } from 'lucide-react';
+
+function calculateCompassBearing(lat1: number, lng1: number, lat2: number, lng2: number): { deg: number; cardinal: string } {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const toDeg = (r: number) => (r * 180) / Math.PI;
+  const y = Math.sin(toRad(lng2 - lng1)) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lng2 - lng1));
+  const brng = (toDeg(Math.atan2(y, x)) + 360) % 360;
+  const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const idx = Math.round(brng / 45) % 8;
+  return { deg: Math.round(brng), cardinal: cardinals[idx] };
+}
 
 interface LeafletMapProps {
   incidents: Incident[];
@@ -117,6 +131,36 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const tmdRadarLayerRef = useRef<L.LayerGroup | null>(null);
   const flightsLayerRef = useRef<L.LayerGroup | null>(null);
 
+  // Tactical Evacuation Distance Ruler State
+  const [isRulerActive, setIsRulerActive] = useState(false);
+  const isRulerActiveRef = useRef(false);
+  const rulerPointsRef = useRef<{ lat: number; lng: number }[]>([]);
+  const rulerLayerRef = useRef<L.LayerGroup | null>(null);
+  const [rulerMeasurement, setRulerMeasurement] = useState<{
+    meters: number;
+    km: number;
+    bearingDeg: number;
+    cardinal: string;
+    points: { lat: number; lng: number }[];
+  } | null>(null);
+
+  const toggleRulerMode = () => {
+    const nextState = !isRulerActive;
+    setIsRulerActive(nextState);
+    isRulerActiveRef.current = nextState;
+    if (nextState) {
+      tacticalAudio.playRadarSonarPing();
+      rulerPointsRef.current = [];
+      setRulerMeasurement(null);
+      if (rulerLayerRef.current) rulerLayerRef.current.clearLayers();
+    } else {
+      tacticalAudio.playTacticalBeep(550, 0.04);
+      rulerPointsRef.current = [];
+      setRulerMeasurement(null);
+      if (rulerLayerRef.current) rulerLayerRef.current.clearLayers();
+    }
+  };
+
   // Default Center: Bangkok Grand Palace / Siam / City Center
   const DEFAULT_CENTER: [number, number] = [13.7563, 100.5018];
   const DEFAULT_ZOOM = 12;
@@ -175,11 +219,70 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     hospitalsLayerRef.current = L.layerGroup().addTo(map);
     tmdRadarLayerRef.current = L.layerGroup().addTo(map);
     flightsLayerRef.current = L.layerGroup().addTo(map);
+    rulerLayerRef.current = L.layerGroup().addTo(map);
     heatmapLayerRef.current = L.layerGroup().addTo(map);
 
     // Map click handler (supports clicking anywhere in Bangkok or other provinces)
     map.on('click', (e: L.LeafletMouseEvent) => {
       const { lat, lng } = e.latlng;
+
+      if (isRulerActiveRef.current) {
+        if (!rulerLayerRef.current) return;
+        const currentPoints = rulerPointsRef.current;
+        if (currentPoints.length === 0) {
+          rulerLayerRef.current.clearLayers();
+          const iconA = L.divIcon({
+            html: `<div style="background:#f59e0b;color:#0f172a;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;box-shadow:0 0 10px #f59e0b;border:2px solid #ffffff;">A</div>`,
+            className: 'ruler-pin-a',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
+          L.marker([lat, lng], { icon: iconA }).addTo(rulerLayerRef.current);
+          rulerPointsRef.current = [{ lat, lng }];
+          setRulerMeasurement(null);
+          tacticalAudio.playTacticalBeep(720, 0.05);
+        } else if (currentPoints.length === 1) {
+          const ptA = currentPoints[0];
+          const iconB = L.divIcon({
+            html: `<div style="background:#06b6d4;color:#0f172a;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;box-shadow:0 0 10px #06b6d4;border:2px solid #ffffff;">B</div>`,
+            className: 'ruler-pin-b',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
+          L.marker([lat, lng], { icon: iconB }).addTo(rulerLayerRef.current);
+          L.polyline([[ptA.lat, ptA.lng], [lat, lng]], {
+            color: '#f59e0b',
+            weight: 3.5,
+            dashArray: '6, 8',
+          }).addTo(rulerLayerRef.current);
+
+          const meters = L.latLng(ptA.lat, ptA.lng).distanceTo(L.latLng(lat, lng));
+          const bearing = calculateCompassBearing(ptA.lat, ptA.lng, lat, lng);
+          rulerPointsRef.current = [ptA, { lat, lng }];
+          setRulerMeasurement({
+            meters,
+            km: meters / 1000,
+            bearingDeg: bearing.deg,
+            cardinal: bearing.cardinal,
+            points: [ptA, { lat, lng }],
+          });
+          tacticalAudio.playEmergencyAlert();
+        } else {
+          rulerLayerRef.current.clearLayers();
+          const iconA = L.divIcon({
+            html: `<div style="background:#f59e0b;color:#0f172a;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;box-shadow:0 0 10px #f59e0b;border:2px solid #ffffff;">A</div>`,
+            className: 'ruler-pin-a',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
+          L.marker([lat, lng], { icon: iconA }).addTo(rulerLayerRef.current);
+          rulerPointsRef.current = [{ lat, lng }];
+          setRulerMeasurement(null);
+          tacticalAudio.playTacticalBeep(720, 0.05);
+        }
+        return;
+      }
+
       if (!clickMarkerRef.current) {
         const pinIcon = L.divIcon({
           html: `
@@ -232,6 +335,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         if (sandbagDepotsLayerRef.current) sandbagDepotsLayerRef.current.clearLayers();
         if (hospitalsLayerRef.current) hospitalsLayerRef.current.clearLayers();
         if (tmdRadarLayerRef.current) tmdRadarLayerRef.current.clearLayers();
+        if (rulerLayerRef.current) rulerLayerRef.current.clearLayers();
         if (clickMarkerRef.current) {
           clickMarkerRef.current.remove();
           clickMarkerRef.current = null;
@@ -1182,6 +1286,91 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       {/* Map DOM target */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[500px]" />
 
+      {/* Tactical Evacuation Ruler Active HUD Banner */}
+      {isRulerActive && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[800] w-[95%] max-w-lg bg-slate-900/95 border border-amber-500/60 rounded-2xl p-3 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+              <span className="font-bold text-amber-300 text-xs tracking-wider">
+                TACTICAL EVACUATION RULER
+              </span>
+            </div>
+            <button
+              onClick={toggleRulerMode}
+              className="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+            >
+              ปิดโหมด
+            </button>
+          </div>
+
+          {!rulerMeasurement ? (
+            <div className="py-2 text-xs text-slate-300 text-center font-mono">
+              {rulerPointsRef.current.length === 0 ? (
+                <span>คลิกจุด A บนแผนที่ (ตำแหน่งเริ่มต้น / บ้านของคุณ)</span>
+              ) : (
+                <span className="text-cyan-300">บันทึกจุด A แล้ว! คลิกจุด B (ศูนย์พักพิง / โรงพยาบาล / จุดหมาย)</span>
+              )}
+            </div>
+          ) : (
+            <div className="pt-2 space-y-2 text-xs">
+              <div className="flex items-center justify-between bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                <div>
+                  <span className="text-[10px] text-slate-500 block">ระยะทางแนวตรง (Straight Distance)</span>
+                  <span className="text-amber-400 font-mono font-bold text-base">
+                    {rulerMeasurement.km >= 1
+                      ? `${rulerMeasurement.km.toFixed(2)} กม.`
+                      : `${Math.round(rulerMeasurement.meters)} เมตร`}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-500 block">ทิศทางมุ่งหน้า (Compass Heading)</span>
+                  <span className="text-cyan-400 font-mono font-bold text-sm">
+                    {rulerMeasurement.bearingDeg}° ({rulerMeasurement.cardinal})
+                  </span>
+                </div>
+              </div>
+
+              {/* Evacuation Time Estimations */}
+              <div className="grid grid-cols-3 gap-1.5 text-[11px] font-mono text-center">
+                <div className="p-1.5 rounded bg-slate-950 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">เดินลุยน้ำ</span>
+                  <span className="text-white font-bold">
+                    ~{Math.max(1, Math.round((rulerMeasurement.km / 2.5) * 60))} นาที
+                  </span>
+                </div>
+                <div className="p-1.5 rounded bg-slate-950 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">รถกระบะยกสูง</span>
+                  <span className="text-emerald-400 font-bold">
+                    ~{Math.max(1, Math.round((rulerMeasurement.km / 20) * 60))} นาที
+                  </span>
+                </div>
+                <div className="p-1.5 rounded bg-slate-950 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block">เรือท้องแบน</span>
+                  <span className="text-cyan-400 font-bold">
+                    ~{Math.max(1, Math.round((rulerMeasurement.km / 10) * 60))} นาที
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={() => {
+                    if (rulerLayerRef.current) rulerLayerRef.current.clearLayers();
+                    rulerPointsRef.current = [];
+                    setRulerMeasurement(null);
+                    tacticalAudio.playTacticalBeep(600, 0.05);
+                  }}
+                  className="text-xs text-amber-400 hover:text-amber-300 font-medium px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  วัดจุดใหม่ (Clear & Remeasure)
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Floating Map Controls on Right Side (Adjusted with mobile padding so bottom nav doesn't clip) */}
       <div className="absolute bottom-20 sm:bottom-24 lg:bottom-28 right-3 sm:right-4 z-[600] pointer-events-auto flex flex-col gap-2 items-center">
         {/* Compact Map Layer Mode Switcher Pill (Street vs Satellite Icons) */}
@@ -1559,6 +1748,19 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer"
         >
           <Globe className="w-5 h-5 text-indigo-400" />
+        </button>
+
+        {/* Tactical Evacuation Distance Ruler Tool Button */}
+        <button
+          onClick={toggleRulerMode}
+          title={isRulerActive ? 'ปิดโหมดวัดระยะทางหนีภัย' : 'เปิดไม้บรรทัดวัดระยะทางหนีภัยฉุกเฉิน'}
+          className={`w-10 h-10 rounded-xl shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
+            isRulerActive
+              ? 'bg-amber-500 text-slate-950 font-bold border border-amber-300 ring-2 ring-amber-400/50 animate-pulse'
+              : 'bg-slate-900/90 hover:bg-slate-800 text-amber-400 hover:text-amber-300 border border-slate-700/80'
+          }`}
+        >
+          <Ruler className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col bg-slate-900/90 border border-slate-700/80 rounded-xl shadow-xl overflow-hidden">
