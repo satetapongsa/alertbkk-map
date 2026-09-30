@@ -50,6 +50,7 @@ import {
   Layers,
   Grid,
   Keyboard,
+  Home,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -71,6 +72,7 @@ export default function HomePage() {
   // Navigation / Camera
   const [flyToCoords, setFlyToCoords] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [homeCoords, setHomeCoords] = useState<{ lat: number; lng: number; label?: string } | null>(null);
   const [watchArea, setWatchArea] = useState<{ lat: number; lng: number; radiusKm: number } | null>(null);
 
   // Modals
@@ -169,6 +171,47 @@ export default function HomePage() {
       );
     }
   }, []);
+
+  // Hydrate Saved Home Location from Local Storage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('alertbkk_home_coords');
+        if (saved) {
+          setHomeCoords(JSON.parse(saved));
+        }
+      } catch {}
+    }
+  }, []);
+
+  const handleSaveHomeLocation = (coords: { lat: number; lng: number; label?: string } | null) => {
+    setHomeCoords(coords);
+    if (typeof window !== 'undefined') {
+      if (coords) {
+        localStorage.setItem('alertbkk_home_coords', JSON.stringify(coords));
+        setLiveToast({
+          title: 'บันทึกหมุดที่อยู่สำเร็จ',
+          message: `ตั้งเป็นหมุดบ้านของคุณเรียบร้อยแล้ว (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`,
+        });
+        setTimeout(() => setLiveToast(null), 4000);
+        tacticalAudio.playTacticalBeep(880, 0.1);
+      } else {
+        localStorage.removeItem('alertbkk_home_coords');
+      }
+    }
+  };
+
+  const handleClearHomeLocation = () => {
+    setHomeCoords(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('alertbkk_home_coords');
+    }
+    setLiveToast({
+      title: 'ลบหมุดที่อยู่เรียบร้อย',
+      message: 'ยกเลิกการบันทึกหมุดบ้านแล้ว คุณสามารถปักใหม่ได้ตลอดเวลา',
+    });
+    setTimeout(() => setLiveToast(null), 3000);
+  };
 
   // Global Tactical Keyboard Shortcuts Listener
   useEffect(() => {
@@ -403,6 +446,9 @@ export default function HomePage() {
           onSelectIncident={handleSelectIncident}
           flyToCoords={flyToCoords}
           userCoords={userCoords}
+          homeCoords={homeCoords}
+          onSetHomeCoords={handleSaveHomeLocation}
+          clickedCoords={clickedMapCoords}
           watchArea={watchArea}
           flights={activeFlights}
           showFlights={showFlightRadar}
@@ -411,17 +457,17 @@ export default function HomePage() {
             setClickedMapCoords({ lat, lng });
             setLiveToast({
               title: 'ปักหมุดตำแหน่งบนแผนที่',
-              message: `พิกัด ${lat.toFixed(4)}, ${lng.toFixed(4)} (คลิกปุ่มด้านล่างเพื่อปักหมุดบ้านหรือแจ้งเหตุ)`,
+              message: `พิกัด ${lat.toFixed(5)}, ${lng.toFixed(5)} (คลิกปุ่มด้านล่างเพื่อปักเป็นที่อยู่บ้าน หรือแจ้งเหตุ)`,
             });
             setTimeout(() => setLiveToast(null), 3500);
           }}
           onLocateUser={(coords: { lat: number; lng: number }) => {
             setUserCoords(coords);
             setLiveToast({
-              title: 'Warped to Current Location',
-              message: `GPS Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`,
+              title: 'ค้นพบตำแหน่ง GPS ปัจจุบัน (ความแม่นยำสูง)',
+              message: `พิกัด ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
             });
-            setTimeout(() => setLiveToast(null), 3000);
+            setTimeout(() => setLiveToast(null), 3500);
           }}
         />
 
@@ -585,6 +631,22 @@ export default function HomePage() {
               <span className="sm:hidden">คู่มือตัดไฟ</span>
             </button>
 
+            {/* Saved Home Location Pill */}
+            {homeCoords && (
+              <button
+                onClick={() => {
+                  setFlyToCoords({ lat: homeCoords.lat, lng: homeCoords.lng, zoom: 17 });
+                  tacticalAudio.playTacticalBeep(660, 0.1);
+                }}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 hover:text-white border border-emerald-500/50 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+                title="วาร์ปไปที่อยู่บ้านของฉัน (My Home Location)"
+              >
+                <Home className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">ที่อยู่ของเรา</span>
+                <span className="sm:hidden">บ้าน</span>
+              </button>
+            )}
+
             {/* Tactical Keybindings Helper Pill */}
             <button
               onClick={() => setIsKeybindingsModalOpen(true)}
@@ -637,22 +699,36 @@ export default function HomePage() {
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] bg-slate-900/95 border border-amber-500/60 text-slate-100 px-3.5 py-2 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-wrap items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-[92vw]">
             <div className="flex items-center gap-1.5 text-amber-400 text-xs font-mono">
               <MapPin className="w-3.5 h-3.5" />
-              <span>{clickedMapCoords.lat.toFixed(4)}, {clickedMapCoords.lng.toFixed(4)}</span>
+              <span>{clickedMapCoords.lat.toFixed(5)}, {clickedMapCoords.lng.toFixed(5)}</span>
             </div>
             <div className="h-4 w-[1px] bg-slate-700 hidden sm:block" />
+            <button
+              onClick={() => {
+                handleSaveHomeLocation({
+                  lat: clickedMapCoords.lat,
+                  lng: clickedMapCoords.lng,
+                  label: 'บ้านของฉัน (My Home)',
+                });
+                setClickedMapCoords(null);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-emerald-600/20"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>ปักเป็นที่อยู่ของเรา</span>
+            </button>
             <button
               onClick={() => setIsReportModalOpen(true)}
               className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-cyan-500/20"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>ปักหมุดบ้าน / แจ้งเหตุ</span>
+              <span>แจ้งเหตุตรงจุดนี้</span>
             </button>
             <button
               onClick={() => setIsHazardModalOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-emerald-600/20"
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-slate-700"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>สแกนเส้นทางมาจุดนี้</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>สแกนเส้นทาง</span>
             </button>
             <button
               onClick={() => setClickedMapCoords(null)}

@@ -168,3 +168,15 @@ export interface RealtimeMessage {
   data: any;
   timestamp: string;
 }
+
+export interface UserSavedLocation {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  address?: string;
+  district?: string;
+  isHome?: boolean;
+  createdAt: string;
+}
+

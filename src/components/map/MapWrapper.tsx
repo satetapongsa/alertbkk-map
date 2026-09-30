@@ -12,6 +12,9 @@ interface MapWrapperProps {
   onSelectIncident: (incident: Incident) => void;
   flyToCoords?: { lat: number; lng: number; zoom?: number } | null;
   userCoords?: { lat: number; lng: number } | null;
+  homeCoords?: { lat: number; lng: number; label?: string } | null;
+  onSetHomeCoords?: (coords: { lat: number; lng: number; label?: string } | null) => void;
+  clickedCoords?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
   watchArea?: { lat: number; lng: number; radiusKm: number } | null;
   onLocateUser?: (coords: { lat: number; lng: number }) => void;

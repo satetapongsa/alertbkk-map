@@ -46,6 +46,8 @@ import {
   AlertTriangle,
   Check,
   X,
+  Home,
+  MapPin,
 } from 'lucide-react';
 
 function calculateCompassBearing(lat1: number, lng1: number, lat2: number, lng2: number): { deg: number; cardinal: string } {
@@ -67,6 +69,9 @@ interface LeafletMapProps {
   onSelectIncident: (incident: Incident) => void;
   flyToCoords?: { lat: number; lng: number; zoom?: number } | null;
   userCoords?: { lat: number; lng: number } | null;
+  homeCoords?: { lat: number; lng: number; label?: string } | null;
+  onSetHomeCoords?: (coords: { lat: number; lng: number; label?: string } | null) => void;
+  clickedCoords?: { lat: number; lng: number } | null;
   onMapClick?: (lat: number, lng: number) => void;
   watchArea?: { lat: number; lng: number; radiusKm: number } | null;
   onLocateUser?: (coords: { lat: number; lng: number }) => void;
@@ -83,6 +88,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   onSelectIncident,
   flyToCoords,
   userCoords,
+  homeCoords,
+  onSetHomeCoords,
+  clickedCoords,
   onMapClick,
   watchArea,
   onLocateUser,
@@ -99,6 +107,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const watchCircleRef = useRef<L.Circle | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const clickMarkerRef = useRef<L.Marker | null>(null);
+  const homeMarkerRef = useRef<L.Marker | null>(null);
 
   // Map Tile Mode: Default to REAL HIGH-RESOLUTION SATELLITE (Like looking down from orbit)
   const [mapMode, setMapMode] = useState<MapTileMode>('SATELLITE');
@@ -1173,7 +1182,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     });
   }, [showHeatmap, incidents]);
 
-  // Update User GPS Marker
+  // Update User GPS Marker with High Precision
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -1181,24 +1190,155 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       if (!userMarkerRef.current) {
         const userIcon = L.divIcon({
           html: `
-            <div style="position: relative; width: 22px; height: 22px;">
-              <div style="position: absolute; inset: 0; border-radius: 50%; background: #38bdf8; opacity: 0.5; animation: pulse-ring 2s infinite;"></div>
-              <div style="width: 14px; height: 14px; margin: 4px; border-radius: 50%; background: #0284c7; border: 2.5px solid #ffffff; box-shadow: 0 0 10px #38bdf8;"></div>
+            <div style="position: relative; width: 28px; height: 28px;">
+              <div style="position: absolute; inset: -4px; border-radius: 50%; background: #06b6d4; opacity: 0.45; animation: pulse 2s infinite;"></div>
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: #0891b2; border: 3px solid #ffffff; box-shadow: 0 0 16px rgba(6, 182, 212, 0.85); display: flex; align-items: center; justify-content: center;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #ffffff;"></div>
+              </div>
             </div>
           `,
           className: 'user-gps-pin',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
         });
 
-        userMarkerRef.current = L.marker([userCoords.lat, userCoords.lng], {
+        const marker = L.marker([userCoords.lat, userCoords.lng], {
           icon: userIcon,
+          zIndexOffset: 1000,
         }).addTo(mapInstanceRef.current);
+
+        marker.bindPopup(`
+          <div style="padding: 10px; font-family: sans-serif; color: #f1f5f9; min-width: 210px;">
+            <div style="font-size: 13px; font-weight: bold; color: #38bdf8; margin-bottom: 4px;">
+              ตำแหน่ง GPS ปัจจุบันของคุณ
+            </div>
+            <div style="font-family: monospace; font-size: 11px; color: #94a3b8; margin-bottom: 8px;">
+              Lat: ${userCoords.lat.toFixed(5)}, Lng: ${userCoords.lng.toFixed(5)}
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; background: rgba(15, 23, 42, 0.6); padding: 6px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.2);">
+              ระบุพิกัดดาวเทียมความแม่นยำสูง
+            </div>
+          </div>
+        `);
+
+        userMarkerRef.current = marker;
       } else {
         userMarkerRef.current.setLatLng([userCoords.lat, userCoords.lng]);
       }
+    } else if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+      userMarkerRef.current = null;
     }
   }, [userCoords]);
+
+  // Update Clicked Map Coordinates Marker
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    if (clickedCoords) {
+      const pinIcon = L.divIcon({
+        html: `
+          <div style="position: relative; width: 34px; height: 34px;">
+            <div style="position: absolute; inset: -4px; border-radius: 50%; background: #f59e0b; opacity: 0.45; animation: pulse 1.5s infinite;"></div>
+            <div style="position: absolute; top: 2px; left: 2px; width: 30px; height: 30px; border-radius: 50%; background: #0f172a; border: 2.5px solid #f59e0b; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.6);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+          </div>
+        `,
+        className: 'custom-click-pin',
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+      });
+
+      if (!clickMarkerRef.current) {
+        clickMarkerRef.current = L.marker([clickedCoords.lat, clickedCoords.lng], {
+          icon: pinIcon,
+          zIndexOffset: 950,
+        }).addTo(mapInstanceRef.current);
+      } else {
+        clickMarkerRef.current.setLatLng([clickedCoords.lat, clickedCoords.lng]);
+      }
+    } else if (clickMarkerRef.current) {
+      clickMarkerRef.current.remove();
+      clickMarkerRef.current = null;
+    }
+  }, [clickedCoords]);
+
+  // Update Persistent My Home / My Location Pin
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    if (homeCoords) {
+      const homeIcon = L.divIcon({
+        html: `
+          <div style="position: relative; width: 38px; height: 38px;">
+            <div style="position: absolute; inset: -5px; border-radius: 14px; background: #10b981; opacity: 0.4; animation: pulse 2s infinite;"></div>
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: #064e3b; border: 2.5px solid #34d399; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.7);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </div>
+          </div>
+        `,
+        className: 'user-home-pin',
+        iconSize: [38, 38],
+        iconAnchor: [19, 38],
+      });
+
+      // Calculate nearest flood incident to home
+      const floodIncidents = incidents.filter((i) => i.type === 'FLOOD');
+      let nearestFloodKm: number | null = null;
+      floodIncidents.forEach((inc) => {
+        const d = L.latLng(homeCoords.lat, homeCoords.lng).distanceTo(L.latLng(inc.latitude, inc.longitude)) / 1000;
+        if (nearestFloodKm === null || d < nearestFloodKm) {
+          nearestFloodKm = d;
+        }
+      });
+
+      let floodDistanceText: string | null = null;
+      if (typeof nearestFloodKm === 'number') {
+        const val: number = nearestFloodKm;
+        floodDistanceText = val < 1 ? `${Math.round(val * 1000)} เมตร` : `${val.toFixed(2)} กม.`;
+      }
+
+      const popupContent = `
+        <div style="padding: 10px; font-family: sans-serif; color: #f1f5f9; min-width: 220px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+            <strong style="font-size: 13px; color: #34d399;">${homeCoords.label || 'บ้าน / ที่อยู่ของคุณ'}</strong>
+          </div>
+          <div style="font-family: monospace; font-size: 11px; color: #94a3b8; margin-bottom: 8px;">
+            ${homeCoords.lat.toFixed(5)}, ${homeCoords.lng.toFixed(5)}
+          </div>
+          <div style="font-size: 11px; padding: 6px 8px; border-radius: 8px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(52, 211, 153, 0.3); margin-bottom: 8px;">
+            ${floodDistanceText ? `จุดน้ำท่วมใกล้ที่สุด: <strong style="color: #38bdf8">${floodDistanceText}</strong>` : 'ไม่มีรายงานน้ำท่วมใกล้เคียงในขณะนี้'}
+          </div>
+          <div style="font-size: 10px; color: #94a3b8;">
+            หมุดบันทึกในเครื่องถาวร (Local Storage)
+          </div>
+        </div>
+      `;
+
+      if (!homeMarkerRef.current) {
+        homeMarkerRef.current = L.marker([homeCoords.lat, homeCoords.lng], {
+          icon: homeIcon,
+          zIndexOffset: 1100,
+        })
+          .addTo(mapInstanceRef.current)
+          .bindPopup(popupContent);
+      } else {
+        homeMarkerRef.current.setLatLng([homeCoords.lat, homeCoords.lng]);
+        homeMarkerRef.current.setPopupContent(popupContent);
+      }
+    } else if (homeMarkerRef.current) {
+      homeMarkerRef.current.remove();
+      homeMarkerRef.current = null;
+    }
+  }, [homeCoords, incidents]);
 
   // Update Watch Area Radius Circle
   useEffect(() => {
@@ -1247,13 +1387,6 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     mapInstanceRef.current?.flyTo([13.7367, 100.5231], 6, { duration: 1.2 });
 
   const handleFlyToUser = () => {
-    if (userCoords && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([userCoords.lat, userCoords.lng], 16, {
-        duration: 1.2,
-      });
-      return;
-    }
-
     if (typeof window !== 'undefined' && navigator.geolocation) {
       setIsLocatingUser(true);
       navigator.geolocation.getCurrentPosition(
@@ -1265,19 +1398,26 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           };
           if (onLocateUser) onLocateUser(coords);
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.flyTo([coords.lat, coords.lng], 16, {
+            mapInstanceRef.current.flyTo([coords.lat, coords.lng], 17, {
               duration: 1.2,
             });
           }
+          tacticalAudio.playTacticalBeep(880, 0.1);
         },
         (err) => {
           setIsLocatingUser(false);
-          alert('Could not retrieve current location. Please allow browser location access.');
+          if (userCoords && mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo([userCoords.lat, userCoords.lng], 16, { duration: 1 });
+          } else {
+            alert('Could not retrieve high accuracy GPS position. Please ensure location services are enabled.');
+          }
         },
-        { enableHighAccuracy: true, timeout: 8000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
-      alert('Geolocation is not supported by your browser.');
+      if (userCoords && mapInstanceRef.current) {
+        mapInstanceRef.current.flyTo([userCoords.lat, userCoords.lng], 16, { duration: 1 });
+      }
     }
   };
 
@@ -1718,11 +1858,31 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           )}
         </div>
 
+        {/* Warp to My Saved Home Pin (If set) */}
+        {homeCoords && (
+          <button
+            onClick={() => {
+              if (mapInstanceRef.current) {
+                mapInstanceRef.current.flyTo([homeCoords.lat, homeCoords.lng], 17, { duration: 1.2 });
+                tacticalAudio.playTacticalBeep(660, 0.1);
+              }
+            }}
+            title="วาร์ปไปที่อยู่บ้านของฉัน (Go to My Home Address)"
+            className="w-10 h-10 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/60 shadow-2xl flex items-center justify-center transition-all active:scale-90 hover:scale-105 cursor-pointer relative group"
+          >
+            <Home className="w-5 h-5 text-emerald-400" />
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border border-slate-900"></span>
+            </span>
+          </button>
+        )}
+
         {/* GPS Warp to My Current Location Button (Always Visible) */}
         <button
           onClick={handleFlyToUser}
           disabled={isLocatingUser}
-          title="Warp to My Current GPS Location"
+          title="ค้นหาตำแหน่ง GPS ปัจจุบันแบบแม่นยำสูง (Warp to High-Accuracy GPS)"
           className="w-10 h-10 rounded-xl bg-slate-900/95 hover:bg-slate-800 text-cyan-400 border border-cyan-500/50 shadow-2xl flex items-center justify-center transition-all active:scale-90 hover:scale-105 cursor-pointer relative group"
         >
           <Navigation className={`w-5 h-5 fill-cyan-400 ${isLocatingUser ? 'animate-spin text-cyan-300' : ''}`} />
