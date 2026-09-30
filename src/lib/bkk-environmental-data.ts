@@ -888,3 +888,143 @@ export const BANGKOK_HOSPITALS: HospitalReadiness[] = [
   },
 ];
 
+// 8. Bangkok Major Public Waterway Piers & Ferry Service Telemetry (เรือด่วนเจ้าพระยา / เรือคลองแสนแสบ / เรือไฟฟ้า)
+export interface WaterwayPier {
+  id: string;
+  name: string;
+  waterwayType: 'CHAO_PHRAYA_EXPRESS' | 'KHLONG_SAEN_SAEP' | 'KHLONG_PHADUNG';
+  waterwayName: string;
+  district: string;
+  lat: number;
+  lng: number;
+  serviceStatus: 'NORMAL' | 'CAUTION_HIGH_TIDE' | 'SUSPENDED';
+  serviceStatusTh: string;
+  connectingTransit: string;
+  currentWaveConditionTh: string;
+  safetyAdviceTh: string;
+  operatingHours: string;
+}
+
+export const BANGKOK_WATERWAYS: WaterwayPier[] = [
+  {
+    id: 'pier-sathorn',
+    name: 'ท่าเรือสาทร (Central Pier Sathorn)',
+    waterwayType: 'CHAO_PHRAYA_EXPRESS',
+    waterwayName: 'แม่น้ำเจ้าพระยา',
+    district: 'สาทร / บางรัก',
+    lat: 13.7188,
+    lng: 100.5135,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'เรือด่วนทุกธงเปิดบริการปกติ',
+    connectingTransit: 'BTS สะพานตากสิน (สายสีลม)',
+    currentWaveConditionTh: 'คลื่นผิวน้ำปกติ ทุ่นลอยปลอดภัย',
+    safetyAdviceTh: 'ก้าวลงเรือด้วยความระมัดระวัง รอเรือจอดเทียบสนิทก่อนก้าว',
+    operatingHours: '06:00 - 19:30 น.',
+  },
+  {
+    id: 'pier-pratunam',
+    name: 'ท่าเรือประตูน้ำ (จุดเชื่อมต่อตะวันออก-ตะวันตก)',
+    waterwayType: 'KHLONG_SAEN_SAEP',
+    waterwayName: 'คลองแสนแสบ',
+    district: 'ปทุมวัน / ราชเทวี',
+    lat: 13.7497,
+    lng: 100.5407,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'เปิดให้บริการตามปกติทั้งสองฝั่ง',
+    connectingTransit: 'แอร์พอร์ตลิงก์ ราชปรารภ / BTS ชิดลม',
+    currentWaveConditionTh: 'ระดับน้ำคลองทรงตัว ลอดสะพานเฉลิมโลกได้ปลอดภัย',
+    safetyAdviceTh: 'จับเชือกพยุงขณะลงเรือ ไม่ยืนบริเวณกราบเรือ',
+    operatingHours: '05:30 - 20:00 น.',
+  },
+  {
+    id: 'pier-asok',
+    name: 'ท่าเรืออโศก (คลองแสนแสบ)',
+    waterwayType: 'KHLONG_SAEN_SAEP',
+    waterwayName: 'คลองแสนแสบ',
+    district: 'วัฒนา / ราชเทวี',
+    lat: 13.7492,
+    lng: 100.5634,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'เรือโดยสารวิ่งปกติ',
+    connectingTransit: 'MRT เพชรบุรี / ARL มักกะสัน',
+    currentWaveConditionTh: 'ระดับน้ำคลองต่ำกว่าคานสะพาน 80 ซม.',
+    safetyAdviceTh: 'ทางเชื่อมขึ้น MRT มีหลังคาคลุมกันฝน',
+    operatingHours: '05:30 - 20:00 น.',
+  },
+  {
+    id: 'pier-wang-lang',
+    name: 'ท่าเรือพรานนก - วังหลัง (หน้า รพ.ศิริราช)',
+    waterwayType: 'CHAO_PHRAYA_EXPRESS',
+    waterwayName: 'แม่น้ำเจ้าพระยา',
+    district: 'บางกอกน้อย',
+    lat: 13.7554,
+    lng: 100.4862,
+    serviceStatus: 'CAUTION_HIGH_TIDE',
+    serviceStatusTh: 'เฝ้าระวังช่วงน้ำทะเลหนุน',
+    connectingTransit: 'รพ.ศิริราช / ตลาดวังหลัง',
+    currentWaveConditionTh: 'คลื่นแรงปานกลางจากเรือโดยสารสัญจร',
+    safetyAdviceTh: 'โป๊ะเทียบเรือปรับระดับตามน้ำ สวมชูชีพตามคำแนะนำเจ้าหน้าที่',
+    operatingHours: '06:00 - 19:00 น.',
+  },
+  {
+    id: 'pier-tha-chang',
+    name: 'ท่าเรือท่าช้าง (พระบรมมหาราชวัง)',
+    waterwayType: 'CHAO_PHRAYA_EXPRESS',
+    waterwayName: 'แม่น้ำเจ้าพระยา',
+    district: 'พระนคร',
+    lat: 13.7525,
+    lng: 100.4892,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'เรือด่วนและเรือข้ามฟากปกติ',
+    connectingTransit: 'สนามหลวง / พระบรมมหาราชวัง',
+    currentWaveConditionTh: 'อาคารเทียบเรือปรับปรุงใหม่ ทางลาดกันลื่นพร้อม',
+    safetyAdviceTh: 'มีเจ้าหน้าที่กรมเจ้าท่าประจำจุดดูแลผู้โดยสาร',
+    operatingHours: '06:00 - 19:30 น.',
+  },
+  {
+    id: 'pier-hua-lamphong',
+    name: 'ท่าเรือสถานีรถไฟหัวลำโพง (เรือไฟฟ้า EV)',
+    waterwayType: 'KHLONG_PHADUNG',
+    waterwayName: 'คลองผดุงกรุงเกษม',
+    district: 'ปทุมวัน',
+    lat: 13.7385,
+    lng: 100.5165,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'เรือพลังงานสะอาด EV วิ่งฟรีตามรอบ',
+    connectingTransit: 'MRT หัวลำโพง (สายสีน้ำเงิน)',
+    currentWaveConditionTh: 'น้ำนิ่ง ไร้คลื่นรบกวน',
+    safetyAdviceTh: 'รองรับวีลแชร์และผู้พิการ มีทางลาดขึ้นลงสะดวก',
+    operatingHours: '06:00 - 19:00 น.',
+  },
+  {
+    id: 'pier-bang-kapi',
+    name: 'ท่าเรือเดอะมอลล์บางกะปิ',
+    waterwayType: 'KHLONG_SAEN_SAEP',
+    waterwayName: 'คลองแสนแสบ',
+    district: 'บางกะปิ',
+    lat: 13.7656,
+    lng: 100.6438,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'เปิดให้บริการปกติ',
+    connectingTransit: 'MRT สายสีเหลือง (สถานีบางกะปิ)',
+    currentWaveConditionTh: 'ระดับน้ำปกติ ประตูระบายน้ำระบายต่อเนื่อง',
+    safetyAdviceTh: 'ระวังลื่นช่วงฝนตก ทางเดินริมเขื่อนมีราวจับตลอดแนว',
+    operatingHours: '05:30 - 19:30 น.',
+  },
+  {
+    id: 'pier-nonthaburi',
+    name: 'ท่าน้ำนนทบุรี (หอนาฬิกา)',
+    waterwayType: 'CHAO_PHRAYA_EXPRESS',
+    waterwayName: 'แม่น้ำเจ้าพระยา (ตอนเหนือ กทม.)',
+    district: 'นนทบุรี (รอยต่อ กทม.)',
+    lat: 13.8425,
+    lng: 100.4905,
+    serviceStatus: 'NORMAL',
+    serviceStatusTh: 'ต้นสายเรือด่วนเจ้าพระยาเปิดปกติ',
+    connectingTransit: 'รถสองแถวรอบเมือง / ตลาดท่าน้ำนนท์',
+    currentWaveConditionTh: 'กระแสน้ำไหลแรงจากทิศเหนือ ทรงตัว',
+    safetyAdviceTh: 'สวมชูชีพทันทีเมื่อลงเรือเที่ยวช่วงเย็น',
+    operatingHours: '05:30 - 19:00 น.',
+  },
+];
+

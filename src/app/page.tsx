@@ -23,6 +23,7 @@ import { BangkokSandbagDepotModal } from '@/components/modals/BangkokSandbagDepo
 import { BangkokAirQualityModal } from '@/components/modals/BangkokAirQualityModal';
 import { BangkokOfflineSosModal } from '@/components/modals/BangkokOfflineSosModal';
 import { BangkokHospitalsModal } from '@/components/modals/BangkokHospitalsModal';
+import { BangkokWaterwaysModal } from '@/components/modals/BangkokWaterwaysModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -81,6 +82,7 @@ export default function HomePage() {
   const [isAirQualityModalOpen, setIsAirQualityModalOpen] = useState(false);
   const [isOfflineSosModalOpen, setIsOfflineSosModalOpen] = useState(false);
   const [isHospitalsModalOpen, setIsHospitalsModalOpen] = useState(false);
+  const [isWaterwaysModalOpen, setIsWaterwaysModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -697,6 +699,7 @@ export default function HomePage() {
         onOpenAirQuality={() => setIsAirQualityModalOpen(true)}
         onOpenOfflineSos={() => setIsOfflineSosModalOpen(true)}
         onOpenHospitals={() => setIsHospitalsModalOpen(true)}
+        onOpenWaterways={() => setIsWaterwaysModalOpen(true)}
       />
 
       {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
@@ -737,6 +740,15 @@ export default function HomePage() {
       <BangkokHospitalsModal
         isOpen={isHospitalsModalOpen}
         onClose={() => setIsHospitalsModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
+      />
+
+      {/* Bangkok Waterways & Public Boat Piers Telemetry Modal */}
+      <BangkokWaterwaysModal
+        isOpen={isWaterwaysModalOpen}
+        onClose={() => setIsWaterwaysModalOpen(false)}
         onFlyToCoords={(lat, lng) => {
           setFlyToCoords({ lat, lng, zoom: 16 });
         }}

@@ -26,6 +26,7 @@ import {
   Package,
   Wind,
   Hospital,
+  Ship,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
 
@@ -62,6 +63,7 @@ interface AllFeaturesHubModalProps {
   onOpenAirQuality?: () => void;
   onOpenOfflineSos?: () => void;
   onOpenHospitals?: () => void;
+  onOpenWaterways?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -83,6 +85,7 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenAirQuality,
   onOpenOfflineSos,
   onOpenHospitals,
+  onOpenWaterways,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -297,6 +300,19 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'ตรวจสถานะห้องฉุกเฉิน เส้นทางรถพยาบาลเข้าถึง และระบบไฟฟ้าสำรอง 7 โรงพยาบาลใหญ่ กทม.',
       badge: 'TRAUMA NET',
       onLaunch: onOpenHospitals || onOpenSos,
+    },
+    {
+      id: 'waterways-piers',
+      titleTh: 'ท่าเรือโดยสาร & การเดินเรือ กทม.',
+      titleEn: 'Bangkok Waterways & Public Boat Piers',
+      category: 'TRAFFIC',
+      categoryTh: 'จราจรและการเดินทาง',
+      icon: Ship,
+      colorClasses: 'text-sky-400 bg-sky-500/15',
+      borderClasses: 'border-sky-500/40 hover:border-sky-400',
+      description: 'ตรวจสอบสถานะท่าเรือด่วนเจ้าพระยา คลองแสนแสบ และเรือไฟฟ้า EV สภาพคลื่นผิวน้ำ และจุดเชื่อมต่อ MRT/BTS',
+      badge: 'RIVER TRANSIT',
+      onLaunch: onOpenWaterways || onOpenExpressway,
     },
   ];
 
