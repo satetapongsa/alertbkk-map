@@ -6,6 +6,8 @@ import { Incident } from '@/types';
 import { FlightItem } from '@/app/api/flights/route';
 import { Compass } from 'lucide-react';
 
+import { BangkokDistrict } from '@/lib/bkk-environmental-data';
+
 interface MapWrapperProps {
   incidents: Incident[];
   selectedIncident: Incident | null;
@@ -21,6 +23,9 @@ interface MapWrapperProps {
   flights?: FlightItem[];
   showFlights?: boolean;
   onToggleFlights?: () => void;
+  selectedDistrict?: BangkokDistrict | null;
+  onClearDistrict?: () => void;
+  onOpenDistrictsModal?: () => void;
 }
 
 const DynamicLeafletMap = dynamic(

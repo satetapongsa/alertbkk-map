@@ -19,7 +19,9 @@ import {
   BANGKOK_PUMP_TRUCKS,
   BANGKOK_RELIEF_DEPOTS,
   BANGKOK_HOSPITALS,
+  BangkokDistrict,
 } from '@/lib/bkk-environmental-data';
+import { getDistrictBoundaryById } from '@/lib/bkk-district-boundaries';
 import { tacticalAudio } from '@/lib/tactical-audio';
 import {
   Navigation,
@@ -29,7 +31,7 @@ import {
   Crosshair,
   Layers,
   Map as MapIcon,
-  Globe,
+  Compass,
   Eye,
   EyeOff,
   Camera,
@@ -78,6 +80,9 @@ interface LeafletMapProps {
   flights?: FlightItem[];
   showFlights?: boolean;
   onToggleFlights?: () => void;
+  selectedDistrict?: BangkokDistrict | null;
+  onClearDistrict?: () => void;
+  onOpenDistrictsModal?: () => void;
 }
 
 export type MapTileMode = 'STREET' | 'SATELLITE';
@@ -97,6 +102,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   flights = [],
   showFlights = false,
   onToggleFlights,
+  selectedDistrict,
+  onClearDistrict,
+  onOpenDistrictsModal,
 }) => {
   const [isLocatingUser, setIsLocatingUser] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -139,6 +147,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const hospitalsLayerRef = useRef<L.LayerGroup | null>(null);
   const tmdRadarLayerRef = useRef<L.LayerGroup | null>(null);
   const flightsLayerRef = useRef<L.LayerGroup | null>(null);
+  const districtBoundaryLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Tactical Evacuation Distance Ruler State
   const [isRulerActive, setIsRulerActive] = useState(false);
@@ -230,6 +239,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     flightsLayerRef.current = L.layerGroup().addTo(map);
     rulerLayerRef.current = L.layerGroup().addTo(map);
     heatmapLayerRef.current = L.layerGroup().addTo(map);
+    districtBoundaryLayerRef.current = L.layerGroup().addTo(map);
 
     // Map click handler (supports clicking anywhere in Bangkok or other provinces)
     map.on('click', (e: L.LeafletMouseEvent) => {
@@ -345,6 +355,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         if (hospitalsLayerRef.current) hospitalsLayerRef.current.clearLayers();
         if (tmdRadarLayerRef.current) tmdRadarLayerRef.current.clearLayers();
         if (rulerLayerRef.current) rulerLayerRef.current.clearLayers();
+        if (districtBoundaryLayerRef.current) districtBoundaryLayerRef.current.clearLayers();
         if (clickMarkerRef.current) {
           clickMarkerRef.current.remove();
           clickMarkerRef.current = null;
@@ -1383,8 +1394,118 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
   const handleCenterBangkok = () =>
     mapInstanceRef.current?.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 1 });
-  const handleCenterThailand = () =>
-    mapInstanceRef.current?.flyTo([13.7367, 100.5231], 6, { duration: 1.2 });
+
+  // District Boundary Perimeter Outline Effect
+  useEffect(() => {
+    if (!mapInstanceRef.current || !districtBoundaryLayerRef.current) return;
+    districtBoundaryLayerRef.current.clearLayers();
+
+    if (!selectedDistrict) return;
+
+    const meta = getDistrictBoundaryById(selectedDistrict.id);
+    const coords = meta?.boundaryPolygon || [];
+
+    if (coords.length > 0) {
+      // 1. Primary glowing colored perimeter line encircling the district
+      const outerBoundary = L.polygon(coords, {
+        color: '#06b6d4',
+        weight: 4,
+        opacity: 0.95,
+        dashArray: '8, 6',
+        fillColor: '#06b6d4',
+        fillOpacity: 0.16,
+        lineCap: 'round',
+        lineJoin: 'round',
+      });
+
+      // 2. High-contrast accent stroke
+      const innerGlow = L.polygon(coords, {
+        color: '#38bdf8',
+        weight: 1.5,
+        opacity: 0.8,
+        fill: false,
+      });
+
+      // 3. District Center Tactical Badge Marker
+      const labelIcon = L.divIcon({
+        html: `
+          <div class="district-center-hud" style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+          ">
+            <div style="
+              background: rgba(15, 23, 42, 0.96);
+              border: 2px solid #06b6d4;
+              box-shadow: 0 0 22px rgba(6, 182, 212, 0.7), 0 8px 24px rgba(0,0,0,0.8);
+              color: #ffffff;
+              padding: 6px 12px;
+              border-radius: 14px;
+              font-family: inherit;
+              font-size: 13px;
+              font-weight: 800;
+              white-space: nowrap;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #06b6d4; box-shadow: 0 0 10px #06b6d4;"></span>
+              <span style="color: #67e8f9; font-weight: 900;">เขต${selectedDistrict.nameTh}</span>
+              <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">(${selectedDistrict.nameEn})</span>
+              <span style="font-size: 10px; background: rgba(6,182,212,0.25); color: #38bdf8; padding: 2px 6px; border-radius: 6px; font-family: monospace;">${selectedDistrict.postalCode}</span>
+            </div>
+            <div style="
+              width: 0; 
+              height: 0; 
+              border-left: 7px solid transparent;
+              border-right: 7px solid transparent;
+              border-top: 8px solid #06b6d4;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            "></div>
+          </div>
+        `,
+        className: 'district-label-container',
+        iconSize: [200, 44],
+        iconAnchor: [100, 44],
+      });
+
+      const labelMarker = L.marker([selectedDistrict.lat, selectedDistrict.lng], { icon: labelIcon });
+      
+      const popupContent = `
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 220px;">
+          <div style="font-size: 14px; font-weight: 800; color: #38bdf8; margin-bottom: 4px;">
+            เขต${selectedDistrict.nameTh} (${selectedDistrict.nameEn})
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 6px;">
+            รหัสไปรษณีย์: <strong style="color: #ffffff;">${selectedDistrict.postalCode}</strong>
+          </div>
+          ${meta ? `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.8); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace; margin-bottom: 8px;">
+              <div><span style="color: #94a3b8;">พื้นที่:</span> <strong style="color: #f8fafc;">${meta.areaKm2} ตร.กม.</strong></div>
+              <div><span style="color: #94a3b8;">ประชากร:</span> <strong style="color: #f8fafc;">~${meta.populationApprox.toLocaleString()}</strong></div>
+            </div>
+          ` : ''}
+          <div style="font-size: 10px; color: #64748b;">
+            พิกัดศูนย์กลาง: ${selectedDistrict.lat.toFixed(4)}, ${selectedDistrict.lng.toFixed(4)}
+          </div>
+        </div>
+      `;
+      labelMarker.bindPopup(popupContent);
+
+      outerBoundary.addTo(districtBoundaryLayerRef.current);
+      innerGlow.addTo(districtBoundaryLayerRef.current);
+      labelMarker.addTo(districtBoundaryLayerRef.current);
+
+      mapInstanceRef.current.fitBounds(outerBoundary.getBounds().pad(0.18), {
+        duration: 1.2,
+        maxZoom: 15,
+      });
+
+      tacticalAudio.playTacticalBeep(640, 0.08);
+    }
+  }, [selectedDistrict]);
 
   const handleFlyToUser = () => {
     if (typeof window !== 'undefined' && navigator.geolocation) {
@@ -1511,6 +1632,48 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         </div>
       )}
 
+      {/* Active District Boundary HUD Pill */}
+      {selectedDistrict && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[800] w-[95%] max-w-md bg-slate-900/95 border-2 border-cyan-500/80 rounded-2xl p-2.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200 pointer-events-auto flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="relative flex h-3 w-3 flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+            </span>
+            <div className="truncate">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">ขอบเขตพื้นที่</span>
+                <span className="text-[10px] text-slate-400 font-mono">[{selectedDistrict.postalCode}]</span>
+              </div>
+              <div className="font-extrabold text-sm text-white truncate">
+                เขต{selectedDistrict.nameTh} <span className="text-slate-400 text-xs font-normal">({selectedDistrict.nameEn})</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {onOpenDistrictsModal && (
+              <button
+                onClick={onOpenDistrictsModal}
+                className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-cyan-200 text-xs font-semibold transition-colors cursor-pointer"
+                title="เปลี่ยนเขต"
+              >
+                เปลี่ยนเขต
+              </button>
+            )}
+            {onClearDistrict && (
+              <button
+                onClick={onClearDistrict}
+                className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-white transition-colors cursor-pointer"
+                title="ล้างเส้นขอบเขต"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Floating Map Controls on Right Side (Adjusted with mobile padding so bottom nav doesn't clip) */}
       <div className="absolute bottom-20 sm:bottom-24 lg:bottom-28 right-3 sm:right-4 z-[600] pointer-events-auto flex flex-col gap-2 items-center">
         {/* Compact Map Layer Mode Switcher Pill (Street vs Satellite Icons) */}
@@ -1538,7 +1701,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
             title="Satellite Imagery (Google Satellite)"
             aria-label="Satellite Imagery"
           >
-            <Globe className="w-4 h-4" />
+            <Layers className="w-4 h-4" />
           </button>
         </div>
 
@@ -1902,13 +2065,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           <Crosshair className="w-5 h-5 text-cyan-400" />
         </button>
 
-        <button
-          onClick={handleCenterThailand}
-          title="ภาพรวมทุกจังหวัดทั่วไทย (View All Thailand)"
-          className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-        >
-          <Globe className="w-5 h-5 text-indigo-400" />
-        </button>
+        {onOpenDistrictsModal && (
+          <button
+            onClick={onOpenDistrictsModal}
+            title="เลือกดู 50 เขต กทม. พร้อมเส้นขอบเขตสี (Bangkok 50 Districts)"
+            className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 shadow-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer group"
+          >
+            <Compass className="w-5 h-5 text-cyan-400 group-hover:rotate-45 transition-transform" />
+          </button>
+        )}
 
         {/* Tactical Evacuation Distance Ruler Tool Button */}
         <button

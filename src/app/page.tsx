@@ -80,6 +80,7 @@ export default function HomePage() {
   const [isAreaWatchModalOpen, setIsAreaWatchModalOpen] = useState(false);
   const [isSosModalOpen, setIsSosModalOpen] = useState(false);
   const [isDistrictsModalOpen, setIsDistrictsModalOpen] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState<BangkokDistrict | null>(null);
   const [isHazardModalOpen, setIsHazardModalOpen] = useState(false);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [isWaterTideModalOpen, setIsWaterTideModalOpen] = useState(false);
@@ -249,6 +250,9 @@ export default function HomePage() {
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         setShowFlightRadar((prev) => !prev);
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        setIsDistrictsModalOpen((prev) => !prev);
       } else if (e.key === 'w' || e.key === 'W') {
         e.preventDefault();
         setIsAreaWatchModalOpen(true);
@@ -453,6 +457,9 @@ export default function HomePage() {
           flights={activeFlights}
           showFlights={showFlightRadar}
           onToggleFlights={() => setShowFlightRadar((prev) => !prev)}
+          selectedDistrict={selectedDistrict}
+          onClearDistrict={() => setSelectedDistrict(null)}
+          onOpenDistrictsModal={() => setIsDistrictsModalOpen(true)}
           onMapClick={(lat: number, lng: number) => {
             setClickedMapCoords({ lat, lng });
             setLiveToast({
@@ -570,11 +577,27 @@ export default function HomePage() {
             {/* 50 Districts Quick Selector Pill */}
             <button
               onClick={() => setIsDistrictsModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-750 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="เลือกดูพิกัด 50 เขต กทม."
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none border ${
+                selectedDistrict
+                  ? 'bg-cyan-950/80 text-cyan-300 border-cyan-400 ring-1 ring-cyan-400/50'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-750'
+              }`}
+              title={selectedDistrict ? `กำลังแสดงเส้นขอบเขต: เขต${selectedDistrict.nameTh}` : 'เลือกดูพิกัด 50 เขต กทม.'}
             >
-              <Compass className="w-3.5 h-3.5 text-cyan-400" />
-              <span>50 เขต</span>
+              <Compass className={`w-3.5 h-3.5 ${selectedDistrict ? 'text-cyan-300' : 'text-cyan-400'}`} />
+              <span>{selectedDistrict ? `เขต${selectedDistrict.nameTh}` : '50 เขต'}</span>
+              {selectedDistrict && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedDistrict(null);
+                  }}
+                  className="ml-0.5 p-0.5 rounded-full hover:bg-rose-500/20 hover:text-rose-300"
+                  title="ล้างเส้นขอบเขต"
+                >
+                  <X className="w-3 h-3" />
+                </span>
+              )}
             </button>
 
             {/* Safe Commute / Hazard Scanner Button */}
@@ -789,10 +812,20 @@ export default function HomePage() {
       <BangkokDistrictsModal
         isOpen={isDistrictsModalOpen}
         onClose={() => setIsDistrictsModalOpen(false)}
+        selectedDistrict={selectedDistrict}
+        onClearDistrict={() => {
+          setSelectedDistrict(null);
+          setLiveToast({
+            title: 'ล้างเส้นขอบเขตพื้นที่',
+            message: 'ยกเลิกการแสดงเส้นขอบเขตเขตแล้ว',
+          });
+          setTimeout(() => setLiveToast(null), 3000);
+        }}
         onSelectDistrict={(district) => {
+          setSelectedDistrict(district);
           setFlyToCoords({ lat: district.lat, lng: district.lng, zoom: 14 });
           setLiveToast({
-            title: `สำรวจพื้นที่เขต${district.nameTh} (${district.nameEn})`,
+            title: `แสดงเส้นขอบเขตสี: เขต${district.nameTh} (${district.nameEn})`,
             message: `พิกัด ${district.lat.toFixed(4)}, ${district.lng.toFixed(4)} • รหัสไปรษณีย์ ${district.postalCode}`,
           });
           setTimeout(() => setLiveToast(null), 4000);

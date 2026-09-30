@@ -21,6 +21,7 @@ export const TacticalKeybindingsModal: React.FC<TacticalKeybindingsModalProps> =
     { key: 'C', descTh: 'เปิดตัวกรองหมวดหมู่เหตุการณ์สด 100%', descEn: 'Toggle Live Incident Categories Filter' },
     { key: 'E', descTh: 'เปิดศูนย์ส่งออกพิกัดโทรมาตร GIS (GeoJSON/CSV)', descEn: 'Open Disaster Telemetry GIS Export' },
     { key: 'F', descTh: 'เปิด/ปิด เรดาร์จราจรน่านฟ้าสุวรรณภูมิ/ดอนเมือง', descEn: 'Toggle Airspace Flight Radar Drawer' },
+    { key: 'D', descTh: 'เปิดระบบสำรวจและแสดงเส้นขอบเขต 50 เขต กทม.', descEn: 'Open Bangkok 50 Districts & Perimeter Boundary' },
     { key: 'W', descTh: 'เปิดระบบเรดาร์เฝ้าระวังพื้นที่รอบที่พัก (Area Watch)', descEn: 'Open Perimeter Area Watch Radar' },
     { key: 'M', descTh: 'เปิด/ปิด เสียงเอฟเฟกต์ยุทธวิธี (Tactical Audio Mute)', descEn: 'Toggle Tactical Audio Synthesizer' },
     { key: 'Esc', descTh: 'ปิดหน้าต่างโมดอลที่กำลังเปิดอยู่ทั้งหมด', descEn: 'Close Active Modals and Overlays' },
