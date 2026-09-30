@@ -739,3 +739,152 @@ export const BANGKOK_RELIEF_DEPOTS: DistrictReliefDepot[] = [
   },
 ];
 
+// 7. Bangkok Major Emergency Trauma Centers & Flood Accessibility Telemetry
+export interface HospitalReadiness {
+  id: string;
+  name: string;
+  district: string;
+  lat: number;
+  lng: number;
+  traumaLevel: 'LEVEL_1' | 'LEVEL_2';
+  erBedStatus: 'AVAILABLE' | 'CONGESTED' | 'FULL';
+  erBedStatusTh: string;
+  floodBarrierMsl: number; // ความสูงคันกั้นน้ำ รทก.
+  accessStatus: 'ALL_VEHICLES' | 'HIGH_CLEARANCE_ONLY' | 'BOAT_ONLY';
+  accessStatusTh: string;
+  emergencyTel: string;
+  generatorBackupHours: number;
+  oxygenSupplyDays: number;
+  helipadReady: boolean;
+  lastUpdated: string;
+}
+
+export const BANGKOK_HOSPITALS: HospitalReadiness[] = [
+  {
+    id: 'hosp-siriraj',
+    name: 'โรงพยาบาลศิริราช (Siriraj Hospital)',
+    district: 'บางกอกน้อย',
+    lat: 13.7578,
+    lng: 100.4855,
+    traumaLevel: 'LEVEL_1',
+    erBedStatus: 'AVAILABLE',
+    erBedStatusTh: 'ห้องฉุกเฉินพร้อมรับผู้ป่วย',
+    floodBarrierMsl: 3.2,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'เข้าถึงได้ทุกยานพาหนะ (แนวเขื่อนเจ้าพระยาสูง)',
+    emergencyTel: '02-419-7000',
+    generatorBackupHours: 120,
+    oxygenSupplyDays: 14,
+    helipadReady: true,
+    lastUpdated: 'Live Telemetry',
+  },
+  {
+    id: 'hosp-chulalongkorn',
+    name: 'โรงพยาบาลจุฬาลงกรณ์ สภากาชาดไทย',
+    district: 'ปทุมวัน',
+    lat: 13.7314,
+    lng: 100.5342,
+    traumaLevel: 'LEVEL_1',
+    erBedStatus: 'AVAILABLE',
+    erBedStatusTh: 'ห้องฉุกเฉินพร้อมรับผู้ป่วยวิกฤต',
+    floodBarrierMsl: 2.8,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'ถนนพระราม 4 และอังรีดูนังต์สัญจรได้ปกติ',
+    emergencyTel: '02-256-4000',
+    generatorBackupHours: 96,
+    oxygenSupplyDays: 20,
+    helipadReady: true,
+    lastUpdated: 'Live Telemetry',
+  },
+  {
+    id: 'hosp-ramathibodi',
+    name: 'โรงพยาบาลรามาธิบดี',
+    district: 'ราชเทวี',
+    lat: 13.7668,
+    lng: 100.5262,
+    traumaLevel: 'LEVEL_1',
+    erBedStatus: 'AVAILABLE',
+    erBedStatusTh: 'พร้อมรับผู้ป่วยอุบัติเหตุและฉุกเฉิน',
+    floodBarrierMsl: 2.5,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'ถนนพระราม 6 สัญจรได้ปกติ',
+    emergencyTel: '02-201-1000',
+    generatorBackupHours: 72,
+    oxygenSupplyDays: 10,
+    helipadReady: true,
+    lastUpdated: 'Live Telemetry',
+  },
+  {
+    id: 'hosp-rajavithi',
+    name: 'โรงพยาบาลราชวิถี (อนุสาวรีย์ชัยสมรภูมิ)',
+    district: 'ราชเทวี',
+    lat: 13.7652,
+    lng: 100.5378,
+    traumaLevel: 'LEVEL_1',
+    erBedStatus: 'CONGESTED',
+    erBedStatusTh: 'ผู้ป่วยฉุกเฉินหนาแน่น',
+    floodBarrierMsl: 2.4,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'ทางลาดเชื่อมต่อสะพานข้ามแยกเข้าถึงได้',
+    emergencyTel: '02-206-2900',
+    generatorBackupHours: 72,
+    oxygenSupplyDays: 12,
+    helipadReady: false,
+    lastUpdated: 'Live Telemetry',
+  },
+  {
+    id: 'hosp-police',
+    name: 'โรงพยาบาลตำรวจ (แยกราชประสงค์)',
+    district: 'ปทุมวัน',
+    lat: 13.7438,
+    lng: 100.5395,
+    traumaLevel: 'LEVEL_1',
+    erBedStatus: 'AVAILABLE',
+    erBedStatusTh: 'ห้องฉุกเฉินเปิดบริการ 24 ชม.',
+    floodBarrierMsl: 2.6,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'ถนนพระราม 1 สัญจรได้ปกติ',
+    emergencyTel: '02-207-6000',
+    generatorBackupHours: 48,
+    oxygenSupplyDays: 7,
+    helipadReady: true,
+    lastUpdated: 'Live Telemetry',
+  },
+  {
+    id: 'hosp-taksin',
+    name: 'โรงพยาบาลตากสิน (สำนักการแพทย์ กทม.)',
+    district: 'คลองสาน',
+    lat: 13.7310,
+    lng: 100.5078,
+    traumaLevel: 'LEVEL_2',
+    erBedStatus: 'AVAILABLE',
+    erBedStatusTh: 'ศูนย์อุบัติเหตุฝั่งธนบุรีพร้อมปฏิบัติการ',
+    floodBarrierMsl: 3.0,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'แนวคันกั้นน้ำคลองสานแข็งแรง',
+    emergencyTel: '02-437-0123',
+    generatorBackupHours: 60,
+    oxygenSupplyDays: 8,
+    helipadReady: false,
+    lastUpdated: 'Live Telemetry',
+  },
+  {
+    id: 'hosp-bangkhen-bma',
+    name: 'โรงพยาบาลภูมิพลอดุลยเดช พอ.',
+    district: 'สายไหม',
+    lat: 13.9100,
+    lng: 100.6212,
+    traumaLevel: 'LEVEL_1',
+    erBedStatus: 'AVAILABLE',
+    erBedStatusTh: 'ศูนย์การแพทย์ฉุกเฉินตอนเหนือ กทม.',
+    floodBarrierMsl: 2.7,
+    accessStatus: 'ALL_VEHICLES',
+    accessStatusTh: 'ถนนพหลโยธินหน้า รพ. สัญจรได้',
+    emergencyTel: '02-534-7000',
+    generatorBackupHours: 120,
+    oxygenSupplyDays: 14,
+    helipadReady: true,
+    lastUpdated: 'Live Telemetry',
+  },
+];
+

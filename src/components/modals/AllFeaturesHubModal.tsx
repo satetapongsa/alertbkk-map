@@ -25,6 +25,7 @@ import {
   Truck,
   Package,
   Wind,
+  Hospital,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
 
@@ -60,6 +61,7 @@ interface AllFeaturesHubModalProps {
   onOpenSandbagDepot?: () => void;
   onOpenAirQuality?: () => void;
   onOpenOfflineSos?: () => void;
+  onOpenHospitals?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -80,6 +82,7 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenSandbagDepot,
   onOpenAirQuality,
   onOpenOfflineSos,
+  onOpenHospitals,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -281,6 +284,19 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'สร้างรหัสพิกัดขอความช่วยเหลือฉุกเฉิน ส่งผ่าน SMS และโครงข่ายสัญญาณต่ำ เมื่อเน็ตมือถือดับหรือติดค้างในน้ำท่วมสูง',
       badge: 'OFFLINE SOS',
       onLaunch: onOpenOfflineSos || onOpenSos,
+    },
+    {
+      id: 'hospitals-trauma',
+      titleTh: 'ศูนย์อุบัติเหตุ & โรงพยาบาลน้ำท่วม',
+      titleEn: 'Trauma Hospitals & Flood Access Telemetry',
+      category: 'EMERGENCY',
+      categoryTh: 'ความปลอดภัยและฉุกเฉิน',
+      icon: Hospital,
+      colorClasses: 'text-emerald-400 bg-emerald-500/15',
+      borderClasses: 'border-emerald-500/40 hover:border-emerald-400',
+      description: 'ตรวจสถานะห้องฉุกเฉิน เส้นทางรถพยาบาลเข้าถึง และระบบไฟฟ้าสำรอง 7 โรงพยาบาลใหญ่ กทม.',
+      badge: 'TRAUMA NET',
+      onLaunch: onOpenHospitals || onOpenSos,
     },
   ];
 

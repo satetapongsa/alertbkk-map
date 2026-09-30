@@ -22,6 +22,7 @@ import { BangkokPumpTrucksModal } from '@/components/modals/BangkokPumpTrucksMod
 import { BangkokSandbagDepotModal } from '@/components/modals/BangkokSandbagDepotModal';
 import { BangkokAirQualityModal } from '@/components/modals/BangkokAirQualityModal';
 import { BangkokOfflineSosModal } from '@/components/modals/BangkokOfflineSosModal';
+import { BangkokHospitalsModal } from '@/components/modals/BangkokHospitalsModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -79,6 +80,7 @@ export default function HomePage() {
   const [isSandbagDepotModalOpen, setIsSandbagDepotModalOpen] = useState(false);
   const [isAirQualityModalOpen, setIsAirQualityModalOpen] = useState(false);
   const [isOfflineSosModalOpen, setIsOfflineSosModalOpen] = useState(false);
+  const [isHospitalsModalOpen, setIsHospitalsModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -694,6 +696,7 @@ export default function HomePage() {
         onOpenSandbagDepot={() => setIsSandbagDepotModalOpen(true)}
         onOpenAirQuality={() => setIsAirQualityModalOpen(true)}
         onOpenOfflineSos={() => setIsOfflineSosModalOpen(true)}
+        onOpenHospitals={() => setIsHospitalsModalOpen(true)}
       />
 
       {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
@@ -728,6 +731,15 @@ export default function HomePage() {
         isOpen={isOfflineSosModalOpen}
         onClose={() => setIsOfflineSosModalOpen(false)}
         userCoords={userCoords}
+      />
+
+      {/* Bangkok Trauma Hospitals & Flood Readiness Modal */}
+      <BangkokHospitalsModal
+        isOpen={isHospitalsModalOpen}
+        onClose={() => setIsHospitalsModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
       />
 
       {/* Mobile App Bottom Navigation Bar */}

@@ -18,6 +18,7 @@ import {
   BANGKOK_SHELTERS,
   BANGKOK_PUMP_TRUCKS,
   BANGKOK_RELIEF_DEPOTS,
+  BANGKOK_HOSPITALS,
 } from '@/lib/bkk-environmental-data';
 import { tacticalAudio } from '@/lib/tactical-audio';
 import {
@@ -40,6 +41,7 @@ import {
   Building2,
   Truck,
   Package,
+  Hospital,
   AlertTriangle,
   Check,
   X,
@@ -97,6 +99,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const [showShelters, setShowShelters] = useState(true);
   const [showPumpTrucks, setShowPumpTrucks] = useState(true);
   const [showSandbagDepots, setShowSandbagDepots] = useState(true);
+  const [showHospitals, setShowHospitals] = useState(true);
   const [showTmdRadar, setShowTmdRadar] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showLayerMenu, setShowLayerMenu] = useState(false);
@@ -110,6 +113,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const sheltersLayerRef = useRef<L.LayerGroup | null>(null);
   const pumpTrucksLayerRef = useRef<L.LayerGroup | null>(null);
   const sandbagDepotsLayerRef = useRef<L.LayerGroup | null>(null);
+  const hospitalsLayerRef = useRef<L.LayerGroup | null>(null);
   const tmdRadarLayerRef = useRef<L.LayerGroup | null>(null);
   const flightsLayerRef = useRef<L.LayerGroup | null>(null);
 
@@ -168,6 +172,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     sheltersLayerRef.current = L.layerGroup().addTo(map);
     pumpTrucksLayerRef.current = L.layerGroup().addTo(map);
     sandbagDepotsLayerRef.current = L.layerGroup().addTo(map);
+    hospitalsLayerRef.current = L.layerGroup().addTo(map);
     tmdRadarLayerRef.current = L.layerGroup().addTo(map);
     flightsLayerRef.current = L.layerGroup().addTo(map);
     heatmapLayerRef.current = L.layerGroup().addTo(map);
@@ -225,6 +230,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         if (sheltersLayerRef.current) sheltersLayerRef.current.clearLayers();
         if (pumpTrucksLayerRef.current) pumpTrucksLayerRef.current.clearLayers();
         if (sandbagDepotsLayerRef.current) sandbagDepotsLayerRef.current.clearLayers();
+        if (hospitalsLayerRef.current) hospitalsLayerRef.current.clearLayers();
         if (tmdRadarLayerRef.current) tmdRadarLayerRef.current.clearLayers();
         if (clickMarkerRef.current) {
           clickMarkerRef.current.remove();
@@ -978,6 +984,71 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     });
   }, [showSandbagDepots]);
 
+  // Update Bangkok Trauma Hospitals & Flood Readiness Layer
+  useEffect(() => {
+    if (!mapInstanceRef.current || !hospitalsLayerRef.current) return;
+    hospitalsLayerRef.current.clearLayers();
+    if (!showHospitals) return;
+
+    BANGKOK_HOSPITALS.forEach((hosp) => {
+      const isAvailable = hosp.erBedStatus === 'AVAILABLE';
+      const statusColor = isAvailable ? '#10b981' : '#f59e0b';
+      const bg = 'rgba(15, 23, 42, 0.95)';
+
+      const hospIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: ${bg};
+            border: 2px solid ${statusColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px ${statusColor}66;
+            cursor: pointer;
+          ">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 6v12M6 12h12"/>
+            </svg>
+          </div>
+        `,
+        className: 'hospital-telemetry-pin',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+
+      const marker = L.marker([hosp.lat, hosp.lng], { icon: hospIcon });
+      marker.bindPopup(`
+        <div style="padding: 10px; font-family: inherit; font-size: 12px; color: #f8fafc; min-width: 250px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <strong style="color: #ffffff; font-size: 13px;">${hosp.name}</strong>
+            <span style="font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}66;">
+              ${hosp.erBedStatusTh}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
+            เขตพื้นที่: <strong style="color: #cbd5e1;">${hosp.district}</strong> (${hosp.traumaLevel === 'LEVEL_1' ? 'ศูนย์อุบัติเหตุระดับ 1' : 'ศูนย์อุบัติเหตุระดับ 2'})
+          </div>
+          <div style="padding: 4px 6px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; font-size: 10px; color: #6ee7b7; margin-bottom: 6px;">
+            เส้นทาง: ${hosp.accessStatusTh}
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: rgba(15, 23, 42, 0.85); border-radius: 8px; border: 1px solid #334155; font-size: 10px; font-family: monospace;">
+            <div><span style="color: #94a3b8;">คันกั้นน้ำ:</span> <strong style="color: #38bdf8;">+${hosp.floodBarrierMsl.toFixed(1)} ม.รทก.</strong></div>
+            <div><span style="color: #94a3b8;">ไฟสำรอง:</span> <strong style="color: #10b981;">${hosp.generatorBackupHours} ชม.</strong></div>
+            <div><span style="color: #94a3b8;">ออกซิเจน:</span> <strong style="color: #f8fafc;">${hosp.oxygenSupplyDays} วัน</strong></div>
+            <div><span style="color: #94a3b8;">ลานจอด ฮ.:</span> <strong style="color: ${hosp.helipadReady ? '#38bdf8' : '#64748b'};">${hosp.helipadReady ? 'พร้อม' : 'ไม่มี'}</strong></div>
+          </div>
+          <div style="margin-top: 6px; font-size: 11px;">
+            สายด่วนฉุกเฉิน: <a href="tel:${hosp.emergencyTel}" style="color: #38bdf8; font-weight: bold;">${hosp.emergencyTel}</a>
+          </div>
+        </div>
+      `);
+      marker.addTo(hospitalsLayerRef.current!);
+    });
+  }, [showHospitals]);
+
   useEffect(() => {
     if (!mapInstanceRef.current || !heatmapLayerRef.current) return;
 
@@ -1395,6 +1466,24 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     {showSandbagDepots && <Check className="w-3 h-3 stroke-[3]" />}
                   </span>
                 </button>
+
+                {/* Trauma Hospitals & Emergency Readiness */}
+                <button
+                  onClick={() => setShowHospitals((prev) => !prev)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-all ${
+                    showHospitals
+                      ? 'bg-emerald-950/40 text-emerald-200 border border-emerald-500/40'
+                      : 'bg-slate-900/60 text-slate-400 border border-transparent hover:bg-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Hospital className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Trauma Hospitals (รพ. ฉุกเฉิน)</span>
+                  </span>
+                  <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${showHospitals ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-500'}`}>
+                    {showHospitals && <Check className="w-3 h-3 stroke-[3]" />}
+                  </span>
+                </button>
               </div>
 
               {/* Master Bulk Action */}
@@ -1410,6 +1499,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     setShowShelters(true);
                     setShowPumpTrucks(true);
                     setShowSandbagDepots(true);
+                    setShowHospitals(true);
                     setShowTmdRadar(true);
                   }}
                   className="text-cyan-400 hover:text-cyan-300 font-medium px-2 py-1 rounded hover:bg-slate-900 cursor-pointer"
@@ -1427,6 +1517,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
                     setShowShelters(false);
                     setShowPumpTrucks(false);
                     setShowSandbagDepots(false);
+                    setShowHospitals(false);
                     setShowTmdRadar(false);
                   }}
                   className="text-slate-400 hover:text-rose-400 font-medium px-2 py-1 rounded hover:bg-slate-900 cursor-pointer"
