@@ -49,6 +49,7 @@ import {
   ShieldAlert,
   Layers,
   Grid,
+  Keyboard,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -582,6 +583,17 @@ export default function HomePage() {
               <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
               <span className="hidden sm:inline">คู่มือตัดไฟ & เอาตัวรอด</span>
               <span className="sm:hidden">คู่มือตัดไฟ</span>
+            </button>
+
+            {/* Tactical Keybindings Helper Pill */}
+            <button
+              onClick={() => setIsKeybindingsModalOpen(true)}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
+              title="คีย์ลัดปฏิบัติการ (?) / Tactical Keyboard Shortcuts"
+            >
+              <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
+              <span>คีย์ลัด</span>
+              <kbd className="px-1 py-0.2 bg-slate-950 border border-slate-700 rounded text-[9px] font-mono text-cyan-300">?</kbd>
             </button>
 
             {/* SOS Hotline Button */}

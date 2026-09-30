@@ -17,6 +17,7 @@ import {
   AlertOctagon,
   Volume2,
   VolumeX,
+  Keyboard,
 } from 'lucide-react';
 import { Incident } from '@/types';
 import { INCIDENT_CONFIG } from '@/lib/utils';
@@ -28,6 +29,7 @@ interface NavbarProps {
   onOpenSosModal?: () => void;
   onOpenDistrictsModal?: () => void;
   onOpenHazardModal?: () => void;
+  onOpenKeybindingsModal?: () => void;
   onSelectIncident?: (incident: Incident) => void;
   onSearchLocation?: (lat: number, lng: number, label: string) => void;
   onSyncCompleted?: () => void;
@@ -41,6 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSosModal,
   onOpenDistrictsModal,
   onOpenHazardModal,
+  onOpenKeybindingsModal,
   onSelectIncident,
   onSearchLocation,
   onSyncCompleted,
@@ -356,19 +359,33 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* Tactical Audio Feedback Toggle */}
-            <button
-              onClick={toggleSound}
-              title={isAudioMuted ? 'เปิดเสียงเอฟเฟกต์ (Tactical Audio Muted)' : 'ปิดเสียงเอฟเฟกต์ (Tactical Audio Active)'}
-              className="p-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all flex items-center gap-1.5 text-xs font-medium cursor-pointer"
-            >
-              {isAudioMuted ? (
-                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
-              ) : (
-                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              {/* Tactical Audio Feedback Toggle */}
+              <button
+                onClick={toggleSound}
+                title={isAudioMuted ? 'เปิดเสียงเอฟเฟกต์ (Tactical Audio Muted)' : 'ปิดเสียงเอฟเฟกต์ (Tactical Audio Active)'}
+                className="p-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+              >
+                {isAudioMuted ? (
+                  <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                )}
+                <span className="hidden 2xl:inline">{isAudioMuted ? 'Muted' : 'Audio On'}</span>
+              </button>
+
+              {/* Tactical Keyboard Shortcuts Button */}
+              {onOpenKeybindingsModal && (
+                <button
+                  onClick={onOpenKeybindingsModal}
+                  title="คีย์ลัดปฏิบัติการ (?) / Tactical Hotkeys"
+                  className="hidden md:flex p-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700/80 transition-all items-center gap-1.5 text-xs font-medium cursor-pointer"
+                >
+                  <Keyboard className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
+                  <kbd className="hidden lg:inline px-1.5 py-0.2 bg-slate-900 border border-slate-700 rounded text-[10px] font-mono text-cyan-300">
+                    ?
+                  </kbd>
+                </button>
               )}
-              <span className="hidden 2xl:inline">{isAudioMuted ? 'Muted' : 'Audio On'}</span>
-            </button>
 
             <button
               onClick={handleWatchClick}
