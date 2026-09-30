@@ -26,6 +26,7 @@ import { BangkokHospitalsModal } from '@/components/modals/BangkokHospitalsModal
 import { BangkokWaterwaysModal } from '@/components/modals/BangkokWaterwaysModal';
 import { BangkokPowerGridModal } from '@/components/modals/BangkokPowerGridModal';
 import { BangkokPetRescueModal } from '@/components/modals/BangkokPetRescueModal';
+import { BangkokTelemetryExportModal } from '@/components/modals/BangkokTelemetryExportModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -87,6 +88,7 @@ export default function HomePage() {
   const [isWaterwaysModalOpen, setIsWaterwaysModalOpen] = useState(false);
   const [isPowerGridModalOpen, setIsPowerGridModalOpen] = useState(false);
   const [isPetRescueModalOpen, setIsPetRescueModalOpen] = useState(false);
+  const [isTelemetryExportOpen, setIsTelemetryExportOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -706,6 +708,7 @@ export default function HomePage() {
         onOpenWaterways={() => setIsWaterwaysModalOpen(true)}
         onOpenPowerGrid={() => setIsPowerGridModalOpen(true)}
         onOpenPetRescue={() => setIsPetRescueModalOpen(true)}
+        onOpenTelemetryExport={() => setIsTelemetryExportOpen(true)}
       />
 
       {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
@@ -776,6 +779,13 @@ export default function HomePage() {
         onFlyToCoords={(lat, lng) => {
           setFlyToCoords({ lat, lng, zoom: 16 });
         }}
+      />
+
+      {/* Disaster Telemetry & GIS Export Center Modal */}
+      <BangkokTelemetryExportModal
+        isOpen={isTelemetryExportOpen}
+        onClose={() => setIsTelemetryExportOpen(false)}
+        incidents={incidents}
       />
 
       {/* Mobile App Bottom Navigation Bar */}

@@ -29,6 +29,7 @@ import {
   Ship,
   Zap,
   Heart,
+  Database,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
 
@@ -68,6 +69,7 @@ interface AllFeaturesHubModalProps {
   onOpenWaterways?: () => void;
   onOpenPowerGrid?: () => void;
   onOpenPetRescue?: () => void;
+  onOpenTelemetryExport?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -92,6 +94,7 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenWaterways,
   onOpenPowerGrid,
   onOpenPetRescue,
+  onOpenTelemetryExport,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -345,6 +348,19 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'ค้นหาจุดรับฝากสัตว์เลี้ยงช่วงน้ำท่วม ทีมเรือกู้ภัยสัตว์ และคู่มือเตรียมกระเป๋าฉุกเฉินสัตว์เลี้ยง 72 ชม.',
       badge: 'PET FRIENDLY',
       onLaunch: onOpenPetRescue || onOpenSos,
+    },
+    {
+      id: 'telemetry-export',
+      titleTh: 'ส่งออกข้อมูลพิกัด GIS (GeoJSON / CSV)',
+      titleEn: 'Disaster Telemetry GIS Export',
+      category: 'RECON',
+      categoryTh: 'สำรวจและเฝ้าระวัง',
+      icon: Database,
+      colorClasses: 'text-cyan-400 bg-cyan-500/15',
+      borderClasses: 'border-cyan-500/40 hover:border-cyan-400',
+      description: 'ส่งออกข้อมูลเหตุการณ์ พิกัดเครื่องสูบน้ำ ถุงทราย โรงพยาบาล และศูนย์พักพิง รองรับ QGIS / ArcGIS / Excel',
+      badge: 'GIS / WGS84',
+      onLaunch: onOpenTelemetryExport || onOpenReport,
     },
   ];
 

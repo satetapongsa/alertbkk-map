@@ -21,6 +21,11 @@ import {
   Sparkles,
   Droplets,
   Car,
+  ShieldAlert,
+  Zap,
+  Waves,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 
 interface CreateReportModalProps {
@@ -428,57 +433,182 @@ export const CreateReportModal: React.FC<CreateReportModalProps> = ({
 
               {/* SPECIFIC FLOOD SECTION */}
               {type === 'FLOOD' && (
-                <div className="bg-cyan-950/30 border border-cyan-800/40 rounded-2xl p-3.5 space-y-3">
-                  <h4 className="font-semibold text-xs text-cyan-300 flex items-center gap-1.5">
-                    <Droplets className="w-4 h-4 text-cyan-400" />
-                    Flood Parameters
-                  </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="bg-cyan-950/30 border border-cyan-800/40 rounded-2xl p-3.5 space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-xs text-cyan-300 flex items-center gap-1.5">
+                      <Droplets className="w-4 h-4 text-cyan-400" />
+                      Flood Telemetry & Water Depth
+                    </h4>
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-700/50 text-cyan-300">
+                      Depth: {floodDetails.waterLevelCm || 35} cm ({floodDetails.waterLevelCategory})
+                    </span>
+                  </div>
+
+                  {/* 1-Tap Visual/Anatomical Depth Presets */}
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1.5 font-medium">
+                      Quick Visual Depth Presets
+                    </label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {[
+                        { label: 'Ankle', th: 'ข้อเท้า', depth: 10, cat: '<10cm' as const, sedan: true, truck: true, blocked: false },
+                        { label: 'Calf', th: 'ครึ่งแข้ง', depth: 25, cat: '10-30cm' as const, sedan: false, truck: true, blocked: false },
+                        { label: 'Knee', th: 'หัวเข่า', depth: 45, cat: '30-50cm' as const, sedan: false, truck: true, blocked: false },
+                        { label: 'Waist', th: 'ระดับเอว', depth: 80, cat: '50-100cm' as const, sedan: false, truck: false, blocked: true },
+                        { label: 'Submerged', th: 'มิดหลังคา', depth: 160, cat: '>100cm' as const, sedan: false, truck: false, blocked: true },
+                      ].map((preset) => {
+                        const isSelected = floodDetails.waterLevelCategory === preset.cat;
+                        return (
+                          <button
+                            key={preset.cat}
+                            type="button"
+                            onClick={() => {
+                              setFloodDetails((prev) => ({
+                                ...prev,
+                                waterLevelCategory: preset.cat,
+                                waterLevelCm: preset.depth,
+                                smallCarPassable: preset.sedan,
+                                largeTruckPassable: preset.truck,
+                                roadBlocked: preset.blocked,
+                              }));
+                            }}
+                            className={`p-2 rounded-xl text-center border transition-all flex flex-col items-center justify-center ${
+                              isSelected
+                                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 ring-1 ring-cyan-400'
+                                : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-slate-600'
+                            }`}
+                          >
+                            <span className="text-[11px] font-bold">{preset.depth} cm</span>
+                            <span className="text-[9px] text-slate-400 leading-tight">{preset.th}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Depth Slider & Direct Entry */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                     <div>
-                      <label className="text-[11px] text-slate-300 block mb-1">Water Depth</label>
+                      <div className="flex justify-between text-[11px] text-slate-300 mb-1">
+                        <span>Precise Depth (cm)</span>
+                        <span className="font-mono text-cyan-400 font-bold">{floodDetails.waterLevelCm || 35} cm</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="200"
+                        step="5"
+                        value={floodDetails.waterLevelCm || 35}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          let cat: any = '<10cm';
+                          if (val >= 100) cat = '>100cm';
+                          else if (val >= 50) cat = '50-100cm';
+                          else if (val >= 30) cat = '30-50cm';
+                          else if (val >= 10) cat = '10-30cm';
+
+                          setFloodDetails((prev) => ({
+                            ...prev,
+                            waterLevelCm: val,
+                            waterLevelCategory: cat,
+                            smallCarPassable: val < 20,
+                            largeTruckPassable: val < 80,
+                            roadBlocked: val >= 60,
+                          }));
+                        }}
+                        className="w-full accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] text-slate-300 block mb-1">Category Classification</label>
                       <select
                         value={floodDetails.waterLevelCategory}
                         onChange={(e: any) =>
                           setFloodDetails({ ...floodDetails, waterLevelCategory: e.target.value })
                         }
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-xs text-slate-100"
+                        className="w-full bg-slate-850 border border-slate-700 rounded-lg p-1.5 text-xs text-slate-100 font-mono"
                       >
-                        <option value="<10cm">Below 10 cm</option>
-                        <option value="10-30cm">10 - 30 cm</option>
-                        <option value="30-50cm">30 - 50 cm</option>
-                        <option value="50-100cm">50 - 100 cm</option>
-                        <option value=">100cm">Above 100 cm</option>
+                        <option value="<10cm">&lt;10 cm (Shallow surface runoff)</option>
+                        <option value="10-30cm">10 - 30 cm (Curb height / low risk)</option>
+                        <option value="30-50cm">30 - 50 cm (Knee high / sedans impassable)</option>
+                        <option value="50-100cm">50 - 100 cm (Waist high / SUV risk)</option>
+                        <option value=">100cm">&gt;100 cm (Chest/roof high / boats only)</option>
                       </select>
                     </div>
+                  </div>
 
-                    <div className="flex items-center gap-2 pt-4">
+                  {/* Hazard Checkboxes */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-slate-800">
+                    <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800 cursor-pointer">
                       <input
                         type="checkbox"
-                        id="smallCar"
-                        checked={floodDetails.smallCarPassable}
-                        onChange={(e) =>
-                          setFloodDetails({ ...floodDetails, smallCarPassable: e.target.checked })
-                        }
-                        className="rounded bg-slate-800 border-slate-700 text-cyan-500 w-4 h-4"
-                      />
-                      <label htmlFor="smallCar" className="text-xs text-slate-300">
-                        Sedans Passable
-                      </label>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-4">
-                      <input
-                        type="checkbox"
-                        id="roadBlocked"
                         checked={floodDetails.roadBlocked}
                         onChange={(e) =>
                           setFloodDetails({ ...floodDetails, roadBlocked: e.target.checked })
                         }
-                        className="rounded bg-slate-800 border-slate-700 text-cyan-500 w-4 h-4"
+                        className="rounded bg-slate-800 border-slate-700 text-rose-500 w-4 h-4"
                       />
-                      <label htmlFor="roadBlocked" className="text-xs text-slate-300">
-                        Road Blocked
-                      </label>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-semibold text-rose-300">Road Blocked</span>
+                        <span className="text-[9px] text-slate-400">ปิดการจราจร</span>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={floodDetails.strongCurrent || false}
+                        onChange={(e) =>
+                          setFloodDetails({ ...floodDetails, strongCurrent: e.target.checked })
+                        }
+                        className="rounded bg-slate-800 border-slate-700 text-amber-500 w-4 h-4"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-semibold text-amber-300">Rapid Currents</span>
+                        <span className="text-[9px] text-slate-400">กระแสน้ำไหลเชี่ยว</span>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={floodDetails.electricRisk || false}
+                        onChange={(e) =>
+                          setFloodDetails({ ...floodDetails, electricRisk: e.target.checked })
+                        }
+                        className="rounded bg-slate-800 border-slate-700 text-yellow-500 w-4 h-4"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-semibold text-yellow-300">Electric Leak</span>
+                        <span className="text-[9px] text-slate-400">เสี่ยงไฟฟ้ารั่ว</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Realtime Passability Matrix Badge */}
+                  <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span>Vehicle Passability Assessment</span>
+                      <span>Automated Telemetry</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 text-center text-[10px]">
+                      <div className={`p-1.5 rounded-lg border ${(floodDetails.waterLevelCm || 35) < 20 ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-300' : 'bg-rose-950/40 border-rose-800/50 text-rose-300'}`}>
+                        <div className="font-bold">Sedans</div>
+                        <div className="text-[9px]">{(floodDetails.waterLevelCm || 35) < 20 ? 'Passable' : 'Do Not Enter'}</div>
+                      </div>
+                      <div className={`p-1.5 rounded-lg border ${(floodDetails.waterLevelCm || 35) < 55 ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-300' : 'bg-rose-950/40 border-rose-800/50 text-rose-300'}`}>
+                        <div className="font-bold">Pickup/SUV</div>
+                        <div className="text-[9px]">{(floodDetails.waterLevelCm || 35) < 55 ? 'Passable' : 'High Risk'}</div>
+                      </div>
+                      <div className={`p-1.5 rounded-lg border ${(floodDetails.waterLevelCm || 35) < 85 ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-300' : 'bg-rose-950/40 border-rose-800/50 text-rose-300'}`}>
+                        <div className="font-bold">6-Wheel+</div>
+                        <div className="text-[9px]">{(floodDetails.waterLevelCm || 35) < 85 ? 'Passable' : 'Critical'}</div>
+                      </div>
+                      <div className={`p-1.5 rounded-lg border ${(floodDetails.waterLevelCm || 35) >= 50 ? 'bg-cyan-950/40 border-cyan-600/50 text-cyan-300' : 'bg-slate-900 border-slate-800 text-slate-500'}`}>
+                        <div className="font-bold">Rescue Boat</div>
+                        <div className="text-[9px]">{(floodDetails.waterLevelCm || 35) >= 50 ? 'Recommended' : 'Not Required'}</div>
+                      </div>
                     </div>
                   </div>
                 </div>

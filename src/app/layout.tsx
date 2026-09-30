@@ -51,6 +51,8 @@ export const viewport: Viewport = {
   themeColor: '#080c14',
 };
 
+import { PwaRegistration } from '@/components/common/PwaRegistration';
+
 export default function RootLayout({
   children,
 }: {
@@ -59,6 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full antialiased">
       <body className="min-h-full bg-[#080c14] text-[#f1f5f9] flex flex-col font-sans select-none">
+        <PwaRegistration />
         {children}
       </body>
     </html>
