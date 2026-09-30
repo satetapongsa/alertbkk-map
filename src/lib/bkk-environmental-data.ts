@@ -1028,3 +1028,113 @@ export const BANGKOK_WATERWAYS: WaterwayPier[] = [
   },
 ];
 
+// 9. Metropolitan Electricity Authority (MEA / กฟน.) High-Voltage Power Grid Substations Telemetry
+export interface PowerSubstation {
+  id: string;
+  name: string;
+  meaDistrict: string;
+  voltageKv: string;
+  lat: number;
+  lng: number;
+  floodBarrierMsl: number;
+  status: 'ONLINE' | 'STANDBY_ALERT' | 'ISOLATED_SAFETY';
+  statusTh: string;
+  servicingZone: string;
+  emergencyFeederReady: boolean;
+  contactTel: string;
+  safetyAdvisoryTh: string;
+}
+
+export const BANGKOK_POWER_SUBSTATIONS: PowerSubstation[] = [
+  {
+    id: 'sub-bang-kapi',
+    name: 'สถานีไฟฟ้าแรงสูงบางกะปิ (MEA 230kV / 115kV Grid)',
+    meaDistrict: 'เขตบางกะปิ / รามคำแหง',
+    voltageKv: '230 kV',
+    lat: 13.7665,
+    lng: 100.6385,
+    floodBarrierMsl: 3.1,
+    status: 'ONLINE',
+    statusTh: 'จ่ายกระแสไฟฟ้าปกติทุกหม้อแปลง',
+    servicingZone: 'บางกะปิ, บึงกุ่ม, ลาดพร้าว, วังทองหลาง',
+    emergencyFeederReady: true,
+    contactTel: '1130',
+    safetyAdvisoryTh: 'แนวคันกั้นน้ำสถานีสูง +3.1 ม. รทก. ป้องกันเครื่องแปลงไฟสมบูรณ์',
+  },
+  {
+    id: 'sub-asok',
+    name: 'สถานีไฟฟ้าย่อยอโศก (Asok GIS Substation)',
+    meaDistrict: 'เขตวัฒนา / สุขุมวิท',
+    voltageKv: '115 kV',
+    lat: 13.7432,
+    lng: 100.5621,
+    floodBarrierMsl: 2.8,
+    status: 'ONLINE',
+    statusTh: 'ระบบแก๊สฉนวน GIS ในอาคารปลอดภัย 100%',
+    servicingZone: 'สุขุมวิท 1-39, อโศกมนตรี, เพชรบุรีตัดใหม่',
+    emergencyFeederReady: true,
+    contactTel: '1130',
+    safetyAdvisoryTh: 'เป็นสถานีแบบปิดในอาคาร น้ำท่วมภายนอกไม่กระทบระบบจำหน่ายไฟฟ้า',
+  },
+  {
+    id: 'sub-yan-nawa',
+    name: 'สถานีไฟฟ้าย่อยยานนาวา (ริมเจ้าพระยา)',
+    meaDistrict: 'เขตยานนาวา / พระราม 3',
+    voltageKv: '115 kV',
+    lat: 13.6925,
+    lng: 100.5365,
+    floodBarrierMsl: 3.4,
+    status: 'STANDBY_ALERT',
+    statusTh: 'เฝ้าระวังระดับน้ำทะเลหนุนริมแม่น้ำ',
+    servicingZone: 'พระราม 3, สาธุประดิษฐ์, นราธิวาสราชนครินทร์',
+    emergencyFeederReady: true,
+    contactTel: '1130',
+    safetyAdvisoryTh: 'สูบน้ำออกจากบ่อดักสายใต้ดินตลอด 24 ชั่วโมง',
+  },
+  {
+    id: 'sub-bang-sue',
+    name: 'สถานีไฟฟ้าแรงสูงบางซื่อ (ชุมทางคมนาคม)',
+    meaDistrict: 'เขตบางซื่อ / จตุจักร',
+    voltageKv: '230 kV',
+    lat: 13.8045,
+    lng: 100.5395,
+    floodBarrierMsl: 2.9,
+    status: 'ONLINE',
+    statusTh: 'จ่ายไฟรองรับสถานีกลางกรุงเทพอภิวัฒน์และรถไฟฟ้า',
+    servicingZone: 'บางซื่อ, จตุจักร, ชุมทางรถไฟ, ประชาชื่น',
+    emergencyFeederReady: true,
+    contactTel: '1130',
+    safetyAdvisoryTh: 'มีระบบตัดวงจรอัตโนมัติ (Arc Flash Protection) มาตรฐานสูงสุด',
+  },
+  {
+    id: 'sub-thon-buri',
+    name: 'สถานีไฟฟ้าย่อยธนบุรี (ฝั่งธนบุรี)',
+    meaDistrict: 'เขตธนบุรี / วงเวียนใหญ่',
+    voltageKv: '115 kV',
+    lat: 13.7275,
+    lng: 100.4905,
+    floodBarrierMsl: 3.0,
+    status: 'ONLINE',
+    statusTh: 'ระบบจ่ายไฟฝั่งธนบุรีมีเสถียรภาพ',
+    servicingZone: 'วงเวียนใหญ่, สมเด็จพระเจ้าตากสิน, อิสรภาพ',
+    emergencyFeederReady: true,
+    contactTel: '1130',
+    safetyAdvisoryTh: 'ป้อนกระแสไฟฟ้าตรงเข้า รพ.ตากสิน และ รพ.ศิริราช อย่างต่อเนื่อง',
+  },
+  {
+    id: 'sub-chaeng-watthana',
+    name: 'สถานีไฟฟ้าแจ้งวัฒนะ (ศูนย์ราชการ)',
+    meaDistrict: 'เขตหลักสี่ / แจ้งวัฒนะ',
+    voltageKv: '115 kV',
+    lat: 13.8912,
+    lng: 100.5695,
+    floodBarrierMsl: 2.7,
+    status: 'ONLINE',
+    statusTh: 'พร้อมจ่ายไฟฉุกเฉินศูนย์ราชการ กทม.',
+    servicingZone: 'ศูนย์ราชการแจ้งวัฒนะ, หลักสี่, ดอนเมืองตอนใต้',
+    emergencyFeederReady: true,
+    contactTel: '1130',
+    safetyAdvisoryTh: 'หม้อแปลงยกสูงจากระดับพื้น 1.80 เมตร ปลอดภัยจากน้ำหลาก',
+  },
+];
+

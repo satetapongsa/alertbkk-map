@@ -27,6 +27,7 @@ import {
   Wind,
   Hospital,
   Ship,
+  Zap,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
 
@@ -64,6 +65,7 @@ interface AllFeaturesHubModalProps {
   onOpenOfflineSos?: () => void;
   onOpenHospitals?: () => void;
   onOpenWaterways?: () => void;
+  onOpenPowerGrid?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -86,6 +88,7 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenOfflineSos,
   onOpenHospitals,
   onOpenWaterways,
+  onOpenPowerGrid,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -313,6 +316,19 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'ตรวจสอบสถานะท่าเรือด่วนเจ้าพระยา คลองแสนแสบ และเรือไฟฟ้า EV สภาพคลื่นผิวน้ำ และจุดเชื่อมต่อ MRT/BTS',
       badge: 'RIVER TRANSIT',
       onLaunch: onOpenWaterways || onOpenExpressway,
+    },
+    {
+      id: 'power-grid',
+      titleTh: 'สถานีไฟฟ้าแรงสูง & ความปลอดภัย กฟน.',
+      titleEn: 'MEA Power Grid & Substation Telemetry',
+      category: 'EMERGENCY',
+      categoryTh: 'ความปลอดภัยและฉุกเฉิน',
+      icon: Zap,
+      colorClasses: 'text-amber-400 bg-amber-500/15',
+      borderClasses: 'border-amber-500/40 hover:border-amber-400',
+      description: 'ตรวจสอบสถานะสถานีไฟฟ้าแรงสูง 230kV/115kV แนวกั้นน้ำสถานี และระบบจ่ายไฟฉุกเฉินเข้าโรงพยาบาล',
+      badge: 'MEA GRID',
+      onLaunch: onOpenPowerGrid || onOpenSurvivalGuide,
     },
   ];
 
