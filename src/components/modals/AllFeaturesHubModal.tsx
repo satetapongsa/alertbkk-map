@@ -22,6 +22,9 @@ import {
   ChevronRight,
   Radio,
   PlusCircle,
+  Truck,
+  Package,
+  Wind,
 } from 'lucide-react';
 import { tacticalAudio } from '@/lib/tactical-audio';
 
@@ -53,6 +56,9 @@ interface AllFeaturesHubModalProps {
   onOpenSurvivalGuide: () => void;
   onOpenAreaWatch: () => void;
   onOpenReport: () => void;
+  onOpenPumpTrucks?: () => void;
+  onOpenSandbagDepot?: () => void;
+  onOpenAirQuality?: () => void;
 }
 
 export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
@@ -69,6 +75,9 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
   onOpenSurvivalGuide,
   onOpenAreaWatch,
   onOpenReport,
+  onOpenPumpTrucks,
+  onOpenSandbagDepot,
+  onOpenAirQuality,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FLOOD' | 'TRAFFIC' | 'EMERGENCY' | 'RECON'>('ALL');
@@ -218,6 +227,45 @@ export const AllFeaturesHubModal: React.FC<AllFeaturesHubModalProps> = ({
       description: 'ส่งรายงานน้ำท่วม รถติด หรืออุบัติเหตุพร้อมระบุพิกัด GPS เพื่อแจ้งเตือนผู้อื่นแบบเรียลไทม์',
       badge: 'REPORT',
       onLaunch: onOpenReport,
+    },
+    {
+      id: 'pump-trucks',
+      titleTh: 'หน่วยสูบน้ำเคลื่อนที่เร็ว (หน่วยเบสท์ กทม.)',
+      titleEn: 'BMA Mobile Pump Truck Units',
+      category: 'FLOOD',
+      categoryTh: 'น้ำท่วมและสภาพอากาศ',
+      icon: Truck,
+      colorClasses: 'text-cyan-400 bg-cyan-500/15',
+      borderClasses: 'border-cyan-500/40 hover:border-cyan-400',
+      description: 'ตรวจพิกัดรถสูบน้ำแรงดันสูงประจำจุดเสี่ยงน้ำท่วม พร้อมสถานะเดินเครื่องและเบอร์นายช่างประจำจุด',
+      badge: 'BEST UNIT',
+      onLaunch: onOpenPumpTrucks || onOpenWaterTide,
+    },
+    {
+      id: 'sandbag-depots',
+      titleTh: 'จุดแจกกระสอบทราย & ศูนย์บรรเทาภัย 50 เขต',
+      titleEn: 'Sandbag Distribution & Relief Depots',
+      category: 'EMERGENCY',
+      categoryTh: 'ความปลอดภัยและฉุกเฉิน',
+      icon: Package,
+      colorClasses: 'text-amber-400 bg-amber-500/15',
+      borderClasses: 'border-amber-500/40 hover:border-amber-400',
+      description: 'ตรวจสอบจุดขอรับกระสอบทรายฟรีกั้นน้ำเข้าบ้าน ณ สำนักงานเขต 50 เขต พร้อมยอดคงเหลือ',
+      badge: 'FREE',
+      onLaunch: onOpenSandbagDepot || onOpenSos,
+    },
+    {
+      id: 'air-quality',
+      titleTh: 'ดัชนีคุณภาพอากาศ & ฝุ่น PM2.5 กทม.',
+      titleEn: 'AirBKK PM2.5 & Air Quality Telemetry',
+      category: 'RECON',
+      categoryTh: 'สำรวจและเฝ้าระวัง',
+      icon: Wind,
+      colorClasses: 'text-teal-400 bg-teal-500/15',
+      borderClasses: 'border-teal-500/40 hover:border-teal-400',
+      description: 'ตรวจวัดระดับฝุ่น PM2.5 และดัชนี AQI รายเขต พร้อมคำแนะนำการสวมหน้ากากอนามัย N95',
+      badge: 'AIR QUALITY',
+      onLaunch: onOpenAirQuality || onOpenDistricts,
     },
   ];
 

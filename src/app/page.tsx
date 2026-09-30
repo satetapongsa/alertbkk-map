@@ -18,6 +18,9 @@ import { BangkokWaterTideModal } from '@/components/modals/BangkokWaterTideModal
 import { BangkokExpresswayModal } from '@/components/modals/BangkokExpresswayModal';
 import { EmergencySurvivalGuideModal } from '@/components/modals/EmergencySurvivalGuideModal';
 import { AllFeaturesHubModal } from '@/components/modals/AllFeaturesHubModal';
+import { BangkokPumpTrucksModal } from '@/components/modals/BangkokPumpTrucksModal';
+import { BangkokSandbagDepotModal } from '@/components/modals/BangkokSandbagDepotModal';
+import { BangkokAirQualityModal } from '@/components/modals/BangkokAirQualityModal';
 import { BangkokDistrict } from '@/lib/bkk-environmental-data';
 import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
 import { Incident, IncidentType, TimeFilter } from '@/types';
@@ -71,6 +74,9 @@ export default function HomePage() {
   const [isWaterTideModalOpen, setIsWaterTideModalOpen] = useState(false);
   const [isExpresswayModalOpen, setIsExpresswayModalOpen] = useState(false);
   const [isSurvivalGuideModalOpen, setIsSurvivalGuideModalOpen] = useState(false);
+  const [isPumpTrucksModalOpen, setIsPumpTrucksModalOpen] = useState(false);
+  const [isSandbagDepotModalOpen, setIsSandbagDepotModalOpen] = useState(false);
+  const [isAirQualityModalOpen, setIsAirQualityModalOpen] = useState(false);
 
   // Live Toast Notification
   const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
@@ -682,6 +688,36 @@ export default function HomePage() {
         onOpenSurvivalGuide={() => setIsSurvivalGuideModalOpen(true)}
         onOpenAreaWatch={() => setIsAreaWatchModalOpen(true)}
         onOpenReport={() => setIsReportModalOpen(true)}
+        onOpenPumpTrucks={() => setIsPumpTrucksModalOpen(true)}
+        onOpenSandbagDepot={() => setIsSandbagDepotModalOpen(true)}
+        onOpenAirQuality={() => setIsAirQualityModalOpen(true)}
+      />
+
+      {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
+      <BangkokPumpTrucksModal
+        isOpen={isPumpTrucksModalOpen}
+        onClose={() => setIsPumpTrucksModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
+      />
+
+      {/* Bangkok Sandbag Distribution & Municipal Relief Depots Modal */}
+      <BangkokSandbagDepotModal
+        isOpen={isSandbagDepotModalOpen}
+        onClose={() => setIsSandbagDepotModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
+      />
+
+      {/* Bangkok Air Quality & PM2.5 Telemetry Modal */}
+      <BangkokAirQualityModal
+        isOpen={isAirQualityModalOpen}
+        onClose={() => setIsAirQualityModalOpen(false)}
+        onFlyToCoords={(lat, lng) => {
+          setFlyToCoords({ lat, lng, zoom: 16 });
+        }}
       />
 
       {/* Mobile App Bottom Navigation Bar */}

@@ -539,3 +539,203 @@ export const BANGKOK_SHELTERS: BangkokShelter[] = [
     contactTel: '02-441-4700',
   },
 ];
+
+// 5. Bangkok Mobile Flood Pump Truck Deployments (หน่วยเบสท์ กทม. เครื่องสูบน้ำเคลื่อนที่)
+export interface PumpTruckUnit {
+  id: string;
+  unitCode: string;
+  locationName: string;
+  district: string;
+  lat: number;
+  lng: number;
+  pumpCapacityLps: number; // ลิตร/วินาที
+  status: 'PUMPING' | 'STANDBY' | 'MAINTENANCE';
+  statusTh: string;
+  dischargingTo: string;
+  officerInCharge: string;
+  contactTel: string;
+  lastUpdated: string;
+}
+
+export const BANGKOK_PUMP_TRUCKS: PumpTruckUnit[] = [
+  {
+    id: 'pump-ratchada-latphrao',
+    unitCode: 'BEST-UNIT-01',
+    locationName: 'แยกรัชดาภิเษก-ลาดพร้าว (หน้าอาคารจอดแล้วจร MRT)',
+    district: 'จตุจักร',
+    lat: 13.8058,
+    lng: 100.5745,
+    pumpCapacityLps: 800,
+    status: 'PUMPING',
+    statusTh: 'กำลังเดินเครื่องสูบน้ำระบายลงคลองบางซื่อ',
+    dischargingTo: 'คลองบางซื่อ',
+    officerInCharge: 'นายช่างประจำจุด: หน่วยเบสท์เขตจตุจักร',
+    contactTel: '02-513-3444',
+    lastUpdated: '10 นาทีที่แล้ว',
+  },
+  {
+    id: 'pump-bang-khen-circle',
+    unitCode: 'BEST-UNIT-02',
+    locationName: 'วงเวียนบางเขน (อนุสาวรีย์พิทักษ์รัฐธรรมนูญ หน้าวัดพระศรีฯ)',
+    district: 'บางเขน',
+    lat: 13.8741,
+    lng: 100.5968,
+    pumpCapacityLps: 1200,
+    status: 'PUMPING',
+    statusTh: 'เดินเครื่องสูบเต็มกำลังเพื่อเปิดผิวจราจร',
+    dischargingTo: 'คลองรางบัว / คลองถนน',
+    officerInCharge: 'หน่วยปฏิบัติการเร่งด่วนบางเขน',
+    contactTel: '02-521-0066',
+    lastUpdated: '5 นาทีที่แล้ว',
+  },
+  {
+    id: 'pump-srinakarin-lamsalee',
+    unitCode: 'BEST-UNIT-03',
+    locationName: 'ถนนศรีนครินทร์ (แยกลำสาลี เชื่อมต่อรามคำแหง)',
+    district: 'บางกะปิ',
+    lat: 13.7635,
+    lng: 100.6452,
+    pumpCapacityLps: 1000,
+    status: 'PUMPING',
+    statusTh: 'สูบน้ำขังผิวถนนระบายลงคลองแสนแสบ',
+    dischargingTo: 'คลองแสนแสบ',
+    officerInCharge: 'ศูนย์ระบายน้ำบางกะปิ',
+    contactTel: '02-377-5494',
+    lastUpdated: '8 นาทีที่แล้ว',
+  },
+  {
+    id: 'pump-chaeng-watthana',
+    unitCode: 'BEST-UNIT-04',
+    locationName: 'ถนนแจ้งวัฒนะ (หน้าศูนย์ราชการ - ศาลปกครอง)',
+    district: 'หลักสี่',
+    lat: 13.8925,
+    lng: 100.5645,
+    pumpCapacityLps: 900,
+    status: 'STANDBY',
+    statusTh: 'สแตนด์บายพร้อมสูบ ผิวถนนแห้งปกติ',
+    dischargingTo: 'คลองเปรมประชากร',
+    officerInCharge: 'หน่วยบรรเทาอุทกภัยหลักสี่',
+    contactTel: '02-576-1393',
+    lastUpdated: '15 นาทีที่แล้ว',
+  },
+  {
+    id: 'pump-pattanakarn',
+    unitCode: 'BEST-UNIT-05',
+    locationName: 'ถนนพัฒนาการ (บริเวณจุดตัดคลองลาว)',
+    district: 'สวนหลวง',
+    lat: 13.7335,
+    lng: 100.6385,
+    pumpCapacityLps: 750,
+    status: 'STANDBY',
+    statusTh: 'ประจำจุดเฝ้าระวังระดับน้ำคลอง',
+    dischargingTo: 'คลองลาว / คลองประเวศ',
+    officerInCharge: 'หน่วยเคลื่อนที่เร็วสวนหลวง',
+    contactTel: '02-322-6483',
+    lastUpdated: '12 นาทีที่แล้ว',
+  },
+  {
+    id: 'pump-sukhumvit-71',
+    unitCode: 'BEST-UNIT-06',
+    locationName: 'ถนนสุขุมวิท 71 (ปรีดี พนมยงค์ เชื่อมคลองตัน)',
+    district: 'วัฒนา',
+    lat: 13.7155,
+    lng: 100.5925,
+    pumpCapacityLps: 850,
+    status: 'PUMPING',
+    statusTh: 'เร่งสูบระบายน้ำขังช่วงซอยปรีดี 14-26',
+    dischargingTo: 'คลองพระโขนง',
+    officerInCharge: 'หน่วยสูบน้ำเคลื่อนที่วัฒนา',
+    contactTel: '02-381-8930',
+    lastUpdated: '6 นาทีที่แล้ว',
+  },
+];
+
+// 6. Bangkok Sandbag Distribution Points & Municipal Relief Depots (จุดแจกกระสอบทรายและศูนย์บรรเทาภัย 50 เขต)
+export interface DistrictReliefDepot {
+  id: string;
+  district: string;
+  officeName: string;
+  lat: number;
+  lng: number;
+  sandbagStock: number;
+  sandbagStatus: 'AVAILABLE' | 'LIMITED' | 'DEPLETED';
+  sandbagStatusTh: string;
+  contactTel: string;
+  services: string[];
+}
+
+export const BANGKOK_RELIEF_DEPOTS: DistrictReliefDepot[] = [
+  {
+    id: 'depot-chatuchak',
+    district: 'จตุจักร',
+    officeName: 'สำนักงานเขตจตุจักร (ฝ่ายโยธาและบรรเทาสาธารณภัย)',
+    lat: 13.8286,
+    lng: 100.5599,
+    sandbagStock: 4500,
+    sandbagStatus: 'AVAILABLE',
+    sandbagStatusTh: 'มีกระสอบทรายพร้อมแจกจ่าย',
+    contactTel: '02-513-3444',
+    services: ['แจกกระสอบทรายฟรี (นำบัตร ปชช. มาแสดง)', 'บริการรถยกสูงรับส่งน้ำท่วม', 'หน่วยตัดกิ่งไม้ล้ม'],
+  },
+  {
+    id: 'depot-bang-khen',
+    district: 'บางเขน',
+    officeName: 'สำนักงานเขตบางเขน (ศูนย์บริการประชาชน)',
+    lat: 13.8738,
+    lng: 100.5967,
+    sandbagStock: 3200,
+    sandbagStatus: 'AVAILABLE',
+    sandbagStatusTh: 'มีกระสอบทรายพร้อมแจกจ่าย',
+    contactTel: '02-521-0066',
+    services: ['แจกกระสอบทราย', 'แจกถุงยังชีพผู้ประสบอุทกภัย', 'ศูนย์พักพิงชั่วคราว'],
+  },
+  {
+    id: 'depot-phra-khanong',
+    district: 'พระโขนง',
+    officeName: 'สำนักงานเขตพระโขนง (ศูนย์ปฏิบัติการป้องกันน้ำท่วม)',
+    lat: 13.7022,
+    lng: 100.6017,
+    sandbagStock: 1800,
+    sandbagStatus: 'LIMITED',
+    sandbagStatusTh: 'กระสอบทรายเหลือน้อย (จำกัดบ้านละ 10 กระสอบ)',
+    contactTel: '02-310-4100',
+    services: ['แจกกระสอบทรายจำกัดจำนวน', 'หน่วยเคลื่อนที่เร็วดึงน้ำออกจากซอย'],
+  },
+  {
+    id: 'depot-din-daeng',
+    district: 'ดินแดง',
+    officeName: 'สำนักงานเขตดินแดง (ศูนย์ช่วยเหลือผู้ประสบภัย)',
+    lat: 13.7699,
+    lng: 100.5532,
+    sandbagStock: 5000,
+    sandbagStatus: 'AVAILABLE',
+    sandbagStatusTh: 'มีกระสอบทรายพร้อมแจกจ่าย',
+    contactTel: '02-245-1568',
+    services: ['แจกกระสอบทราย', 'ศูนย์ประสานงานเครื่องสูบน้ำเข้าซอย', 'ศูนย์ปฐมพยาบาล'],
+  },
+  {
+    id: 'depot-min-buri',
+    district: 'มีนบุรี',
+    officeName: 'สำนักงานเขตมีนบุรี (จุดบริการประชาชนริมคลองแสนแสบ)',
+    lat: 13.8139,
+    lng: 100.7480,
+    sandbagStock: 6000,
+    sandbagStatus: 'AVAILABLE',
+    sandbagStatusTh: 'มีกระสอบทรายพร้อมแจกจ่ายจำนวนมาก',
+    contactTel: '02-540-7156',
+    services: ['แจกกระสอบทรายป้องกันคันกั้นน้ำล้น', 'บริการเรือท้องแบนรับส่งชาวบ้าน'],
+  },
+  {
+    id: 'depot-thon-buri',
+    district: 'ธนบุรี',
+    officeName: 'สำนักงานเขตธนบุรี (ฝ่ายโยธา)',
+    lat: 13.7250,
+    lng: 100.4858,
+    sandbagStock: 2500,
+    sandbagStatus: 'AVAILABLE',
+    sandbagStatusTh: 'มีกระสอบทรายพร้อมแจกจ่าย',
+    contactTel: '02-465-0025',
+    services: ['แจกกระสอบทราย', 'ตรวจสอบแนวกระสอบทรายริมแม่น้ำเจ้าพระยา'],
+  },
+];
+
