@@ -1,5 +1,9 @@
 # AlertBKK
 
+<p align="center">
+  <img src="./public/alertbkk-banner.jpg" alt="AlertBKK Real-Time Emergency & Incident Intelligence Platform" width="100%" />
+</p>
+
 ### Bangkok Real-Time Incident & Flood Situation Platform
 
 AlertBKK เป็นแพลตฟอร์มศูนย์กลางข้อมูลสถานการณ์ฉุกเฉิน น้ำท่วมขัง การจราจร และการเดินทางในกรุงเทพมหานครแบบเรียลไทม์ ออกแบบมาเพื่อช่วยให้ประชาชนและเจ้าหน้าที่สามารถประเมินสถานการณ์บนท้องถนนได้อย่างรวดเร็ว แม่นยำ และปลอดภัย
