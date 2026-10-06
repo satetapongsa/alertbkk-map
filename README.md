@@ -1,141 +1,95 @@
-# AlertBKK
+# MIRRIX — Real-World Intelligence
 
-<p align="center">
-  <img src="./public/alertbkk-banner.jpg" alt="AlertBKK Real-Time Emergency & Incident Intelligence Platform" width="100%" />
-</p>
-
-### Bangkok Real-Time Incident & Flood Situation Platform
-
-AlertBKK เป็นแพลตฟอร์มศูนย์กลางข้อมูลสถานการณ์ฉุกเฉิน น้ำท่วมขัง การจราจร และการเดินทางในกรุงเทพมหานครแบบเรียลไทม์ ออกแบบมาเพื่อช่วยให้ประชาชนและเจ้าหน้าที่สามารถประเมินสถานการณ์บนท้องถนนได้อย่างรวดเร็ว แม่นยำ และปลอดภัย
-
-ระบบเน้นการรายงานสถานการณ์ครอบคลุม 50 เขตของกรุงเทพมหานครเป็นหลัก โดยแสดงผลแบบเรียลไทม์สด 100% พร้อมเชื่อมโยงข้อมูลโทรมาตรสภาพอากาศ ระดับน้ำ และโครงข่ายคมนาคมเข้าไว้ในแผนที่เดียว
+> **Live Global Situational Awareness Platform**  
+> Assembled from public geospatial, camera, traffic, weather, infrastructure, and incident data.  
+> Focused initially on Bangkok, Thailand with a distributed architecture designed to scale globally.
 
 ---
 
-## จุดเด่นของระบบ (Core Capabilities)
+## 1. System Overview
 
-### 1. แผนที่รายงานเหตุการณ์สด (Bangkok Real-Time Live Map)
-- แสดงหมุดเหตุการณ์แบบเรียลไทม์ ทั้งน้ำท่วมขัง รถติดสะสม อุบัติเหตุ ถนนปิด/แนวก่อสร้าง และระบบขนส่งสาธารณะ
-- รวมศูนย์หมวดหมู่เหตุการณ์ไว้ในปุ่มเดียว เปิดเลือกดูเฉพาะเรื่องที่สนใจได้อย่างสะดวกรวดเร็ว
-- รองรับการปักหมุดตำแหน่งบ้านเพื่อติดตามสถานะความปลอดภัยรอบรัศมีที่พักอาศัย
+**MIRRIX** (Mirror + Matrix) is a live mirror of the real world, assembled from public geospatial intelligence. It allows an operator to open the system and immediately answer:
+- **WHAT IS HAPPENING?**
+- **WHERE IS IT?**
+- **WHEN DID IT HAPPEN?**
+- **WHAT PUBLIC CAMERAS ARE NEARBY?**
+- **WHAT PUBLIC SOURCES REPORTED IT?**
+- **WHAT SERVICES ARE NEARBY?**
+- **WHAT IS THE CURRENT TRAFFIC / WEATHER / FLOOD SITUATION?**
 
-### 2. เครื่องคำนวณความเสี่ยงน้ำท่วมตามรุ่นรถ (Vehicle Flood Clearance Simulator)
-- ประเมินความปลอดภัยใต้ท้องรถและระบบขับเคลื่อนตามความสูงของระดับน้ำจริงบนผิวถนน
-- รองรับการคำนวณแยกตามประเภทรถ: รถเก๋ง (Sedan/Eco Car), รถยกสูง (SUV/Crossover), กระบะขับเคลื่อน 4 ล้อ, รถยนต์ไฟฟ้า (EV), และรถจักรยานยนต์
-- ให้คำแนะนำเชิงวิศวกรรมการขับขี่ลุยน้ำอย่างปลอดภัย
-
-### 3. ตรวจสอบระดับน้ำเจ้าพระยาและสถานีสูบน้ำ (Hydro-Telemetry & Sluice Gates)
-- รายงานระดับน้ำแม่น้ำเจ้าพระยาเทียบระดับน้ำทะเลปานกลาง (ม. รทก.) ณ สถานีสำคัญ (ปากคลองตลาด, สะพานพุทธ, บางนา, สะพานพระราม 7)
-- ติดตามสถานะการเดินเครื่องสูบน้ำของอุโมงค์ยักษ์พระราม 9, สถานีสูบน้ำพระโขนง และประตูระบายน้ำหลัก กทม.
-
-### 4. เรดาร์ตรวจจับกลุ่มฝน (TMD Doppler Weather Radar)
-- วงสแกนเรดาร์ตรวจวัดกลุ่มฝนสดจากสถานีเรดาร์หนองจอก และสถานีเรดาร์ภาษีเจริญ
-- แสดงการเคลื่อนตัวและความหนาแน่นของกลุ่มฝนทั่วลุ่มน้ำเจ้าพระยาและพื้นที่ กทม.
-
-### 5. โครงข่ายทางด่วน กทม. (Bangkok Expressways Network)
-- ตรวจสอบสภาพผิวทางยกระดับ ทางด่วนขั้นที่ 1, ขั้นที่ 2 (ศรีรัช), ทางพิเศษฉลองรัช และดอนเมืองโทลล์เวย์
-- แจ้งเตือนจุดลงทางด่วนที่มีน้ำท่วมขังด้านล่าง พร้อมแนะนำจุดขึ้นทางด่วนหนีน้ำท่วม (Flood Bypass)
-
-### 6. เรดาร์สายการบินสด (Airspace Flight Radar)
-- ติดตามสถานะเที่ยวบินสดขึ้น-ลง ท่าอากาศยานสุวรรณภูมิ (BKK) และท่าอากาศยานดอนเมือง (DMK) ผ่านระบบ ADS-B
-
-### 7. สายด่วนฉุกเฉินและคู่มือตัดไฟ (Emergency SOS & Survival Protocols)
-- รวมเบอร์สายด่วน กทม. 24 ชั่วโมง (199, 1669, 1555, 1130) กดโทรออกได้ทันที
-- คู่มือกฎเหล็กป้องกันไฟฟ้ารั่วในน้ำตามมาตรฐาน กฟน. และเช็กลิสต์กระเป๋าฉุกเฉิน 72 ชั่วโมง
-
-### 8. ศูนย์รวมเครื่องมือและฟีเจอร์ทั้งหมด (All Features Command Hub)
-- รวบรวมทุกฟังก์ชันและเครื่องมือไว้ในปุ่มเดียว พร้อมระบบค้นหาด่วนและแถบแยกประเภท (น้ำท่วม, ทางด่วน, ฉุกเฉิน, สำรวจ 50 เขต) สะดวกและใช้งานง่ายในคลิกเดียว
-
-### 9. หน่วยสูบน้ำเคลื่อนที่เร็ว กทม. (BMA Mobile Pump Units)
-- ตรวจพิกัดรถสูบน้ำแรงดันสูงประจำจุดเสี่ยงน้ำท่วม พร้อมสถานะเดินเครื่องและเบอร์นายช่างประจำจุด
-
-### 10. จุดแจกกระสอบทรายและศูนย์บรรเทาภัย 50 เขต (Sandbag Distribution Depots)
-- ตรวจสอบจุดขอรับกระสอบทรายฟรีกั้นน้ำเข้าบ้าน ณ ฝ่ายโยธา สำนักงานเขต 50 เขต พร้อมยอดคงเหลือ
-
-### 11. ดัชนีคุณภาพอากาศและฝุ่น PM2.5 (AirBKK Telemetry)
-- ตรวจวัดระดับฝุ่น PM2.5 และดัชนี AQI รายเขต กทม. พร้อมคำแนะนำการสวมหน้ากากอนามัย N95
-
-### 12. สัญญาณขอความช่วยเหลือฉุกเฉินผ่าน SMS / ดาวเทียม (Emergency Offline SOS Beacon)
-- สร้างรหัสพิกัดขอความช่วยเหลือฉุกเฉิน พร้อมระบุจำนวนผู้ประสบภัย ระดับน้ำท่วมขัง และสถานะการตัดไฟเมน
-- ออกแบบสำหรับสถานการณ์สัญญาณอินเทอร์เน็ตมือถือ 4G/5G ขัดข้อง ส่งตรงผ่านข้อความ SMS เข้าศูนย์สั่งการ 199, 1669, 191 ได้ทันที
-
-### 13. ศูนย์อุบัติเหตุและโรงพยาบาลรองรับน้ำท่วม (Trauma Hospitals & Flood Access Telemetry)
-- ติดตามสถานะความพร้อมห้องฉุกเฉิน (ER Bed Capacity) และระดับคันกั้นน้ำ รทก. ของ 7 โรงพยาบาลหลัก กทม.
-- แสดงสถานะเส้นทางรถพยาบาลเข้าถึง ความพร้อมลานจอดเฮลิคอปเตอร์ และระบบไฟฟ้าสำรองฉุกเฉิน 24 ชั่วโมง
-
-### 14. ไม้บรรทัดวัดระยะทางและเข็มทิศหนีภัยน้ำท่วม (Tactical Evacuation Distance Ruler)
-- คลิกวัดระยะทางจริงระหว่าง 2 จุดบนแผนที่ (เช่น จากบ้านไปยังศูนย์พักพิง หรือโรงพยาบาลที่ใกล้ที่สุด)
-- คำนวณระยะทางแนวตรง (เมตร/กิโลเมตร) องศาทิศทางมุ่งหน้า (Compass Heading) และประมาณเวลาอพยพด้วยการเดินลุยน้ำ (2.5 กม./ชม.), รถกระบะยกสูง (20 กม./ชม.) หรือเรือท้องแบน (10 กม./ชม.)
-
-### 15. ท่าเรือโดยสารและการเดินเรือ กทม. (Bangkok Waterways & Public Boat Piers)
-- ติดตามสถานะการเปิดให้บริการท่าเรือด่วนเจ้าพระยา (ทุกสายธง), เรือโดยสารคลองแสนแสบ และเรือไฟฟ้า EV คลองผดุงกรุงเกษม
-- รายงานสภาพคลื่นผิวน้ำ คำเตือนช่วงน้ำทะเลหนุนสูง และจุดเชื่อมต่อระบบราง BTS / MRT สะดวกสำหรับการเดินทางเลี่ยงน้ำท่วม
-
-### 16. สถานีไฟฟ้าแรงสูงและความปลอดภัย กฟน. (MEA Power Grid Telemetry)
-- ติดตามสถานะความปลอดภัยสถานีไฟฟ้าแรงสูง 230kV / 115kV การไฟฟ้านครหลวง (กฟน.) และแนวกั้นน้ำสถานี รทก.
-- รายงานเสถียรภาพการจ่ายกระแสไฟเข้าโรงพยาบาลและสถานีสูบน้ำหลัก พร้อมคำแนะนำการตัดไฟและการแจ้งเหตุด่วน 1130
-
-### 17. ศูนย์พักพิงสัตว์เลี้ยงและหน่วยกู้ภัยสัตว์ (Pet & Animal Flood Rescue)
-- รวบรวมศูนย์พักพิงสัตว์เลี้ยงช่วงน้ำท่วมและโรงพยาบาลสัตว์ที่มีทีมสัตวแพทย์ดูแลตลอด 24 ชั่วโมง
-- พิกัดหน่วยเรือกู้ภัยสัตว์ติดเกาะน้ำท่วม และเช็กลิสต์อุปกรณ์จำเป็นสำหรับสัตว์เลี้ยง 72 ชั่วโมง (กรง, อาหาร, ปลอกคอเบอร์โทร, ยาประจำตัว)
-
-### 18. เครื่องมือคำนวณและรายงานระดับน้ำท่วมแบบสัมพัทธ์ (Visual Flood Depth & Passability Matrix)
-- ปุ่มลัดระบุระดับน้ำท่วมแบบจุดสังเกตทางกายวิภาค (ข้อเท้า 10 ซม., ครึ่งแข้ง 25 ซม., หัวเข่า 45 ซม., เอว 80 ซม., มิดหลังคา 160 ซม.)
-- ระบบประเมินความสามารถในการสัญจรของรถยนต์ 4 ประเภท (รถเก๋ง, กระบะ/SUV, 6 ล้อใหญ่, เรือท้องแบนกู้ภัย) อัตโนมัติ พร้อมสวิตช์แจ้งเตือนกระแสน้ำเชี่ยวและไฟฟ้ารั่ว
-
-### 19. ศูนย์ส่งออกข้อมูลโทรมาตรภัยพิบัติ GIS (Disaster Telemetry Export Center)
-- รองรับการดาวน์โหลดข้อมูลพิกัดในรูปแบบ GeoJSON (WGS84 / EPSG:4326) และ CSV Spreadsheet
-- ครอบคลุมชุดข้อมูลเหตุการณ์สด, รถสูบน้ำเคลื่อนที่, จุดแจกกระสอบทราย, โรงพยาบาลศูนย์อุบัติเหตุ, สถานีไฟฟ้า กฟน., และศูนย์พักพิงสัตว์ สำหรับนำไปวิเคราะห์ใน QGIS, ArcGIS หรือ Microsoft Excel
-
-### 20. สถาปัตยกรรมทำงานออฟไลน์ในภาวะภัยพิบัติ (Resilient PWA & Offline Service Worker)
-- ระบบ Service Worker และ Web App Manifest รองรับการเปิดใช้งานแม้สัญญาณโทรศัพท์เคลื่อนที่ 4G/5G ขัดข้อง
-- เข้าถึงเครื่องมือฉุกเฉิน สัญญาณขอความช่วยเหลือ SOS และคู่มือเอาชีวิตรอดได้ตลอด 24 ชั่วโมง
-
-### 21. คีย์ลัดควบคุมศูนย์บัญชาการยุทธวิธี (Tactical Keyboard Shortcuts)
-- ควบคุมระบบได้ทันทีผ่านแป้นพิมพ์คอมพิวเตอร์โดยไม่ต้องใช้เมาส์:
-  - `?`: เปิดคู่มือคีย์ลัดปฏิบัติการ
-  - `R`: เปิดฟอร์มรายงานเหตุด่วน (Report)
-  - `S`: เปิดสายด่วนฉุกเฉิน กทม. (SOS 24 ชม.)
-  - `C`: ตัวกรองหมวดหมู่เหตุการณ์สด
-  - `D`: สำรวจและแสดงเส้นขอบเขต 50 เขต กทม.
-  - `E`: ส่งออกข้อมูลโทรมาตร GIS (Export GeoJSON/CSV)
-  - `F`: เปิดเรดาร์น่านฟ้าสุวรรณภูมิ/ดอนเมือง
-  - `W`: เรดาร์เฝ้าระวังพื้นที่รอบตัว (Area Watch)
-  - `M`: เปิด/ปิดเสียงเอฟเฟกต์ยุทธวิธี (Audio Mute)
-  - `Esc`: ปิดหน้าต่างโมดอลทั้งหมด
+### Visual & Tactical Direction
+- **Map-First Experience**: High-resolution dark satellite imagery dominates ~90% of the viewport.
+- **True 2D Overhead Projection**: Default application view is True 2D top-down satellite (pitch 0°, bearing 0°). Decoupled 3D (pitch 55°) and basemaps (`MAP` / `SAT`).
+- **Command HUD**: Real-time Zulu clock, live status indicator, location status, active camera matrix, situational summary.
+- **Reference-Accurate Markers**: Glowing camera markers, pulsating incident severity markers, and emergency services (hospitals, police, fire & rescue).
+- **Tactical Controls**: `[ 3D ] [ 2D ] [ MAP ] [ SAT ]` perspective controls with pitch, bearing, and zoom.
 
 ---
 
-## สถาปัตยกรรมและเทคโนโลยี (Technology Stack)
+## 2. Source Safety & Legal Compliance Policy
 
-- **Frontend & Framework:** Next.js (App Router), React, TypeScript
-- **Styling & UI:** Tailwind CSS, Glassmorphic Tactical Dark Theme
-- **Geospatial & Mapping:** Leaflet, OpenStreetMap, Open-Meteo, TMD Doppler Radar Integration
-- **Real-Time Data Delivery:** Server-Sent Events (SSE), Web Audio API Synthesizer
-- **Database & ORM:** PostgreSQL / Neon Serverless, Prisma ORM
+Per strict operational requirements:
+- **Zero Private CCTV**: Private network endpoints (`192.168.x.x`, `10.x.x.x`), RTSP brute-forcing, and authentication bypass are prohibited.
+- **Strictly Public & Open Data**: Only ingests verified open-government data (Bangkok BMA, DOH, EXAT), Creative Commons webcams, and embeddable YouTube Live feeds.
+- **Safe Fallback**: If an official public source prohibits direct embedding, the system provides a direct **"OPEN PUBLIC SOURCE"** portal link instead of attempting to circumvent restrictions.
+- **Privacy & Civil Liberties**: No facial recognition, no biometric analysis, no individual tracking.
 
 ---
 
-## การติดตั้งและเริ่มใช้งาน (Getting Started)
+## 3. Technology Stack
 
-### ความต้องการของระบบ
-- Node.js version 18.18.0 ขึ้นไป
-- npm หรือ yarn หรือ pnpm
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: Tactical Dark SOC Design System (Vanilla CSS, Glassmorphism, JetBrains Mono)
+- **Map Engine**: MapLibre GL JS + Esri World Imagery (High-Res Dark Satellite) + Carto Dark Matter
+- **Geospatial Computations**: Turf.js, Haversine geodesic indexing, Bounding-Box filtering
+- **Database & Storage**: PostgreSQL 16 + PostGIS extension (DDL included in `src/lib/schema.sql`)
+- **Real-Time Layer**: Server-Sent Events (SSE) `/api/events` + Companion WebSocket Server (`scripts/start-ws.mjs`)
+- **Acoustic Feedback**: Web Audio API tactical synthesizer (radar chirp, alert chime)
+- **One-Shot Location**: Native Browser Geolocation API (`getCurrentPosition` with `enableHighAccuracy: true`) + Turf.js dynamic accuracy circle + Client-side Privacy Enclave
 
-### ขั้นตอนการรันระบบ
+---
+
+## 3.1 Device Location System (Privacy-First One-Shot Fix)
+
+MIRRIX features a pure one-shot, privacy-first device location system:
+- **Single Target Fix**: Clicking `[ MY LOCATION ]` requests a single position fix (`getCurrentPosition`), moves map directly to those exact coordinates, renders single user target marker ("YOU ARE HERE"), and displays accuracy circle matching `coords.accuracy` in meters (`±X M`).
+- **No Continuous Tracking**: Zero background monitoring, zero `watchPosition`, zero telemetry persistence.
+- **Zero Server Transmission**: Coordinates remain strictly within client-side browser memory.
+- **Nearby Tactical Association**: Instantly calculates geodesic distances from unit to nearby public cameras, active incidents, and trauma emergency POIs.
+
+---
+
+## 4. Key Intelligence Features
+
+- **True 2D Overhead Projection**: Perpendicular top-down cartographic and satellite view (`pitch: 0, bearing: 0`).
+- **Incident Density Heatmap**: Subtle multi-domain heat density overlay for accidents, fires, and floods.
+- **Event Replay Mode**: Chronological event progression (15M, 1H, 6H, 24H) with scrub slider and speed control.
+- **Source Provenance & Data Age**: Transparent tracking of source, type, URL, first reported, last updated, and transparent confidence rating (LOW, MEDIUM, HIGH, VERY HIGH).
+- **Tactical Area Scan**: Radial multi-domain scan (500M, 1KM, 2KM, 5KM) around current map center.
+- **Global Search with Coordinate Input**: Direct parsing of geographic coordinates (e.g. `13.756331, 100.501762`) with instant flyTo.
+- **Right-Click Tactical Context Menu**: Direct access to copy coordinates, scan area, and measure distance.
+- **Local Bookmarks**: Save and navigate to key sectors (Sukhumvit, Siam, Rama IX, Airport, Bang Na).
+
+---
+
+## 5. Getting Started
+
+### Prerequisites
+- Node.js `v20+` or `v24+`
+- npm `v10+`
+
+### Installation & Run
 
 ```bash
-# 1. ติดตั้ง Dependencies
+# Install dependencies
 npm install
 
-# 2. เริ่มต้นรันเซิร์ฟเวอร์สำหรับทดสอบ (Development Server)
+# Run development server
 npm run dev
+
+# Run test suite
+npm test
+
+# Run production build
+npm run build
 ```
-
-เปิดเว็บเบราว์เซอร์ไปที่ `http://localhost:3000` เพื่อเข้าใช้งานระบบ AlertBKK
-
----
-
-## ลิขสิทธิ์และการพัฒนา (License & Contributors)
-
-พัฒนาขึ้นเพื่อสาธารณประโยชน์ในการติดตามสถานการณ์ภัยพิบัติและการเดินทางของชาวกรุงเทพมหานครและปริมณฑล

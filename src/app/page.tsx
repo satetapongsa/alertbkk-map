@@ -1,286 +1,191 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Navbar } from '@/components/navbar';
-import { MapWrapper } from '@/components/map/MapWrapper';
-import { IncidentCategoryModal } from '@/components/modals/IncidentCategoryModal';
-import { IncidentCard } from '@/components/incidents/IncidentCard';
-import { CreateReportModal } from '@/components/incidents/CreateReportModal';
-import { AreaWatchModal } from '@/components/incidents/AreaWatchModal';
-import { SatelliteWeatherBar } from '@/components/weather/SatelliteWeatherBar';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { CompactFlightRadarDrawer } from '@/components/transit/CompactFlightRadarDrawer';
-import { BangkokEmergencySosModal } from '@/components/modals/BangkokEmergencySosModal';
-import { BangkokDistrictsModal } from '@/components/modals/BangkokDistrictsModal';
-import { SafeRouteHazardModal } from '@/components/modals/SafeRouteHazardModal';
-import { VehicleFloodRiskModal } from '@/components/modals/VehicleFloodRiskModal';
-import { BangkokWaterTideModal } from '@/components/modals/BangkokWaterTideModal';
-import { BangkokExpresswayModal } from '@/components/modals/BangkokExpresswayModal';
-import { EmergencySurvivalGuideModal } from '@/components/modals/EmergencySurvivalGuideModal';
-import { AllFeaturesHubModal } from '@/components/modals/AllFeaturesHubModal';
-import { BangkokPumpTrucksModal } from '@/components/modals/BangkokPumpTrucksModal';
-import { BangkokSandbagDepotModal } from '@/components/modals/BangkokSandbagDepotModal';
-import { BangkokAirQualityModal } from '@/components/modals/BangkokAirQualityModal';
-import { BangkokOfflineSosModal } from '@/components/modals/BangkokOfflineSosModal';
-import { BangkokHospitalsModal } from '@/components/modals/BangkokHospitalsModal';
-import { BangkokWaterwaysModal } from '@/components/modals/BangkokWaterwaysModal';
-import { BangkokPowerGridModal } from '@/components/modals/BangkokPowerGridModal';
-import { BangkokPetRescueModal } from '@/components/modals/BangkokPetRescueModal';
-import { BangkokTelemetryExportModal } from '@/components/modals/BangkokTelemetryExportModal';
-import { TacticalKeybindingsModal } from '@/components/modals/TacticalKeybindingsModal';
-import { tacticalAudio } from '@/lib/tactical-audio';
-import { BangkokDistrict } from '@/lib/bkk-environmental-data';
-import { AirportFlightResponse, FlightItem } from '@/app/api/flights/route';
-import { Incident, IncidentType, TimeFilter } from '@/types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import * as maplibregl from 'maplibre-gl';
 import {
-  Bell,
-  Radio,
-  CheckCircle2,
-  MapPin,
-  Plus,
-  X,
-  Plane,
-  AlertOctagon,
-  Compass,
-  ShieldCheck,
-  Gauge,
-  Waves,
-  Car,
-  ShieldAlert,
-  Layers,
-  Grid,
-  Keyboard,
-  Home,
-} from 'lucide-react';
+  CameraSource,
+  Incident,
+  POI,
+  TrafficSegment,
+  FloodZone,
+  MeasurementToolState,
+} from '@/types/intelligence';
+import { TopHUD } from '@/components/layout/TopHUD';
+import { LeftRail } from '@/components/layout/LeftRail';
+import { RightRail } from '@/components/layout/RightRail';
+import { IntelligenceMap } from '@/components/map/IntelligenceMap';
+import { CameraIntelligencePanel } from '@/components/panels/CameraIntelligencePanel';
+import { IncidentIntelligencePanel } from '@/components/panels/IncidentIntelligencePanel';
+import { CameraGridOverlay } from '@/components/panels/CameraGridOverlay';
+import { GlobalSearchModal } from '@/components/panels/GlobalSearchModal';
+import { AdvancedFiltersDrawer } from '@/components/panels/AdvancedFiltersDrawer';
+import { LiveTimelineDrawer } from '@/components/panels/LiveTimelineDrawer';
+import { AnalyticsModal } from '@/components/panels/AnalyticsModal';
+import { AdminSourcesModal } from '@/components/panels/AdminSourcesModal';
+import { ScanAreaModal } from '@/components/panels/ScanAreaModal';
+import { EventReplayDrawer } from '@/components/panels/EventReplayDrawer';
+import { SituationalSummaryModal } from '@/components/panels/SituationalSummaryModal';
+import { BookmarksModal } from '@/components/panels/BookmarksModal';
+import { useUserLocation } from '@/hooks/useUserLocation';
+import { useRealtimeStream } from '@/lib/useRealtimeStream';
+import { tacticalAudio } from '@/lib/tacticalAudio';
 
-export default function HomePage() {
+export default function Home() {
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+
+  // Primary Entity Collections
+  const [cameras, setCameras] = useState<CameraSource[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [filteredIncidents, setFilteredIncidents] = useState<Incident[]>([]);
+  const [pois, setPois] = useState<POI[]>([]);
+  const [trafficSegments, setTrafficSegments] = useState<TrafficSegment[]>([]);
+  const [floodZones, setFloodZones] = useState<FloodZone[]>([]);
+
+  // Replay filtered incidents (when replay active)
+  const [replayIncidents, setReplayIncidents] = useState<Incident[] | null>(null);
+
+  // Selected Entities
+  const [selectedCamera, setSelectedCamera] = useState<CameraSource | null>(null);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
-  // Live Airspace Radar Telemetry (Suvarnabhumi & Don Mueang ADS-B)
-  const [flightData, setFlightData] = useState<AirportFlightResponse | null>(null);
-  const [isFlightLoading, setIsFlightLoading] = useState(false);
-  const [showFlightRadar, setShowFlightRadar] = useState(false);
+  // Active Panels / Overlays
+  const [leftRailTab, setLeftRailTab] = useState<string>('');
+  const [activeRightPanel, setActiveRightPanel] = useState<string>('');
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState<boolean>(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState<boolean>(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
+  const [isSystemStatusOpen, setIsSystemStatusOpen] = useState<boolean>(false);
+  const [isGridView, setIsGridView] = useState<boolean>(false);
+  const [isScanAreaModalOpen, setIsScanAreaModalOpen] = useState<boolean>(false);
+  const [isReplayOpen, setIsReplayOpen] = useState<boolean>(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState<boolean>(false);
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState<boolean>(false);
 
-  // Filters & Selected Coordinates
-  const [clickedMapCoords, setClickedMapCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [selectedType, setSelectedType] = useState<IncidentType | 'ALL'>('ALL');
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isFeaturesHubOpen, setIsFeaturesHubOpen] = useState(false);
+  // Tactical Area Scan State
+  const [scanAreaState, setScanAreaState] = useState<{
+    center: [number, number]; // [lng, lat]
+    radiusMeters: number;
+  } | null>(null);
 
-  // Navigation / Camera
-  const [flyToCoords, setFlyToCoords] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [homeCoords, setHomeCoords] = useState<{ lat: number; lng: number; label?: string } | null>(null);
-  const [watchArea, setWatchArea] = useState<{ lat: number; lng: number; radiusKm: number } | null>(null);
+  // Layer Toggles
+  const [showCameras, setShowCameras] = useState<boolean>(true);
+  const [showIncidents, setShowIncidents] = useState<boolean>(true);
+  const [showTraffic, setShowTraffic] = useState<boolean>(true);
+  const [showWeather, setShowWeather] = useState<boolean>(true);
+  const [showHospitals, setShowHospitals] = useState<boolean>(true);
+  const [showPolice, setShowPolice] = useState<boolean>(true);
+  const [showFireStations, setShowFireStations] = useState<boolean>(true);
+  const [showFloods, setShowFloods] = useState<boolean>(true);
+  const [showHeatmap, setShowHeatmap] = useState<boolean>(false);
+  const [showCameraCoverage, setShowCameraCoverage] = useState<boolean>(false);
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
 
-  // Modals
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isAreaWatchModalOpen, setIsAreaWatchModalOpen] = useState(false);
-  const [isSosModalOpen, setIsSosModalOpen] = useState(false);
-  const [isDistrictsModalOpen, setIsDistrictsModalOpen] = useState(false);
-  const [selectedDistrict, setSelectedDistrict] = useState<BangkokDistrict | null>(null);
-  const [isHazardModalOpen, setIsHazardModalOpen] = useState(false);
-  const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
-  const [isWaterTideModalOpen, setIsWaterTideModalOpen] = useState(false);
-  const [isExpresswayModalOpen, setIsExpresswayModalOpen] = useState(false);
-  const [isSurvivalGuideModalOpen, setIsSurvivalGuideModalOpen] = useState(false);
-  const [isPumpTrucksModalOpen, setIsPumpTrucksModalOpen] = useState(false);
-  const [isSandbagDepotModalOpen, setIsSandbagDepotModalOpen] = useState(false);
-  const [isAirQualityModalOpen, setIsAirQualityModalOpen] = useState(false);
-  const [isOfflineSosModalOpen, setIsOfflineSosModalOpen] = useState(false);
-  const [isHospitalsModalOpen, setIsHospitalsModalOpen] = useState(false);
-  const [isWaterwaysModalOpen, setIsWaterwaysModalOpen] = useState(false);
-  const [isPowerGridModalOpen, setIsPowerGridModalOpen] = useState(false);
-  const [isPetRescueModalOpen, setIsPetRescueModalOpen] = useState(false);
-  const [isTelemetryExportOpen, setIsTelemetryExportOpen] = useState(false);
-  const [isKeybindingsModalOpen, setIsKeybindingsModalOpen] = useState(false);
+  // Measurement Tool State
+  const [measurementState, setMeasurementState] = useState<MeasurementToolState>({
+    activeTool: 'NONE',
+    points: [],
+  });
 
-  // Live Toast Notification
-  const [liveToast, setLiveToast] = useState<{ title: string; message: string } | null>(null);
-
-  // Fetch initial incidents
-  const fetchIncidents = useCallback(async () => {
-    try {
-      const res = await fetch('/api/incidents');
-      const data = await res.json();
-      if (data.success) {
-        setIncidents(data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching incidents:', err);
-    }
-  }, []);
-
-  // Fetch Live Flights Telemetry
-  const fetchFlights = useCallback(async () => {
-    setIsFlightLoading(true);
-    try {
-      const res = await fetch('/api/flights');
-      const data = await res.json();
-      if (data.success) {
-        setFlightData(data);
-      }
-    } catch (err) {
-      console.error('Error fetching live flights:', err);
-    } finally {
-      setIsFlightLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchIncidents();
-  }, [fetchIncidents]);
-
-  useEffect(() => {
-    fetchFlights();
-    const interval = setInterval(fetchFlights, 30000);
-    return () => clearInterval(interval);
-  }, [fetchFlights]);
-
-  // Check URL query parameters for modal opening and category filters
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('report') === '1') {
-        setIsReportModalOpen(true);
-      } else if (params.get('watch') === '1') {
-        setIsAreaWatchModalOpen(true);
-      }
-      const typeParam = params.get('type');
-      if (typeParam) {
-        setSelectedType(typeParam as any);
-      }
-    }
-  }, []);
-
-  // Request User Geolocation on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserCoords({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          });
-        },
-        (err) => {
-          console.log('Location permission not granted or timeout; using Bangkok default center.');
-        },
-        { enableHighAccuracy: false, timeout: 6000 }
-      );
-    }
-  }, []);
-
-  // Hydrate Saved Home Location from Local Storage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('alertbkk_home_coords');
-        if (saved) {
-          setHomeCoords(JSON.parse(saved));
-        }
-      } catch {}
-    }
-  }, []);
-
-  const handleSaveHomeLocation = (coords: { lat: number; lng: number; label?: string } | null) => {
-    setHomeCoords(coords);
-    if (typeof window !== 'undefined') {
-      if (coords) {
-        localStorage.setItem('alertbkk_home_coords', JSON.stringify(coords));
-        setLiveToast({
-          title: 'บันทึกหมุดที่อยู่สำเร็จ',
-          message: `ตั้งเป็นหมุดบ้านของคุณเรียบร้อยแล้ว (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`,
+  // User Geolocation Hook (High Accuracy, Single-Shot Fix, No Tracking)
+  const {
+    status: locationStatus,
+    location: userLocation,
+    locate,
+  } = useUserLocation({
+    onFollowMapCenter: (lat, lng, zoom) => {
+      if (mapInstanceRef.current) {
+        const is2D = mapInstanceRef.current.getPitch() === 0;
+        mapInstanceRef.current.flyTo({
+          center: [lng, lat],
+          zoom: zoom || 16.5,
+          pitch: is2D ? 0 : 50,
+          duration: 1200,
         });
-        setTimeout(() => setLiveToast(null), 4000);
-        tacticalAudio.playTacticalBeep(880, 0.1);
-      } else {
-        localStorage.removeItem('alertbkk_home_coords');
       }
-    }
-  };
+    },
+  });
 
-  const handleClearHomeLocation = () => {
-    setHomeCoords(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('alertbkk_home_coords');
-    }
-    setLiveToast({
-      title: 'ลบหมุดที่อยู่เรียบร้อย',
-      message: 'ยกเลิกการบันทึกหมุดบ้านแล้ว คุณสามารถปักใหม่ได้ตลอดเวลา',
-    });
-    setTimeout(() => setLiveToast(null), 3000);
-  };
+  // Initial Data Fetch
+  const loadData = useCallback(async () => {
+    try {
+      const [cRes, iRes, pRes, tRes] = await Promise.all([
+        fetch('/api/cameras').then((r) => r.json()),
+        fetch('/api/incidents').then((r) => r.json()),
+        fetch('/api/pois').then((r) => r.json()),
+        fetch('/api/traffic').then((r) => r.json()),
+      ]);
 
-  // Global Tactical Keyboard Shortcuts Listener
+      if (cRes.success) setCameras(cRes.data);
+      if (iRes.success) setIncidents(iRes.data);
+      if (pRes.success) setPois(pRes.data);
+      if (tRes.success) {
+        setTrafficSegments(tRes.traffic_segments || []);
+        setFloodZones(tRes.flood_zones || []);
+      }
+    } catch (e) {
+      console.error('Failed to load initial MIRRIX telemetry data:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Real-time Event Stream (Incident Flash & Audio Alert)
+  useRealtimeStream((event) => {
+    if (event.event === 'incident.created') {
+      tacticalAudio.playCriticalAlert();
+      loadData();
+    }
+  });
+
+  // Keyboard Shortcuts handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is currently typing in an input, textarea, or contentEditable element
-      const target = e.target as HTMLElement;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        if (e.key === 'Escape') {
-          target.blur();
-        }
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
 
-      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
-        e.preventDefault();
-        setIsKeybindingsModalOpen((prev) => !prev);
-      } else if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        setIsReportModalOpen(true);
-      } else if (e.key === 's' || e.key === 'S') {
-        e.preventDefault();
-        setIsSosModalOpen(true);
-      } else if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault();
-        setIsCategoryModalOpen((prev) => !prev);
-      } else if (e.key === 'e' || e.key === 'E') {
-        e.preventDefault();
-        setIsTelemetryExportOpen((prev) => !prev);
-      } else if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        setShowFlightRadar((prev) => !prev);
-      } else if (e.key === 'd' || e.key === 'D') {
-        e.preventDefault();
-        setIsDistrictsModalOpen((prev) => !prev);
-      } else if (e.key === 'w' || e.key === 'W') {
-        e.preventDefault();
-        setIsAreaWatchModalOpen(true);
-      } else if (e.key === 'm' || e.key === 'M') {
-        e.preventDefault();
-        tacticalAudio.toggleMute();
-      } else if (e.key === 'Escape') {
-        setIsReportModalOpen(false);
-        setIsCategoryModalOpen(false);
-        setIsFeaturesHubOpen(false);
-        setIsAreaWatchModalOpen(false);
-        setIsSosModalOpen(false);
-        setIsDistrictsModalOpen(false);
-        setIsHazardModalOpen(false);
-        setIsVehicleModalOpen(false);
-        setIsWaterTideModalOpen(false);
-        setIsExpresswayModalOpen(false);
-        setIsSurvivalGuideModalOpen(false);
-        setIsPumpTrucksModalOpen(false);
-        setIsSandbagDepotModalOpen(false);
-        setIsAirQualityModalOpen(false);
-        setIsOfflineSosModalOpen(false);
-        setIsHospitalsModalOpen(false);
-        setIsWaterwaysModalOpen(false);
-        setIsPowerGridModalOpen(false);
-        setIsPetRescueModalOpen(false);
-        setIsTelemetryExportOpen(false);
-        setIsKeybindingsModalOpen(false);
+      switch (e.key.toLowerCase()) {
+        case 'f':
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+          break;
+        case 'l':
+          setIsFiltersOpen((prev) => !prev);
+          break;
+        case 'c':
+          setIsGridView((prev) => !prev);
+          break;
+        case 'i':
+          setIsTimelineOpen((prev) => !prev);
+          break;
+        case 's':
+          e.preventDefault();
+          setIsSearchOpen((prev) => !prev);
+          break;
+        case 'a':
+          setIsAnalyticsOpen((prev) => !prev);
+          break;
+        case 'r':
+          // Reset view to Bangkok Core
+          closeAllPanels();
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo({
+              center: [100.5450, 13.7420],
+              zoom: 12.7,
+              pitch: 0,
+              bearing: 0,
+              duration: 1200,
+            });
+          }
+          break;
+        case 'escape':
+          closeAllPanels();
+          break;
       }
     };
 
@@ -288,714 +193,334 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Real-Time SSE Subscription
-  useEffect(() => {
-    let eventSource: EventSource | null = null;
-
-    try {
-      eventSource = new EventSource('/api/realtime');
-
-      eventSource.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-
-          if (parsed.type === 'incident.created') {
-            const newInc: Incident = parsed.data;
-            setIncidents((prev) => [newInc, ...prev.filter((i) => i.id !== newInc.id)]);
-            setLiveToast({
-              title: 'New Incident Reported',
-              message: `${newInc.title} (${newInc.locationName})`,
-            });
-            setTimeout(() => setLiveToast(null), 5000);
-          } else if (parsed.type === 'incident.confirmed') {
-            const { id, confirmCount } = parsed.data;
-            setIncidents((prev) =>
-              prev.map((i) => (i.id === id ? { ...i, confirmCount } : i))
-            );
-            if (selectedIncident?.id === id) {
-              setSelectedIncident((prev) => (prev ? { ...prev, confirmCount } : null));
-            }
-          } else if (parsed.type === 'incident.disputed') {
-            const { id, disputeCount } = parsed.data;
-            setIncidents((prev) =>
-              prev.map((i) => (i.id === id ? { ...i, disputeCount } : i))
-            );
-            if (selectedIncident?.id === id) {
-              setSelectedIncident((prev) => (prev ? { ...prev, disputeCount } : null));
-            }
-          } else if (parsed.type === 'incident.resolved') {
-            const { id, status } = parsed.data;
-            setIncidents((prev) =>
-              prev.map((i) => (i.id === id ? { ...i, status } : i))
-            );
-          }
-        } catch (e) {
-          // heartbeat or unparseable
-        }
-      };
-
-      eventSource.onerror = () => {
-        // EventSource will automatically retry connecting
-      };
-    } catch (err) {
-      console.error('SSE initialization error:', err);
-    }
-
-    return () => {
-      eventSource?.close();
-    };
-  }, [selectedIncident]);
-
-  /**
-   * ARCHITECTURE SPECIFICATION (AlertBKK Core):
-   * 1. Priority Focus: Bangkok Metropolitan Region (BKK).
-   *    AlertBKK is primarily designed to serve Bangkok first; default camera views,
-   *    recon layers, and telemetry anchor around Bangkok (13.7563, 100.5018).
-   * 2. Provincial Extensibility: Incidents reported across other provinces in Thailand
-   *    remain fully loaded and queryable on the map without cluttering the UI with dedicated
-   *    scope filter toggle buttons.
-   */
-  // Apply Real-Time Active Filtering (Always LIVE Real-Time on Main Page)
-  useEffect(() => {
-    let list = incidents.filter((i) => i.status === 'ACTIVE' || i.status === 'MONITORING');
-
-    // Filter Type if selected
-    if (selectedType !== 'ALL') {
-      list = list.filter((i) => i.type === selectedType);
-    }
-
-    setFilteredIncidents(list);
-  }, [incidents, selectedType]);
-
-  // Incident Select Handlers
-  const handleSelectIncident = (incident: Incident) => {
-    setSelectedIncident(incident);
-    setFlyToCoords({ lat: incident.latitude, lng: incident.longitude, zoom: 15 });
+  const closeAllPanels = () => {
+    setSelectedCamera(null);
+    setSelectedIncident(null);
+    setIsSearchOpen(false);
+    setIsFiltersOpen(false);
+    setIsTimelineOpen(false);
+    setIsAnalyticsOpen(false);
+    setIsSystemStatusOpen(false);
+    setIsScanAreaModalOpen(false);
+    setIsReplayOpen(false);
+    setIsSummaryOpen(false);
+    setIsBookmarksOpen(false);
+    setActiveRightPanel('');
+    setLeftRailTab('');
   };
 
-  const handleSearchLocation = (lat: number, lng: number, label: string) => {
-    setFlyToCoords({ lat, lng, zoom: 15 });
-    setLiveToast({
-      title: 'Navigating to Location',
-      message: label,
-    });
-    setTimeout(() => setLiveToast(null), 3000);
+  const handleSelectCamera = (cam: CameraSource) => {
+    setSelectedIncident(null);
+    setSelectedCamera(cam);
   };
 
-  const handleConfirmIncident = async (incidentId: string) => {
-    try {
-      const res = await fetch(`/api/incidents/${incidentId}/confirm`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setIncidents((prev) =>
-          prev.map((i) => (i.id === incidentId ? data.data : i))
-        );
-        setSelectedIncident(data.data);
-      }
-    } catch (err) {
-      console.error(err);
+  const handleSelectIncident = (inc: Incident) => {
+    setSelectedCamera(null);
+    setSelectedIncident(inc);
+  };
+
+  // Pure One-Shot MY LOCATION click handler (direct native call, no dialog, no panel)
+  const handleLocateButtonClick = () => {
+    locate();
+  };
+
+  const toggleDrawingTool = () => {
+    if (measurementState.activeTool === 'NONE') {
+      tacticalAudio.playRadarBlip();
+      setMeasurementState({ activeTool: 'DISTANCE', points: [] });
+    } else {
+      setMeasurementState({ activeTool: 'NONE', points: [] });
     }
   };
 
-  const handleDisputeIncident = async (incidentId: string) => {
-    try {
-      const res = await fetch(`/api/incidents/${incidentId}/dispute`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setIncidents((prev) =>
-          prev.map((i) => (i.id === incidentId ? data.data : i))
-        );
-        setSelectedIncident(data.data);
-      }
-    } catch (err) {
-      console.error(err);
+  // Trigger Area Scan Tool
+  const triggerScanArea = (coords?: [number, number], radiusMeters: number = 2000) => {
+    let center: [number, number] = [100.5450, 13.7420];
+    if (coords) {
+      center = coords;
+    } else if (mapInstanceRef.current) {
+      const c = mapInstanceRef.current.getCenter();
+      center = [c.lng, c.lat];
     }
+    setScanAreaState({ center, radiusMeters });
+    setIsScanAreaModalOpen(true);
   };
 
-  // Consolidate BKK & DMK active flights from telemetry response
-  const activeFlights = flightData
-    ? [...flightData.airports.suvarnabhumi.flights, ...flightData.airports.donmueang.flights]
+  // Get map center coordinates for modal queries
+  const getCurrentMapCenter = (): [number, number] => {
+    if (mapInstanceRef.current) {
+      const c = mapInstanceRef.current.getCenter();
+      return [c.lng, c.lat];
+    }
+    return [100.5450, 13.7420];
+  };
+
+  // Nearby Incidents for currently selected camera
+  const nearbyIncidentsForCamera = selectedCamera
+    ? incidents.filter((inc) => {
+        const latDiff = Math.abs(inc.latitude - selectedCamera.latitude);
+        const lngDiff = Math.abs(inc.longitude - selectedCamera.longitude);
+        return latDiff < 0.02 && lngDiff < 0.02;
+      })
     : [];
-  const totalFlightCount = flightData?.totalAirborneInBKKBasin || activeFlights.length;
+
+  // Emergency Services
+  const hospitals = pois.filter((p) => p.type === 'HOSPITAL');
+  const police = pois.filter((p) => p.type === 'POLICE');
+  const fire = pois.filter((p) => p.type === 'FIRE_STATION');
+
+  // Active Incidents List (Normal vs Replay)
+  const displayedIncidents = replayIncidents !== null ? replayIncidents : incidents;
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-slate-950">
-      {/* 1. Top Navbar */}
-      <Navbar
-        incidents={incidents}
-        activeCount={incidents.filter((i) => i.status === 'ACTIVE').length}
-        onOpenReportModal={() => setIsReportModalOpen(true)}
-        onOpenAreaWatchModal={() => setIsAreaWatchModalOpen(true)}
-        onOpenSosModal={() => setIsSosModalOpen(true)}
-        onOpenDistrictsModal={() => setIsDistrictsModalOpen(true)}
-        onOpenHazardModal={() => setIsHazardModalOpen(true)}
+    <main className="mirrix-shell">
+      {/* 1. TOP COMMAND HUD */}
+      <TopHUD
+        onlineCameras={cameras.filter((c) => c.status === 'ONLINE').length}
+        activeIncidents={incidents.filter((i) => i.status === 'ACTIVE').length}
+        alertCount={incidents.filter((i) => i.severity === 'CRITICAL' || i.severity === 'HIGH').length}
+        onOpenSystemStatus={() => setIsSystemStatusOpen(true)}
+        onToggleGrid={() => setIsGridView(!isGridView)}
+        isGridView={isGridView}
+        onResetView={closeAllPanels}
+        locationStatus={locationStatus}
+        userLocation={userLocation}
+        onOpenSummary={() => setIsSummaryOpen(true)}
+        onOpenWeather={() => setIsSummaryOpen(true)}
+      />
+
+      {/* 2. LEFT VERTICAL TACTICAL RAIL */}
+      <LeftRail
+        activeTab={leftRailTab}
+        onSelectTab={(tab) => {
+          setLeftRailTab(tab);
+          if (tab === 'cameras') setIsGridView(true);
+          if (tab === 'incidents') setIsTimelineOpen(true);
+          if (tab === 'alerts') setIsTimelineOpen(true);
+          if (tab === 'layers') setIsFiltersOpen(true);
+          if (tab === 'overview') setIsSummaryOpen(true);
+        }}
+        cameraCount={cameras.length}
+        incidentCount={incidents.length}
+        alertCount={incidents.filter((i) => i.severity === 'CRITICAL' || i.severity === 'HIGH').length}
+      />
+
+      {/* 3. RIGHT VERTICAL CONTROLS RAIL */}
+      <RightRail
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenFilters={() => setIsFiltersOpen(true)}
+        onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+        onToggleDrawing={toggleDrawingTool}
+        onOpenTimeline={() => setIsTimelineOpen(true)}
+        onOpenScanArea={() => triggerScanArea()}
+        onOpenBookmarks={() => setIsBookmarksOpen(true)}
+        onOpenLayers={() => setIsFiltersOpen(true)}
+        onOpenSignals={() => setIsTimelineOpen(true)}
+        isDrawingActive={measurementState.activeTool !== 'NONE'}
+        activePanel={activeRightPanel}
+        onSelectPanel={(p) => setActiveRightPanel(p)}
+        locationStatus={locationStatus}
+        onLocateClick={handleLocateButtonClick}
+      />
+
+      {/* 4. MAP VIEWPORT ENGINE */}
+      <IntelligenceMap
+        cameras={cameras}
+        incidents={displayedIncidents}
+        pois={pois}
+        trafficSegments={trafficSegments}
+        floodZones={floodZones}
+        selectedCamera={selectedCamera}
+        selectedIncident={selectedIncident}
+        onSelectCamera={handleSelectCamera}
         onSelectIncident={handleSelectIncident}
-        onSearchLocation={handleSearchLocation}
-        onSyncCompleted={fetchIncidents}
+        showCameras={showCameras}
+        showIncidents={showIncidents}
+        showHospitals={showHospitals}
+        showPolice={showPolice}
+        showFireStations={showFireStations}
+        showTraffic={showTraffic}
+        showFloods={showFloods}
+        showHeatmap={showHeatmap}
+        showCameraCoverage={showCameraCoverage}
+        scanAreaState={scanAreaState}
+        measurementState={measurementState}
+        onUpdateMeasurement={setMeasurementState}
+        userLocation={userLocation}
+        locationStatus={locationStatus}
+        onTriggerScanArea={(coords, r) => triggerScanArea(coords, r)}
+        onMapReady={(map) => {
+          mapInstanceRef.current = map;
+        }}
       />
 
-      {/* 2. Real-time Satellite & Meteorology Telemetry Bar */}
-      <SatelliteWeatherBar />
-
-      {/* 3. Main Map & Overlays Container */}
-      <main className="relative flex-1 w-full h-full min-h-0 overflow-hidden">
-        {/* Full-Screen Leaflet Map */}
-        <MapWrapper
-          incidents={filteredIncidents}
-          selectedIncident={selectedIncident}
+      {/* 5. CAMERA INTELLIGENCE SLIDE-IN PANEL */}
+      {selectedCamera && !isGridView && (
+        <CameraIntelligencePanel
+          camera={selectedCamera}
+          nearbyIncidents={nearbyIncidentsForCamera}
+          onClose={() => setSelectedCamera(null)}
+          onCenterMap={(lat, lng) => {
+            mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom: 15.5, duration: 1000 });
+          }}
           onSelectIncident={handleSelectIncident}
-          flyToCoords={flyToCoords}
-          userCoords={userCoords}
-          homeCoords={homeCoords}
-          onSetHomeCoords={handleSaveHomeLocation}
-          clickedCoords={clickedMapCoords}
-          watchArea={watchArea}
-          flights={activeFlights}
-          showFlights={showFlightRadar}
-          onToggleFlights={() => setShowFlightRadar((prev) => !prev)}
+          userLocation={userLocation}
+        />
+      )}
+
+      {/* 6. INCIDENT SITUATIONAL REPORT SLIDE-IN PANEL */}
+      {selectedIncident && !isGridView && (
+        <IncidentIntelligencePanel
+          incident={selectedIncident}
+          nearbyCameras={cameras}
+          nearbyHospitals={hospitals}
+          nearbyPolice={police}
+          nearbyFire={fire}
+          onClose={() => setSelectedIncident(null)}
+          onSelectCamera={handleSelectCamera}
+          onCenterMap={(lat, lng) => {
+            mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom: 15.5, duration: 1000 });
+          }}
+          onMeasureRadius={(lat, lng) => {
+            setMeasurementState({
+              activeTool: 'RADIUS',
+              points: [[lng, lat]],
+              radiusMeters: 2000,
+            });
+          }}
+          userLocation={userLocation}
+        />
+      )}
+
+      {/* 7. MULTI-CAMERA SURVEILLANCE GRID OVERLAY */}
+      {isGridView && (
+        <CameraGridOverlay
+          cameras={cameras}
+          onClose={() => setIsGridView(false)}
+          onSelectCamera={handleSelectCamera}
+        />
+      )}
+
+      {/* 10. GLOBAL SPATIAL SEARCH MODAL (WITH COORDINATE JUMP) */}
+      {isSearchOpen && (
+        <GlobalSearchModal
+          onClose={() => setIsSearchOpen(false)}
+          onFlyTo={(lat, lng) => {
+            mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1000 });
+          }}
+          onSelectCamera={handleSelectCamera}
+          onSelectIncident={handleSelectIncident}
+          allCameras={cameras}
+          allIncidents={incidents}
+        />
+      )}
+
+      {/* 11. MAP LAYER MANAGER & ADVANCED FILTERS DRAWER */}
+      {isFiltersOpen && (
+        <AdvancedFiltersDrawer
+          onClose={() => setIsFiltersOpen(false)}
+          showCameras={showCameras}
+          setShowCameras={setShowCameras}
+          showIncidents={showIncidents}
+          setShowIncidents={setShowIncidents}
+          showTraffic={showTraffic}
+          setShowTraffic={setShowTraffic}
+          showWeather={showWeather}
+          setShowWeather={setShowWeather}
+          showHospitals={showHospitals}
+          setShowHospitals={setShowHospitals}
+          showPolice={showPolice}
+          setShowPolice={setShowPolice}
+          showFireStations={showFireStations}
+          setShowFireStations={setShowFireStations}
+          showFloods={showFloods}
+          setShowFloods={setShowFloods}
+          showHeatmap={showHeatmap}
+          setShowHeatmap={setShowHeatmap}
+          showCameraCoverage={showCameraCoverage}
+          setShowCameraCoverage={setShowCameraCoverage}
           selectedDistrict={selectedDistrict}
-          onClearDistrict={() => setSelectedDistrict(null)}
-          onOpenDistrictsModal={() => setIsDistrictsModalOpen(true)}
-          onMapClick={(lat: number, lng: number) => {
-            setClickedMapCoords({ lat, lng });
-            setLiveToast({
-              title: 'ปักหมุดตำแหน่งบนแผนที่',
-              message: `พิกัด ${lat.toFixed(5)}, ${lng.toFixed(5)} (คลิกปุ่มด้านล่างเพื่อปักเป็นที่อยู่บ้าน หรือแจ้งเหตุ)`,
-            });
-            setTimeout(() => setLiveToast(null), 3500);
+          setSelectedDistrict={setSelectedDistrict}
+        />
+      )}
+
+      {/* 12. REAL-TIME INCIDENT TIMELINE 2.0 DRAWER */}
+      {isTimelineOpen && (
+        <LiveTimelineDrawer
+          incidents={incidents}
+          onClose={() => setIsTimelineOpen(false)}
+          onSelectIncident={handleSelectIncident}
+        />
+      )}
+
+      {/* 13. GEOSPATIAL SITUATIONAL ANALYTICS MODAL */}
+      {isAnalyticsOpen && <AnalyticsModal onClose={() => setIsAnalyticsOpen(false)} />}
+
+      {/* 14. DATA SOURCE HEALTH & OBSERVABILITY MODAL */}
+      {isSystemStatusOpen && (
+        <AdminSourcesModal
+          onClose={() => setIsSystemStatusOpen(false)}
+          onRefreshSources={loadData}
+        />
+      )}
+
+      {/* 15. AREA SCAN MODAL */}
+      {isScanAreaModalOpen && (
+        <ScanAreaModal
+          centerCoords={scanAreaState ? scanAreaState.center : getCurrentMapCenter()}
+          cameras={cameras}
+          incidents={incidents}
+          pois={pois}
+          trafficSegments={trafficSegments}
+          floodZones={floodZones}
+          onClose={() => {
+            setIsScanAreaModalOpen(false);
+            setScanAreaState(null);
           }}
-          onLocateUser={(coords: { lat: number; lng: number }) => {
-            setUserCoords(coords);
-            setLiveToast({
-              title: 'ค้นพบตำแหน่ง GPS ปัจจุบัน (ความแม่นยำสูง)',
-              message: `พิกัด ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
-            });
-            setTimeout(() => setLiveToast(null), 3500);
+          onApplyRadius={(radiusMeters) => {
+            setScanAreaState((prev) =>
+              prev ? { ...prev, radiusMeters } : { center: getCurrentMapCenter(), radiusMeters }
+            );
+          }}
+          onSelectCamera={handleSelectCamera}
+          onSelectIncident={handleSelectIncident}
+        />
+      )}
+
+      {/* 16. EVENT REPLAY DRAWER */}
+      {isReplayOpen && (
+        <EventReplayDrawer
+          incidents={incidents}
+          onClose={() => {
+            setIsReplayOpen(false);
+            setReplayIncidents(null);
+          }}
+          onSelectIncident={handleSelectIncident}
+          onFilterReplayIncidents={(activeIncs) => setReplayIncidents(activeIncs)}
+        />
+      )}
+
+      {/* 17. SITUATIONAL SUMMARY MODAL */}
+      {isSummaryOpen && (
+        <SituationalSummaryModal
+          cameras={cameras}
+          incidents={incidents}
+          trafficSegments={trafficSegments}
+          floodZones={floodZones}
+          onClose={() => setIsSummaryOpen(false)}
+        />
+      )}
+
+      {/* 18. TACTICAL BOOKMARKS MODAL */}
+      {isBookmarksOpen && (
+        <BookmarksModal
+          currentCenter={getCurrentMapCenter()}
+          onClose={() => setIsBookmarksOpen(false)}
+          onFlyTo={(lat, lng, zoom) => {
+            mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom, duration: 1200 });
           }}
         />
-
-        {/* Satellite Orbital HUD Overlay (Non-intrusive transparent grid & reticle) */}
-        <div className="absolute inset-0 pointer-events-none satellite-grid-overlay z-[400] opacity-40" />
-
-        {/* Orbit Telemetry Stamp (Bottom-Left) */}
-        <div className="hidden lg:flex absolute bottom-6 left-6 z-[500] pointer-events-none items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 border border-slate-800/80 backdrop-blur-md text-[10px] font-mono text-slate-400 select-none shadow-2xl">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-          <span>ORBITAL RECON: 35,786 KM GEO-SYNCHRONOUS</span>
-          <span className="text-slate-600">|</span>
-          <span className="text-cyan-300">BASIN SCAN: ACTIVE</span>
-        </div>
-
-        {/* Top-Left Action Bar & Categories Icon Pill (Real-Time Always) */}
-        <div className="absolute top-3 sm:top-4 left-2 sm:left-3 max-w-[calc(100%-20px)] sm:max-w-2xl z-[500] pointer-events-none flex flex-wrap items-center gap-1.5 sm:gap-2">
-          {/* All Features Hub Launcher Pill */}
-          <button
-            onClick={() => setIsFeaturesHubOpen(true)}
-            className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 via-sky-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-white border border-cyan-400/50 backdrop-blur-xl text-xs font-bold shadow-lg shadow-cyan-500/10 transition-all cursor-pointer select-none active:scale-95"
-            title="เปิดศูนย์รวมฟีเจอร์และเครื่องมือทั้งหมด (All Features Hub)"
-          >
-            <Grid className="w-3.5 h-3.5 text-cyan-400" />
-            <span>รวมทุกฟีเจอร์</span>
-          </button>
-
-          {/* Consolidated Incident Category Launcher Pill */}
-          <button
-            onClick={() => setIsCategoryModalOpen(true)}
-            className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none active:scale-95 ${
-              selectedType !== 'ALL'
-                ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400 font-bold shadow-cyan-500/20'
-                : 'bg-slate-900/95 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-700/90'
-            }`}
-            title="เลือกดูแยกตามหมวดหมู่เหตุการณ์สด (น้ำท่วม, รถติด, อุบัติเหตุ ฯลฯ)"
-          >
-            <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            <span>
-              {selectedType === 'ALL'
-                ? 'หมวดหมู่เหตุการณ์'
-                : selectedType === 'FLOOD'
-                ? 'น้ำท่วม'
-                : selectedType === 'TRAFFIC'
-                ? 'รถติด'
-                : selectedType === 'ACCIDENT'
-                ? 'อุบัติเหตุ'
-                : selectedType === 'ROAD_CLOSED'
-                ? 'ถนนปิด'
-                : selectedType === 'TRANSIT'
-                ? 'รถไฟฟ้า'
-                : selectedType === 'EMERGENCY'
-                ? 'เหตุฉุกเฉิน'
-                : 'ทั่วไป'}
-            </span>
-            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-cyan-300 border border-slate-700 font-bold">
-              {filteredIncidents.length}
-            </span>
-            {selectedType !== 'ALL' && (
-              <span
-                role="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedType('ALL');
-                }}
-                className="hover:text-rose-400 ml-0.5 cursor-pointer text-slate-400"
-                title="รีเซ็ตเป็นทั้งหมด"
-              >
-                <X className="w-3 h-3" />
-              </span>
-            )}
-          </button>
-
-          {/* Quick Tactical Action Pills */}
-          <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {/* Airspace Flight Radar Launcher Pill */}
-            <button
-              onClick={() => setShowFlightRadar((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none ${
-                showFlightRadar
-                  ? 'bg-cyan-500 text-slate-950 font-bold border-cyan-300 shadow-cyan-500/30'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white border-cyan-500/40'
-              }`}
-              title="ดูสายการบินและเรดาร์น่านฟ้าสด (BKK & DMK)"
-            >
-              <Plane className={`w-3.5 h-3.5 ${showFlightRadar ? 'rotate-45' : ''}`} />
-              <span>สายการบิน</span>
-              {totalFlightCount > 0 && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                    showFlightRadar
-                      ? 'bg-slate-950 text-cyan-300'
-                      : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
-                  }`}
-                >
-                  {totalFlightCount} ลำ
-                </span>
-              )}
-            </button>
-
-            {/* 50 Districts Quick Selector Pill */}
-            <button
-              onClick={() => setIsDistrictsModalOpen(true)}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none border ${
-                selectedDistrict
-                  ? 'bg-cyan-950/80 text-cyan-300 border-cyan-400 ring-1 ring-cyan-400/50'
-                  : 'bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-750'
-              }`}
-              title={selectedDistrict ? `กำลังแสดงเส้นขอบเขต: เขต${selectedDistrict.nameTh}` : 'เลือกดูพิกัด 50 เขต กทม.'}
-            >
-              <Compass className={`w-3.5 h-3.5 ${selectedDistrict ? 'text-cyan-300' : 'text-cyan-400'}`} />
-              <span>{selectedDistrict ? `เขต${selectedDistrict.nameTh}` : '50 เขต'}</span>
-              {selectedDistrict && (
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedDistrict(null);
-                  }}
-                  className="ml-0.5 p-0.5 rounded-full hover:bg-rose-500/20 hover:text-rose-300"
-                  title="ล้างเส้นขอบเขต"
-                >
-                  <X className="w-3 h-3" />
-                </span>
-              )}
-            </button>
-
-            {/* Safe Commute / Hazard Scanner Button */}
-            <button
-              onClick={() => setIsHazardModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-emerald-300 hover:text-white border border-emerald-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="สแกนเส้นทางกลับบ้าน/ที่หมาย ปลอดภัยจากน้ำท่วมและอุบัติเหตุ"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>สแกนเส้นทาง</span>
-            </button>
-
-            {/* Vehicle Flood Clearance Calculator Pill */}
-            <button
-              onClick={() => setIsVehicleModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white border border-cyan-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="ตรวจความเสี่ยงน้ำท่วมตามประเภทรถ (Sedan, SUV, EV, มอเตอร์ไซค์)"
-            >
-              <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden sm:inline">ตรวจน้ำท่วมตามรุ่นรถ</span>
-              <span className="sm:hidden">รุ่นรถ</span>
-            </button>
-
-            {/* Chao Phraya Water Tides & Sluice Gates Pill */}
-            <button
-              onClick={() => setIsWaterTideModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-sky-300 hover:text-white border border-sky-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="ระดับน้ำแม่น้ำเจ้าพระยาและสถานีสูบน้ำหลัก กทม."
-            >
-              <Waves className="w-3.5 h-3.5 text-sky-400" />
-              <span className="hidden sm:inline">ระดับน้ำเจ้าพระยา</span>
-              <span className="sm:hidden">ระดับน้ำ</span>
-            </button>
-
-            {/* Expressway Flood Escape Network Pill */}
-            <button
-              onClick={() => setIsExpresswayModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-blue-300 hover:text-white border border-blue-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="โครงข่ายทางด่วน กทม. และทางลงหนีน้ำท่วม"
-            >
-              <Car className="w-3.5 h-3.5 text-blue-400" />
-              <span className="hidden sm:inline">ทางด่วน กทม.</span>
-              <span className="sm:hidden">ทางด่วน</span>
-            </button>
-
-            {/* Emergency Electrical Flood Survival Guide Pill */}
-            <button
-              onClick={() => setIsSurvivalGuideModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-rose-300 hover:text-white border border-rose-500/40 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="คู่มือตัดไฟฟ้ารั่วและเอาตัวรอดน้ำท่วม กทม."
-            >
-              <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-              <span className="hidden sm:inline">คู่มือตัดไฟ & เอาตัวรอด</span>
-              <span className="sm:hidden">คู่มือตัดไฟ</span>
-            </button>
-
-            {/* Saved Home Location Pill */}
-            {homeCoords && (
-              <button
-                onClick={() => {
-                  setFlyToCoords({ lat: homeCoords.lat, lng: homeCoords.lng, zoom: 17 });
-                  tacticalAudio.playTacticalBeep(660, 0.1);
-                }}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 hover:text-white border border-emerald-500/50 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-                title="วาร์ปไปที่อยู่บ้านของฉัน (My Home Location)"
-              >
-                <Home className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">ที่อยู่ของเรา</span>
-                <span className="sm:hidden">บ้าน</span>
-              </button>
-            )}
-
-            {/* Tactical Keybindings Helper Pill */}
-            <button
-              onClick={() => setIsKeybindingsModalOpen(true)}
-              className="hidden lg:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 backdrop-blur-xl text-xs font-semibold shadow-lg transition-all cursor-pointer select-none"
-              title="คีย์ลัดปฏิบัติการ (?) / Tactical Keyboard Shortcuts"
-            >
-              <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
-              <span>คีย์ลัด</span>
-              <kbd className="px-1 py-0.2 bg-slate-950 border border-slate-700 rounded text-[9px] font-mono text-cyan-300">?</kbd>
-            </button>
-
-            {/* SOS Hotline Button */}
-            <button
-              onClick={() => setIsSosModalOpen(true)}
-              className="sm:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 backdrop-blur-xl text-xs font-bold shadow-lg transition-all cursor-pointer"
-            >
-              <AlertOctagon className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-              <span>SOS</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Live Flight Radar Compact Drawer */}
-        <CompactFlightRadarDrawer
-          isOpen={showFlightRadar}
-          onClose={() => setShowFlightRadar(false)}
-          flightData={flightData}
-          loading={isFlightLoading}
-          onRefresh={fetchFlights}
-          onSelectFlight={(flight) => {
-            setFlyToCoords({ lat: flight.latitude, lng: flight.longitude, zoom: 15 });
-          }}
-        />
-
-        {/* Selected Incident Floating Popup Card */}
-        {selectedIncident && (
-          <div className="absolute top-20 left-3 sm:left-4 max-w-sm sm:max-w-md w-[calc(100%-24px)] z-[600] pointer-events-auto animate-in slide-in-from-top-4 duration-200">
-            <IncidentCard
-              incident={selectedIncident}
-              userCoords={userCoords}
-              onConfirm={handleConfirmIncident}
-              onDispute={handleDisputeIncident}
-              onClose={() => setSelectedIncident(null)}
-            />
-          </div>
-        )}
-
-        {/* Floating Quick Action when User clicks anywhere on the Map (Home Pin / Report Here / Scan Path) */}
-        {clickedMapCoords && !selectedIncident && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] bg-slate-900/95 border border-amber-500/60 text-slate-100 px-3.5 py-2 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-wrap items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200 max-w-[92vw]">
-            <div className="flex items-center gap-1.5 text-amber-400 text-xs font-mono">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>{clickedMapCoords.lat.toFixed(5)}, {clickedMapCoords.lng.toFixed(5)}</span>
-            </div>
-            <div className="h-4 w-[1px] bg-slate-700 hidden sm:block" />
-            <button
-              onClick={() => {
-                handleSaveHomeLocation({
-                  lat: clickedMapCoords.lat,
-                  lng: clickedMapCoords.lng,
-                  label: 'บ้านของฉัน (My Home)',
-                });
-                setClickedMapCoords(null);
-              }}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-emerald-600/20"
-            >
-              <Home className="w-3.5 h-3.5" />
-              <span>ปักเป็นที่อยู่ของเรา</span>
-            </button>
-            <button
-              onClick={() => setIsReportModalOpen(true)}
-              className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md shadow-cyan-500/20"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>แจ้งเหตุตรงจุดนี้</span>
-            </button>
-            <button
-              onClick={() => setIsHazardModalOpen(true)}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 border border-slate-700"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>สแกนเส้นทาง</span>
-            </button>
-            <button
-              onClick={() => setClickedMapCoords(null)}
-              className="text-slate-400 hover:text-white p-1 rounded-lg"
-              title="Close pin"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        {/* Real-time Broadcast Toast */}
-        {liveToast && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[700] bg-cyan-950/95 border border-cyan-500/80 text-cyan-200 px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-3 duration-300">
-            <Radio className="w-5 h-5 text-cyan-400 animate-pulse flex-shrink-0" />
-            <div>
-              <p className="font-bold text-xs text-white">{liveToast.title}</p>
-              <p className="text-[11px] text-cyan-300/90">{liveToast.message}</p>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Modals */}
-      <CreateReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        onSubmitSuccess={(newInc) => {
-          setIncidents((prev) => [newInc, ...prev]);
-          handleSelectIncident(newInc);
-        }}
-        currentMapCoords={clickedMapCoords || userCoords || { lat: 13.7563, lng: 100.5018 }}
-      />
-
-      <AreaWatchModal
-        isOpen={isAreaWatchModalOpen}
-        onClose={() => setIsAreaWatchModalOpen(false)}
-        userCoords={userCoords}
-        onSaveWatchArea={(area) => {
-          if (userCoords) {
-            setWatchArea({
-              lat: userCoords.lat,
-              lng: userCoords.lng,
-              radiusKm: area.radiusKm,
-            });
-          }
-        }}
-      />
-
-      {/* Bangkok Emergency SOS Hotlines Modal */}
-      <BangkokEmergencySosModal
-        isOpen={isSosModalOpen}
-        onClose={() => setIsSosModalOpen(false)}
-        userCoords={userCoords}
-      />
-
-      {/* Bangkok 50 Districts Explorer Modal */}
-      <BangkokDistrictsModal
-        isOpen={isDistrictsModalOpen}
-        onClose={() => setIsDistrictsModalOpen(false)}
-        selectedDistrict={selectedDistrict}
-        onClearDistrict={() => {
-          setSelectedDistrict(null);
-          setLiveToast({
-            title: 'ล้างเส้นขอบเขตพื้นที่',
-            message: 'ยกเลิกการแสดงเส้นขอบเขตเขตแล้ว',
-          });
-          setTimeout(() => setLiveToast(null), 3000);
-        }}
-        onSelectDistrict={(district) => {
-          setSelectedDistrict(district);
-          setFlyToCoords({ lat: district.lat, lng: district.lng, zoom: 14 });
-          setLiveToast({
-            title: `แสดงเส้นขอบเขตสี: เขต${district.nameTh} (${district.nameEn})`,
-            message: `พิกัด ${district.lat.toFixed(4)}, ${district.lng.toFixed(4)} • รหัสไปรษณีย์ ${district.postalCode}`,
-          });
-          setTimeout(() => setLiveToast(null), 4000);
-        }}
-      />
-
-      {/* Safe Commute / Hazard Scanner Modal */}
-      <SafeRouteHazardModal
-        isOpen={isHazardModalOpen}
-        onClose={() => setIsHazardModalOpen(false)}
-        userCoords={userCoords}
-        targetCoords={clickedMapCoords}
-        incidents={incidents}
-        onFlyToIncident={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 15 });
-        }}
-      />
-
-      {/* Vehicle Clearance Flood Risk Calculator Modal */}
-      <VehicleFloodRiskModal
-        isOpen={isVehicleModalOpen}
-        onClose={() => setIsVehicleModalOpen(false)}
-      />
-
-      {/* Bangkok Chao Phraya River Water Level & Sluice Gates Modal */}
-      <BangkokWaterTideModal
-        isOpen={isWaterTideModalOpen}
-        onClose={() => setIsWaterTideModalOpen(false)}
-      />
-
-      {/* Bangkok Expressways & Flood Escape Ramps Modal */}
-      <BangkokExpresswayModal
-        isOpen={isExpresswayModalOpen}
-        onClose={() => setIsExpresswayModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Emergency Survival & Electrical Flood Safety Guide Modal */}
-      <EmergencySurvivalGuideModal
-        isOpen={isSurvivalGuideModalOpen}
-        onClose={() => setIsSurvivalGuideModalOpen(false)}
-      />
-
-      {/* Consolidated Incident Category Selector Modal */}
-      <IncidentCategoryModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        selectedType={selectedType}
-        onSelectType={setSelectedType}
-        incidents={incidents.filter((i) => i.status === 'ACTIVE' || i.status === 'MONITORING')}
-      />
-
-      {/* All Features & Tools Command Hub Modal */}
-      <AllFeaturesHubModal
-        isOpen={isFeaturesHubOpen}
-        onClose={() => setIsFeaturesHubOpen(false)}
-        onOpenCategories={() => setIsCategoryModalOpen(true)}
-        onOpenVehicleSimulator={() => setIsVehicleModalOpen(true)}
-        onOpenWaterTide={() => setIsWaterTideModalOpen(true)}
-        onOpenExpressway={() => setIsExpresswayModalOpen(true)}
-        onOpenFlightRadar={() => setShowFlightRadar(true)}
-        onOpenHazardScanner={() => setIsHazardModalOpen(true)}
-        onOpenDistricts={() => setIsDistrictsModalOpen(true)}
-        onOpenSos={() => setIsSosModalOpen(true)}
-        onOpenSurvivalGuide={() => setIsSurvivalGuideModalOpen(true)}
-        onOpenAreaWatch={() => setIsAreaWatchModalOpen(true)}
-        onOpenReport={() => setIsReportModalOpen(true)}
-        onOpenPumpTrucks={() => setIsPumpTrucksModalOpen(true)}
-        onOpenSandbagDepot={() => setIsSandbagDepotModalOpen(true)}
-        onOpenAirQuality={() => setIsAirQualityModalOpen(true)}
-        onOpenOfflineSos={() => setIsOfflineSosModalOpen(true)}
-        onOpenHospitals={() => setIsHospitalsModalOpen(true)}
-        onOpenWaterways={() => setIsWaterwaysModalOpen(true)}
-        onOpenPowerGrid={() => setIsPowerGridModalOpen(true)}
-        onOpenPetRescue={() => setIsPetRescueModalOpen(true)}
-        onOpenTelemetryExport={() => setIsTelemetryExportOpen(true)}
-      />
-
-      {/* Bangkok Mobile Flood Pump Truck Deployments Modal */}
-      <BangkokPumpTrucksModal
-        isOpen={isPumpTrucksModalOpen}
-        onClose={() => setIsPumpTrucksModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Bangkok Sandbag Distribution & Municipal Relief Depots Modal */}
-      <BangkokSandbagDepotModal
-        isOpen={isSandbagDepotModalOpen}
-        onClose={() => setIsSandbagDepotModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Bangkok Air Quality & PM2.5 Telemetry Modal */}
-      <BangkokAirQualityModal
-        isOpen={isAirQualityModalOpen}
-        onClose={() => setIsAirQualityModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Bangkok Offline SOS Satellite Distress Beacon Modal */}
-      <BangkokOfflineSosModal
-        isOpen={isOfflineSosModalOpen}
-        onClose={() => setIsOfflineSosModalOpen(false)}
-        userCoords={userCoords}
-      />
-
-      {/* Bangkok Trauma Hospitals & Flood Readiness Modal */}
-      <BangkokHospitalsModal
-        isOpen={isHospitalsModalOpen}
-        onClose={() => setIsHospitalsModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Bangkok Waterways & Public Boat Piers Telemetry Modal */}
-      <BangkokWaterwaysModal
-        isOpen={isWaterwaysModalOpen}
-        onClose={() => setIsWaterwaysModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Bangkok Power Grid & MEA Substations Telemetry Modal */}
-      <BangkokPowerGridModal
-        isOpen={isPowerGridModalOpen}
-        onClose={() => setIsPowerGridModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Bangkok Pet & Animal Flood Evacuation Shelters Modal */}
-      <BangkokPetRescueModal
-        isOpen={isPetRescueModalOpen}
-        onClose={() => setIsPetRescueModalOpen(false)}
-        onFlyToCoords={(lat, lng) => {
-          setFlyToCoords({ lat, lng, zoom: 16 });
-        }}
-      />
-
-      {/* Disaster Telemetry & GIS Export Center Modal */}
-      <BangkokTelemetryExportModal
-        isOpen={isTelemetryExportOpen}
-        onClose={() => setIsTelemetryExportOpen(false)}
-        incidents={incidents}
-      />
-
-      {/* Tactical Keyboard Shortcuts Modal */}
-      <TacticalKeybindingsModal
-        isOpen={isKeybindingsModalOpen}
-        onClose={() => setIsKeybindingsModalOpen(false)}
-      />
-
-      {/* Mobile App Bottom Navigation Bar */}
-      <MobileBottomNav
-        onOpenReport={() => setIsReportModalOpen(true)}
-        onToggleFlights={() => setShowFlightRadar((prev) => !prev)}
-        showFlights={showFlightRadar}
-        flightCount={totalFlightCount}
-      />
-    </div>
+      )}
+    </main>
   );
 }

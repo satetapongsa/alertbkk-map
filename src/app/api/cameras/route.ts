@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { IncidentSeverity, IncidentType } from '@/types/intelligence';
+import { CameraStatus, CameraType } from '@/types/intelligence';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const district = searchParams.get('district') || undefined;
-    const severity = searchParams.get('severity') ? (searchParams.get('severity')!.split(',') as IncidentSeverity[]) : undefined;
-    const type = searchParams.get('type') ? (searchParams.get('type')!.split(',') as IncidentType[]) : undefined;
+    const status = searchParams.get('status') ? (searchParams.get('status')!.split(',') as CameraStatus[]) : undefined;
+    const type = searchParams.get('type') ? (searchParams.get('type')!.split(',') as CameraType[]) : undefined;
     const query = searchParams.get('q') || undefined;
 
-    const incidents = db.getIncidents({
+    const cameras = db.getCameras({
       selectedDistrict: district,
-      incidentSeverities: severity,
-      incidentTypes: type,
+      cameraStatuses: status,
+      cameraTypes: type,
       searchQuery: query,
     });
 
     return NextResponse.json({
       success: true,
-      count: incidents.length,
-      data: incidents,
+      count: cameras.length,
+      data: cameras,
     });
   } catch (error) {
     return NextResponse.json(

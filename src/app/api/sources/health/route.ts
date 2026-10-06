@@ -3,10 +3,10 @@ import { db } from '@/lib/db';
 
 export async function GET() {
   try {
-    const weather = db.getWeather();
+    const health = db.getSourceHealth();
     return NextResponse.json({
       success: true,
-      data: weather,
+      data: health,
     });
   } catch (error) {
     return NextResponse.json(
