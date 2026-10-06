@@ -48,6 +48,21 @@ export default function Home() {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
   // Active Panels / Overlays
+  const [activeWindow, setActiveWindow] = useState<
+    | 'NONE'
+    | 'SEARCH'
+    | 'FILTERS'
+    | 'TIMELINE'
+    | 'ANALYTICS'
+    | 'SYSTEM_STATUS'
+    | 'SCAN_AREA'
+    | 'REPLAY'
+    | 'SUMMARY'
+    | 'BOOKMARKS'
+    | 'GRID_VIEW'
+    | 'CAMERA_PANEL'
+    | 'INCIDENT_PANEL'
+  >('NONE');
   const [leftRailTab, setLeftRailTab] = useState<string>('');
   const [activeRightPanel, setActiveRightPanel] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
@@ -97,9 +112,13 @@ export default function Home() {
         const is2D = mapInstanceRef.current.getPitch() === 0;
         mapInstanceRef.current.flyTo({
           center: [lng, lat],
-          zoom: zoom || 16.5,
+          zoom: zoom || 17.0,
           pitch: is2D ? 0 : 50,
+          bearing: is2D ? 0 : mapInstanceRef.current.getBearing(),
           duration: 1200,
+          curve: 1.42,
+          speed: 1.5,
+          essential: true,
         });
       }
     },
@@ -139,6 +158,137 @@ export default function Home() {
     }
   });
 
+  // Comprehensive Window Coordinator (Mutual Exclusivity: Only 1 Window Active at a time)
+  const closeAllPanels = useCallback(() => {
+    setActiveWindow('NONE');
+    setSelectedCamera(null);
+    setSelectedIncident(null);
+    setIsSearchOpen(false);
+    setIsFiltersOpen(false);
+    setIsTimelineOpen(false);
+    setIsAnalyticsOpen(false);
+    setIsSystemStatusOpen(false);
+    setIsScanAreaModalOpen(false);
+    setIsReplayOpen(false);
+    setIsSummaryOpen(false);
+    setIsBookmarksOpen(false);
+    setIsGridView(false);
+    setActiveRightPanel('');
+    setLeftRailTab('');
+  }, []);
+
+  const openWindow = useCallback(
+    (
+      target:
+        | 'NONE'
+        | 'SEARCH'
+        | 'FILTERS'
+        | 'TIMELINE'
+        | 'ANALYTICS'
+        | 'SYSTEM_STATUS'
+        | 'SCAN_AREA'
+        | 'REPLAY'
+        | 'SUMMARY'
+        | 'BOOKMARKS'
+        | 'GRID_VIEW'
+        | 'CAMERA_PANEL'
+        | 'INCIDENT_PANEL',
+      payload?: any
+    ) => {
+      // 1. Close all previous windows so they never overlap
+      closeAllPanels();
+
+      // 2. Activate requested window as the topmost element
+      setActiveWindow(target);
+
+      switch (target) {
+        case 'SEARCH':
+          setIsSearchOpen(true);
+          setActiveRightPanel('search');
+          break;
+        case 'FILTERS':
+          setIsFiltersOpen(true);
+          setActiveRightPanel('filters');
+          break;
+        case 'TIMELINE':
+          setIsTimelineOpen(true);
+          setActiveRightPanel('timeline');
+          break;
+        case 'ANALYTICS':
+          setIsAnalyticsOpen(true);
+          setActiveRightPanel('analytics');
+          break;
+        case 'SYSTEM_STATUS':
+          setIsSystemStatusOpen(true);
+          break;
+        case 'SCAN_AREA': {
+          let center: [number, number] = [100.5450, 13.7420];
+          if (payload?.coords) {
+            center = payload.coords;
+          } else if (mapInstanceRef.current) {
+            const c = mapInstanceRef.current.getCenter();
+            center = [c.lng, c.lat];
+          }
+          setScanAreaState({ center, radiusMeters: payload?.radiusMeters || 2000 });
+          setIsScanAreaModalOpen(true);
+          setActiveRightPanel('scan_area');
+          break;
+        }
+        case 'REPLAY':
+          setIsReplayOpen(true);
+          break;
+        case 'SUMMARY':
+          setIsSummaryOpen(true);
+          setLeftRailTab('overview');
+          break;
+        case 'BOOKMARKS':
+          setIsBookmarksOpen(true);
+          setActiveRightPanel('bookmarks');
+          break;
+        case 'GRID_VIEW':
+          setIsGridView(true);
+          setLeftRailTab('cameras');
+          break;
+        case 'CAMERA_PANEL':
+          setSelectedCamera(payload);
+          break;
+        case 'INCIDENT_PANEL':
+          setSelectedIncident(payload);
+          break;
+        default:
+          break;
+      }
+    },
+    [closeAllPanels]
+  );
+
+  const toggleWindow = useCallback(
+    (
+      target:
+        | 'NONE'
+        | 'SEARCH'
+        | 'FILTERS'
+        | 'TIMELINE'
+        | 'ANALYTICS'
+        | 'SYSTEM_STATUS'
+        | 'SCAN_AREA'
+        | 'REPLAY'
+        | 'SUMMARY'
+        | 'BOOKMARKS'
+        | 'GRID_VIEW'
+        | 'CAMERA_PANEL'
+        | 'INCIDENT_PANEL',
+      payload?: any
+    ) => {
+      if (activeWindow === target) {
+        closeAllPanels();
+      } else {
+        openWindow(target, payload);
+      }
+    },
+    [activeWindow, closeAllPanels, openWindow]
+  );
+
   // Keyboard Shortcuts handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -155,20 +305,20 @@ export default function Home() {
           }
           break;
         case 'l':
-          setIsFiltersOpen((prev) => !prev);
+          toggleWindow('FILTERS');
           break;
         case 'c':
-          setIsGridView((prev) => !prev);
+          toggleWindow('GRID_VIEW');
           break;
         case 'i':
-          setIsTimelineOpen((prev) => !prev);
+          toggleWindow('TIMELINE');
           break;
         case 's':
           e.preventDefault();
-          setIsSearchOpen((prev) => !prev);
+          toggleWindow('SEARCH');
           break;
         case 'a':
-          setIsAnalyticsOpen((prev) => !prev);
+          toggleWindow('ANALYTICS');
           break;
         case 'r':
           // Reset view to Bangkok Core
@@ -191,40 +341,42 @@ export default function Home() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const closeAllPanels = () => {
-    setSelectedCamera(null);
-    setSelectedIncident(null);
-    setIsSearchOpen(false);
-    setIsFiltersOpen(false);
-    setIsTimelineOpen(false);
-    setIsAnalyticsOpen(false);
-    setIsSystemStatusOpen(false);
-    setIsScanAreaModalOpen(false);
-    setIsReplayOpen(false);
-    setIsSummaryOpen(false);
-    setIsBookmarksOpen(false);
-    setActiveRightPanel('');
-    setLeftRailTab('');
-  };
+  }, [closeAllPanels, toggleWindow]);
 
   const handleSelectCamera = (cam: CameraSource) => {
-    setSelectedIncident(null);
-    setSelectedCamera(cam);
+    openWindow('CAMERA_PANEL', cam);
   };
 
   const handleSelectIncident = (inc: Incident) => {
-    setSelectedCamera(null);
-    setSelectedIncident(inc);
+    openWindow('INCIDENT_PANEL', inc);
   };
 
-  // Pure One-Shot MY LOCATION click handler (direct native call, no dialog, no panel)
-  const handleLocateButtonClick = () => {
+  // Pure One-Shot MY LOCATION click handler (Instant warp zoom to current pin)
+  const handleLocateButtonClick = useCallback(() => {
+    // 1. Immediately close any open modal/drawer so map viewport is completely clear
+    closeAllPanels();
+
+    // 2. If userLocation already exists, immediately trigger high-speed tactical warp
+    if (userLocation && mapInstanceRef.current) {
+      const is2D = mapInstanceRef.current.getPitch() === 0;
+      mapInstanceRef.current.flyTo({
+        center: [userLocation.longitude, userLocation.latitude],
+        zoom: 17.0,
+        pitch: is2D ? 0 : 50,
+        bearing: is2D ? 0 : mapInstanceRef.current.getBearing(),
+        duration: 1200,
+        curve: 1.42,
+        speed: 1.5,
+        essential: true,
+      });
+    }
+
+    // 3. Acquire / re-verify one-shot position fix
     locate();
-  };
+  }, [closeAllPanels, userLocation, locate]);
 
   const toggleDrawingTool = () => {
+    closeAllPanels();
     if (measurementState.activeTool === 'NONE') {
       tacticalAudio.playRadarBlip();
       setMeasurementState({ activeTool: 'DISTANCE', points: [] });
@@ -235,15 +387,7 @@ export default function Home() {
 
   // Trigger Area Scan Tool
   const triggerScanArea = (coords?: [number, number], radiusMeters: number = 2000) => {
-    let center: [number, number] = [100.5450, 13.7420];
-    if (coords) {
-      center = coords;
-    } else if (mapInstanceRef.current) {
-      const c = mapInstanceRef.current.getCenter();
-      center = [c.lng, c.lat];
-    }
-    setScanAreaState({ center, radiusMeters });
-    setIsScanAreaModalOpen(true);
+    openWindow('SCAN_AREA', { coords, radiusMeters });
   };
 
   // Get map center coordinates for modal queries
@@ -279,26 +423,32 @@ export default function Home() {
         onlineCameras={cameras.filter((c) => c.status === 'ONLINE').length}
         activeIncidents={incidents.filter((i) => i.status === 'ACTIVE').length}
         alertCount={incidents.filter((i) => i.severity === 'CRITICAL' || i.severity === 'HIGH').length}
-        onOpenSystemStatus={() => setIsSystemStatusOpen(true)}
-        onToggleGrid={() => setIsGridView(!isGridView)}
+        onOpenSystemStatus={() => toggleWindow('SYSTEM_STATUS')}
+        onToggleGrid={() => toggleWindow('GRID_VIEW')}
         isGridView={isGridView}
         onResetView={closeAllPanels}
         locationStatus={locationStatus}
         userLocation={userLocation}
-        onOpenSummary={() => setIsSummaryOpen(true)}
-        onOpenWeather={() => setIsSummaryOpen(true)}
+        onOpenSummary={() => toggleWindow('SUMMARY')}
+        onOpenWeather={() => toggleWindow('SUMMARY')}
       />
 
       {/* 2. LEFT VERTICAL TACTICAL RAIL */}
       <LeftRail
         activeTab={leftRailTab}
         onSelectTab={(tab) => {
-          setLeftRailTab(tab);
-          if (tab === 'cameras') setIsGridView(true);
-          if (tab === 'incidents') setIsTimelineOpen(true);
-          if (tab === 'alerts') setIsTimelineOpen(true);
-          if (tab === 'layers') setIsFiltersOpen(true);
-          if (tab === 'overview') setIsSummaryOpen(true);
+          if (leftRailTab === tab) {
+            closeAllPanels();
+            return;
+          }
+          if (tab === 'cameras') toggleWindow('GRID_VIEW');
+          else if (tab === 'incidents' || tab === 'alerts') toggleWindow('TIMELINE');
+          else if (tab === 'layers' || tab === 'traffic' || tab === 'flood') toggleWindow('FILTERS');
+          else if (tab === 'overview' || tab === 'weather') toggleWindow('SUMMARY');
+          else {
+            closeAllPanels();
+            setLeftRailTab(tab);
+          }
         }}
         cameraCount={cameras.length}
         incidentCount={incidents.length}
@@ -307,18 +457,20 @@ export default function Home() {
 
       {/* 3. RIGHT VERTICAL CONTROLS RAIL */}
       <RightRail
-        onOpenSearch={() => setIsSearchOpen(true)}
-        onOpenFilters={() => setIsFiltersOpen(true)}
-        onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+        onOpenSearch={() => toggleWindow('SEARCH')}
+        onOpenFilters={() => toggleWindow('FILTERS')}
+        onOpenAnalytics={() => toggleWindow('ANALYTICS')}
         onToggleDrawing={toggleDrawingTool}
-        onOpenTimeline={() => setIsTimelineOpen(true)}
-        onOpenScanArea={() => triggerScanArea()}
-        onOpenBookmarks={() => setIsBookmarksOpen(true)}
-        onOpenLayers={() => setIsFiltersOpen(true)}
-        onOpenSignals={() => setIsTimelineOpen(true)}
+        onOpenTimeline={() => toggleWindow('TIMELINE')}
+        onOpenScanArea={() => toggleWindow('SCAN_AREA')}
+        onOpenBookmarks={() => toggleWindow('BOOKMARKS')}
+        onOpenLayers={() => toggleWindow('FILTERS')}
+        onOpenSignals={() => toggleWindow('TIMELINE')}
         isDrawingActive={measurementState.activeTool !== 'NONE'}
         activePanel={activeRightPanel}
-        onSelectPanel={(p) => setActiveRightPanel(p)}
+        onSelectPanel={(p) => {
+          if (!p) closeAllPanels();
+        }}
         locationStatus={locationStatus}
         onLocateClick={handleLocateButtonClick}
       />
@@ -359,7 +511,7 @@ export default function Home() {
         <CameraIntelligencePanel
           camera={selectedCamera}
           nearbyIncidents={nearbyIncidentsForCamera}
-          onClose={() => setSelectedCamera(null)}
+          onClose={closeAllPanels}
           onCenterMap={(lat, lng) => {
             mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom: 15.5, duration: 1000 });
           }}
@@ -376,7 +528,7 @@ export default function Home() {
           nearbyHospitals={hospitals}
           nearbyPolice={police}
           nearbyFire={fire}
-          onClose={() => setSelectedIncident(null)}
+          onClose={closeAllPanels}
           onSelectCamera={handleSelectCamera}
           onCenterMap={(lat, lng) => {
             mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom: 15.5, duration: 1000 });
@@ -396,7 +548,7 @@ export default function Home() {
       {isGridView && (
         <CameraGridOverlay
           cameras={cameras}
-          onClose={() => setIsGridView(false)}
+          onClose={closeAllPanels}
           onSelectCamera={handleSelectCamera}
         />
       )}
@@ -404,7 +556,7 @@ export default function Home() {
       {/* 10. GLOBAL SPATIAL SEARCH MODAL (WITH COORDINATE JUMP) */}
       {isSearchOpen && (
         <GlobalSearchModal
-          onClose={() => setIsSearchOpen(false)}
+          onClose={closeAllPanels}
           onFlyTo={(lat, lng) => {
             mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1000 });
           }}
@@ -418,7 +570,7 @@ export default function Home() {
       {/* 11. MAP LAYER MANAGER & ADVANCED FILTERS DRAWER */}
       {isFiltersOpen && (
         <AdvancedFiltersDrawer
-          onClose={() => setIsFiltersOpen(false)}
+          onClose={closeAllPanels}
           showCameras={showCameras}
           setShowCameras={setShowCameras}
           showIncidents={showIncidents}
@@ -448,18 +600,18 @@ export default function Home() {
       {isTimelineOpen && (
         <LiveTimelineDrawer
           incidents={incidents}
-          onClose={() => setIsTimelineOpen(false)}
+          onClose={closeAllPanels}
           onSelectIncident={handleSelectIncident}
         />
       )}
 
       {/* 13. GEOSPATIAL SITUATIONAL ANALYTICS MODAL */}
-      {isAnalyticsOpen && <AnalyticsModal onClose={() => setIsAnalyticsOpen(false)} />}
+      {isAnalyticsOpen && <AnalyticsModal onClose={closeAllPanels} />}
 
       {/* 14. DATA SOURCE HEALTH & OBSERVABILITY MODAL */}
       {isSystemStatusOpen && (
         <AdminSourcesModal
-          onClose={() => setIsSystemStatusOpen(false)}
+          onClose={closeAllPanels}
           onRefreshSources={loadData}
         />
       )}
@@ -473,10 +625,7 @@ export default function Home() {
           pois={pois}
           trafficSegments={trafficSegments}
           floodZones={floodZones}
-          onClose={() => {
-            setIsScanAreaModalOpen(false);
-            setScanAreaState(null);
-          }}
+          onClose={closeAllPanels}
           onApplyRadius={(radiusMeters) => {
             setScanAreaState((prev) =>
               prev ? { ...prev, radiusMeters } : { center: getCurrentMapCenter(), radiusMeters }
@@ -491,10 +640,7 @@ export default function Home() {
       {isReplayOpen && (
         <EventReplayDrawer
           incidents={incidents}
-          onClose={() => {
-            setIsReplayOpen(false);
-            setReplayIncidents(null);
-          }}
+          onClose={closeAllPanels}
           onSelectIncident={handleSelectIncident}
           onFilterReplayIncidents={(activeIncs) => setReplayIncidents(activeIncs)}
         />
@@ -507,7 +653,7 @@ export default function Home() {
           incidents={incidents}
           trafficSegments={trafficSegments}
           floodZones={floodZones}
-          onClose={() => setIsSummaryOpen(false)}
+          onClose={closeAllPanels}
         />
       )}
 
@@ -515,7 +661,7 @@ export default function Home() {
       {isBookmarksOpen && (
         <BookmarksModal
           currentCenter={getCurrentMapCenter()}
-          onClose={() => setIsBookmarksOpen(false)}
+          onClose={closeAllPanels}
           onFlyTo={(lat, lng, zoom) => {
             mapInstanceRef.current?.flyTo({ center: [lng, lat], zoom, duration: 1200 });
           }}
