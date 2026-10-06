@@ -88,26 +88,19 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         onClick={onResetView}
         title="MIRRIX — LIVE GLOBAL SITUATIONAL AWARENESS (Click to Reset View)"
       >
-        <svg
+        <img
+          src="/mirrix-logo.jpg"
+          alt="MIRRIX Logo"
           className="hud-logo-icon"
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Tactical Outer Crosshair Brackets */}
-          <path d="M50 10V22M50 78V90M10 50H22M78 50H90" stroke="#00f0ff" strokeWidth="2.5" strokeLinecap="round" />
-          {/* Geospatial Eye / World Matrix Arch */}
-          <path
-            d="M50 24C28 24 12 50 12 50C12 50 28 76 50 76C72 76 88 50 88 50C88 50 72 24 50 24Z"
-            stroke="currentColor"
-            strokeWidth="3.2"
-            strokeLinecap="round"
-          />
-          {/* Globe Meridian & Equator Ring */}
-          <circle cx="50" cy="50" r="16" stroke="#d4af37" strokeWidth="2.5" strokeDasharray="3 2" />
-          {/* Active Matrix Signal Pulse Core */}
-          <circle cx="50" cy="50" r="6" fill="#00ff66" />
-        </svg>
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            border: '1.5px solid #00f0ff',
+            boxShadow: '0 0 10px rgba(0, 240, 255, 0.4), inset 0 0 4px rgba(212, 175, 55, 0.3)',
+            objectFit: 'cover',
+          }}
+        />
 
         <div className="hud-title-wrap">
           <div className="hud-title" style={{ letterSpacing: '2px' }}>MIRRIX</div>

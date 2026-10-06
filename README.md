@@ -1,8 +1,14 @@
-# MIRRIX — Real-World Intelligence
+<div align="center">
+  <img src="public/mirrix-banner.jpg" alt="MIRRIX — Real-World Intelligence" width="100%" />
 
-> **LIVE GLOBAL SITUATIONAL AWARENESS PLATFORM**  
-> *A live mirror of the real world assembled from public geospatial feeds, traffic cameras, weather radar, civil defense bulletins, and urban sensor networks.*  
-> **Initial Operational Sector**: Bangkok, Thailand (scalable globally).
+  # MIRRIX — Real-World Intelligence
+
+  <p>
+    <strong>LIVE GLOBAL SITUATIONAL AWARENESS PLATFORM</strong><br />
+    <em>A live mirror of the real world assembled from public geospatial feeds, traffic cameras, weather radar, civil defense bulletins, and urban sensor networks.</em><br />
+    <strong>Initial Operational Sector</strong>: Bangkok, Thailand (scalable globally).
+  </p>
+</div>
 
 ---
 
