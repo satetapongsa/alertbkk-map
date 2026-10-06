@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SourceRegistry } from '@/lib/ingestion/registry';
 import { db } from '@/lib/db';
 import { CameraSource, CameraType } from '@/types/intelligence';
 
 export async function GET() {
-  const health = db.getSourceHealth();
-  return NextResponse.json({ success: true, data: health });
+  const sources = SourceRegistry.getInstance().getAllSources();
+  return NextResponse.json({ success: true, count: sources.length, data: sources });
 }
 
 export async function POST(request: NextRequest) {

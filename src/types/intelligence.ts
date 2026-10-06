@@ -1,4 +1,8 @@
-export type CameraStatus = 'ONLINE' | 'OFFLINE' | 'DEGRADED' | 'UNKNOWN';
+export type SourceHealthStatus = 'ONLINE' | 'DEGRADED' | 'OFFLINE' | 'STALE';
+
+export type DataAgeStatus = 'LIVE' | 'RECENT' | 'STALE' | 'OFFLINE';
+
+export type CameraStatus = 'ONLINE' | 'DEGRADED' | 'OFFLINE' | 'STALE' | 'UNKNOWN';
 
 export type CameraType =
   | 'TRAFFIC'
@@ -12,32 +16,52 @@ export type CameraType =
   | 'RAILWAY'
   | 'OTHER';
 
-export interface CameraSource {
+export interface DataSource {
   id: string;
   name: string;
   provider: string;
+  type: string;
+  url: string;
+  license: string;
+  public_access: boolean;
+  embed_allowed: boolean;
+  status: SourceHealthStatus;
+  last_checked: string;
+  last_success: string;
+  latency: number; // latency in ms
+  error_count: number;
+  is_demo?: boolean;
+}
+
+export interface CameraSource {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  type?: CameraType;
+  source?: string;
+  stream_url?: string;
+  embed_url?: string;
+  status: CameraStatus;
+  last_verified?: string;
+  license: string;
+  provider: string;
   source_type: CameraType;
   source_url: string;
-  stream_url?: string;
   thumbnail_url?: string;
-  embed_url?: string;
   is_youtube?: boolean;
   youtube_video_id?: string;
-  license: string;
   public_access: boolean;
   embedding_allowed: boolean;
   country: string;
   city: string;
   district: string;
-  latitude: number;
-  longitude: number;
   timezone: string;
-  status: CameraStatus;
   last_seen: string;
   last_checked: string;
-  last_verified?: string;
   latency_ms?: number;
-  metadata?: Record<string, unknown>;
+  data_age?: DataAgeStatus;
+  is_demo?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -80,8 +104,13 @@ export interface Incident {
   source_type?: string;
   source_count: number;
   confidence: number; // 0.0 - 1.0
+  first_seen?: string;
+  last_updated?: string;
   reported_at: string;
   updated_at: string;
+  data_age?: DataAgeStatus;
+  age_formatted?: string;
+  is_demo?: boolean;
   images?: string[];
   videos?: string[];
   related_cameras?: string[];
@@ -152,7 +181,7 @@ export interface SourceHealth {
   provider: string;
   type: string;
   region: string;
-  status: 'ONLINE' | 'DEGRADED' | 'OFFLINE';
+  status: SourceHealthStatus;
   last_check: string;
   latency_ms: number;
   error_rate_pct: number;

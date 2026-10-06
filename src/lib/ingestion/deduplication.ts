@@ -11,13 +11,19 @@ export interface DeduplicationCandidate {
   source_url: string;
 }
 
-export class IncidentDeduplicationEngine {
-  private static SPATIAL_THRESHOLD_METERS = 600; // Incidents within 600m
-  private static TEMPORAL_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
+/**
+ * ============================================================================
+ * 8. INCIDENT DEDUPLICATION PIPELINE
+ * Identifies duplicate reports across multiple independent authorities and feeds.
+ * Merges reports, increments source_count, boosts confidence, and updates timestamps.
+ * ============================================================================
+ */
+export class IncidentDeduplicationPipeline {
+  private static SPATIAL_THRESHOLD_METERS = 350; // Incidents within 350m
+  private static TEMPORAL_THRESHOLD_MS = 60 * 60 * 1000; // 60 minutes
 
   /**
    * Checks if an incoming candidate matches any existing active incident.
-   * If matched, merges and increases confidence and source count.
    */
   public static findDuplicateMatch(
     candidate: DeduplicationCandidate,
@@ -41,7 +47,7 @@ export class IncidentDeduplicationEngine {
       }
 
       // 2. Temporal proximity check
-      const incTime = new Date(inc.reported_at).getTime();
+      const incTime = new Date(inc.first_seen || inc.reported_at || Date.now()).getTime();
       const timeDiff = Math.abs(candidateTime - incTime);
       if (timeDiff > this.TEMPORAL_THRESHOLD_MS) {
         continue;
@@ -60,8 +66,8 @@ export class IncidentDeduplicationEngine {
         }
       }
 
-      // If close distance (< 300m) or high keyword overlap
-      if (distance < 300 || matchCount >= 1) {
+      // If close distance (< 200m) or keyword overlap
+      if (distance < 200 || matchCount >= 1) {
         return inc;
       }
     }
@@ -76,13 +82,18 @@ export class IncidentDeduplicationEngine {
     const newSourceCount = (target.source_count || 1) + 1;
     // Boost confidence score as more independent sources confirm the event
     const boostedConfidence = Math.min(0.99, Number((target.confidence + 0.05).toFixed(2)));
+    const now = new Date().toISOString();
 
     return {
       ...target,
       source_count: newSourceCount,
       confidence: boostedConfidence,
-      updated_at: new Date().toISOString(),
+      last_updated: now,
+      updated_at: now,
       description: `${target.description} (Cross-verified by ${candidate.source})`,
     };
   }
 }
+
+// Backwards compatibility alias
+export const IncidentDeduplicationEngine = IncidentDeduplicationPipeline;

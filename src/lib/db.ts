@@ -871,14 +871,30 @@ class IntelligenceDatabase {
   // --- QUERY & RETRIEVAL METHODS ---
 
   public getCameras(filters?: Partial<FilterState>): CameraSource[] {
-    let list = Array.from(this.cameras.values());
+    let list = Array.from(this.cameras.values()).map((c) => {
+      const now = new Date().toISOString();
+      const lastCheck = c.last_checked || c.last_seen || c.updated_at || now;
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - new Date(lastCheck).getTime()) / 1000));
+      const dataAge = elapsedSeconds < 60 ? 'LIVE' : elapsedSeconds < 900 ? 'RECENT' : elapsedSeconds < 3600 ? 'STALE' : 'OFFLINE';
+
+      return {
+        ...c,
+        type: c.type || c.source_type || 'TRAFFIC',
+        source: c.source || c.provider || 'Public Open Feed',
+        stream_url: c.stream_url || '',
+        embed_url: c.embed_url ?? '',
+        license: c.license || 'Open Government Data License (OGDL)',
+        last_verified: c.last_verified || c.last_checked || now,
+        data_age: (c.data_age || dataAge) as any,
+      };
+    });
 
     if (filters) {
       if (filters.cameraStatuses && filters.cameraStatuses.length > 0) {
         list = list.filter((c) => filters.cameraStatuses!.includes(c.status));
       }
       if (filters.cameraTypes && filters.cameraTypes.length > 0) {
-        list = list.filter((c) => filters.cameraTypes!.includes(c.source_type));
+        list = list.filter((c) => filters.cameraTypes!.includes(c.type || c.source_type));
       }
       if (filters.selectedDistrict && filters.selectedDistrict !== 'ALL') {
         list = list.filter((c) => c.district.toLowerCase() === filters.selectedDistrict!.toLowerCase());
@@ -889,7 +905,8 @@ class IntelligenceDatabase {
           (c) =>
             c.name.toLowerCase().includes(q) ||
             c.district.toLowerCase().includes(q) ||
-            c.provider.toLowerCase().includes(q)
+            c.provider.toLowerCase().includes(q) ||
+            c.source.toLowerCase().includes(q)
         );
       }
     }
@@ -898,22 +915,70 @@ class IntelligenceDatabase {
   }
 
   public getCameraById(id: string): CameraSource | undefined {
-    return this.cameras.get(id);
+    const cam = this.cameras.get(id);
+    if (!cam) return undefined;
+    const now = new Date().toISOString();
+    return {
+      ...cam,
+      type: cam.type || cam.source_type || 'TRAFFIC',
+      source: cam.source || cam.provider || 'Public Open Feed',
+      stream_url: cam.stream_url || '',
+      embed_url: cam.embed_url ?? '',
+      license: cam.license || 'Open Government Data License (OGDL)',
+      last_verified: cam.last_verified || cam.last_checked || now,
+    };
   }
 
   public getNearbyCameras(lat: number, lng: number, radiusMeters: number = 1500): CameraSource[] {
     return Array.from(this.cameras.values())
-      .map((cam) => ({
-        cam,
-        distance: calculateDistanceMeters(lat, lng, cam.latitude, cam.longitude),
-      }))
+      .map((cam) => {
+        const now = new Date().toISOString();
+        const formatted: CameraSource = {
+          ...cam,
+          type: cam.type || cam.source_type || 'TRAFFIC',
+          source: cam.source || cam.provider || 'Public Open Feed',
+          stream_url: cam.stream_url || '',
+          embed_url: cam.embed_url ?? '',
+          license: cam.license || 'Open Government Data License (OGDL)',
+          last_verified: cam.last_verified || cam.last_checked || now,
+        };
+        return {
+          cam: formatted,
+          distance: calculateDistanceMeters(lat, lng, cam.latitude, cam.longitude),
+        };
+      })
       .filter((item) => item.distance <= radiusMeters)
       .sort((a, b) => a.distance - b.distance)
       .map((item) => item.cam);
   }
 
   public getIncidents(filters?: Partial<FilterState>): Incident[] {
-    let list = Array.from(this.incidents.values());
+    let list = Array.from(this.incidents.values()).map((inc) => {
+      const now = new Date().toISOString();
+      const firstSeen = inc.first_seen || inc.reported_at || now;
+      const lastUpdated = inc.last_updated || inc.updated_at || now;
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - new Date(lastUpdated).getTime()) / 1000));
+      const dataAge = elapsedSeconds < 60 ? 'LIVE' : elapsedSeconds < 900 ? 'RECENT' : elapsedSeconds < 3600 ? 'STALE' : 'OFFLINE';
+      const ageFormatted =
+        elapsedSeconds < 5
+          ? 'JUST NOW'
+          : elapsedSeconds < 60
+          ? `${elapsedSeconds} SEC AGO`
+          : elapsedSeconds < 3600
+          ? `${Math.floor(elapsedSeconds / 60)} MIN AGO`
+          : `${Math.floor(elapsedSeconds / 3600)} HR AGO`;
+
+      return {
+        ...inc,
+        first_seen: firstSeen,
+        last_updated: lastUpdated,
+        source_url: inc.source_url || 'https://trafficpolice.go.th',
+        source_count: inc.source_count || 1,
+        confidence: inc.confidence ?? 0.88,
+        data_age: (inc.data_age || dataAge) as any,
+        age_formatted: inc.age_formatted || ageFormatted,
+      };
+    });
 
     if (filters) {
       if (filters.incidentSeverities && filters.incidentSeverities.length > 0) {
@@ -923,7 +988,7 @@ class IntelligenceDatabase {
         list = list.filter((inc) => filters.incidentTypes!.includes(inc.type));
       }
       if (filters.selectedDistrict && filters.selectedDistrict !== 'ALL') {
-        list = list.filter((inc) => inc.district.toLowerCase() === filters.selectedDistrict!.toLowerCase());
+        list = list.filter((inc) => inc.district?.toLowerCase() === filters.selectedDistrict!.toLowerCase());
       }
       if (filters.searchQuery && filters.searchQuery.trim().length > 0) {
         const q = filters.searchQuery.toLowerCase().trim();
@@ -931,16 +996,26 @@ class IntelligenceDatabase {
           (inc) =>
             inc.title.toLowerCase().includes(q) ||
             inc.description.toLowerCase().includes(q) ||
-            inc.district.toLowerCase().includes(q)
+            inc.district?.toLowerCase().includes(q)
         );
       }
     }
 
-    return list.sort((a, b) => new Date(b.reported_at).getTime() - new Date(a.reported_at).getTime());
+    return list.sort((a, b) => new Date(b.last_updated || b.reported_at || 0).getTime() - new Date(a.last_updated || a.reported_at || 0).getTime());
   }
 
   public getIncidentById(id: string): Incident | undefined {
-    return this.incidents.get(id);
+    const inc = this.incidents.get(id);
+    if (!inc) return undefined;
+    const now = new Date().toISOString();
+    return {
+      ...inc,
+      first_seen: inc.first_seen || inc.reported_at || now,
+      last_updated: inc.last_updated || inc.updated_at || now,
+      source_url: inc.source_url || 'https://trafficpolice.go.th',
+      source_count: inc.source_count || 1,
+      confidence: inc.confidence ?? 0.88,
+    };
   }
 
   public getPOIs(type?: string): POI[] {
